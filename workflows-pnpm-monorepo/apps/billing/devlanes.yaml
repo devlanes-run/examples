@@ -2,7 +2,7 @@
 # A second project in the same worktree. Commands run anywhere under
 # apps/billing use this file, the nearest devlanes.yaml; everywhere else in the
 # example uses the root one. Relative paths below start at apps/billing.
-project: pnpm-billing
+project: example-pnpm-billing
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
@@ -15,8 +15,8 @@ tasks:
     run: [pnpm, install, --frozen-lockfile]
     when: lane.create
     timeout: 10m
-  # turbo run build --filter=@acme/billing^...: only the packages billing
-  # imports, @acme/config and @acme/ui.
+  # turbo run build --filter=@acme/billing^...: only the package billing
+  # imports, @acme/config.
   build-deps:
     run_script:
       file: package.json
@@ -33,4 +33,4 @@ services:
       http:
         path: /healthz
     env:
-      MONOREPO_WEB_URL: ${{ projects.pnpm_monorepo.services.web.public_url | default('') }}
+      MONOREPO_WEB_URL: ${{ projects.example_pnpm_monorepo.services.web.public_url | default('') }}

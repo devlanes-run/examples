@@ -1,0 +1,75 @@
+project: example-many-services
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # A new worktree has no node_modules or dist/, so the lane installs and builds
+  # before its first start. After an edit under src/, run `devlanes run install`
+  # and `devlanes restart`.
+  install:
+    run: npm install && npm run build
+    when: lane.create
+
+# A service takes the colour of its first tag that has one, so the TUI and the
+# monitor show each kind in its own colour.
+tags:
+  api: { color: cyan, description: JSON APIs }
+  web: { color: green, description: Pages }
+  worker: { color: magenta, description: Workers that handle a batch every few seconds }
+  job: { color: yellow, description: Jobs that run a longer task now and then }
+
+# Every service runs the same server; KIND picks its routes and logs (src/kinds/).
+# BOOT_MS is how long it works before it listens, BURST_MS how long each CPU
+# burst lasts and BURST_EVERY_MS the pause between bursts; each is a min-max
+# range in milliseconds, picked at random.
+templates:
+  node:
+    # node on the built dist/ instead of the `dev` script: npm and tsx watch
+    # would add two more processes to every service and compile each one on
+    # start, so the monitor would show tsx and the boot below would be lost in it.
+    run: [node, dist/index.js]
+    env:
+      BOOT_MS: 1000-6000
+  api:
+    extends: node
+    tags: [api]
+    # Each service holds its start slot until its ready check passes.
+    ready:
+      http:
+        path: /healthz
+    env:
+      KIND: api
+      BURST_MS: 30-120
+      BURST_EVERY_MS: 2000-5000
+  web:
+    extends: node
+    tags: [web]
+    ready:
+      http:
+        path: /healthz
+    env:
+      KIND: web
+      BURST_MS: 20-80
+      BURST_EVERY_MS: 3000-6000
+  worker:
+    extends: node
+    tags: [worker]
+    # Workers and jobs stand in for processes with nothing to probe, so the start
+    # waits for the line they print once they listen.
+    ready:
+      log: "ready after"
+    env:
+      KIND: worker
+      BURST_MS: 100-300
+      BURST_EVERY_MS: 4000-8000
+  job:
+    extends: node
+    tags: [job]
+    ready:
+      log: "ready after"
+    env:
+      KIND: job
+      BURST_MS: 300-800
+      BURST_EVERY_MS: 10000-20000

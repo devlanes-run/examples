@@ -1,17 +1,21 @@
 {
   "name": "@acme/api",
-  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/server.ts",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@acme/config": "workspace:*"
+    "@acme/config": "workspace:*",
+    "@hono/node-server": "2.1.6",
+    "hono": "4.13.16"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
+    "tsx": "4.23.15",
     "typescript": "7.0.2"
   }
 }

@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: multi-database
+project: example-multi-database
 
 lanes:
   # One name per store and lane. Setup, teardown and global_env all read these,
@@ -16,9 +16,9 @@ lanes:
 
 infra:
   compose: docker-compose.yml
-  # A fixed name, so `docker compose -p multi-database ...` reaches the shared
-  # containers from any folder.
-  project_name: multi-database
+  # A fixed name, so `docker compose -p example-multi-database ...` reaches the
+  # shared containers from any folder.
+  project_name: example-multi-database
   # Mail is the one store with nothing to namespace, so each lane gets its own
   # Mailpit and inbox.
   per_lane: [mailpit]
@@ -35,6 +35,8 @@ infra:
   # Each entry runs once per lane after the containers are healthy, and each is
   # safe to run again (`devlanes run infra.setup.<name>`).
   setup:
+    # Postgres has no CREATE DATABASE IF NOT EXISTS; \gexec runs the statement
+    # only when the SELECT returns it.
     postgres: |
       printf '%s\n' "SELECT 'CREATE DATABASE ${{ lane.db_name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ lane.db_name }}') \gexec" |
         docker compose exec -T postgres psql -U postgres -v ON_ERROR_STOP=1
@@ -42,16 +44,19 @@ infra:
     redis: docker compose exec -T redis redis-cli -n ${{ lane.redis_db }} SET lane:owner ${{ lane.name }}
     clickhouse: docker compose exec -T clickhouse clickhouse-client --user app --password app -q "CREATE DATABASE IF NOT EXISTS ${{ lane.ch_db }}"
     rabbitmq:
-      # await_startup covers a rerun that starts while the restarted node is
-      # still booting; add_vhost is a no-op for a vhost that exists.
+      # A rerun after a restart can begin while the node is still booting, so
+      # wait for the healthcheck's own test first. add_vhost is a no-op for a
+      # vhost that exists.
       run: |
-        docker compose exec -T rabbitmq rabbitmqctl await_startup &&
+        until docker compose exec -T rabbitmq rabbitmq-diagnostics -q check_running >/dev/null 2>&1; do sleep 2; done &&
         docker compose exec -T rabbitmq rabbitmqctl add_vhost ${{ lane.vhost }} &&
         docker compose exec -T rabbitmq rabbitmqctl set_permissions -p ${{ lane.vhost }} app '.*' '.*' '.*'
       # Vhosts live inside the RabbitMQ node; run again whenever the container
       # restarts, in case it came back without them.
       container: rabbitmq
       timeout: 2m
+    # rc is RustFS's command line, run in a throwaway container so the host
+    # needs no S3 tool.
     s3: docker compose run --rm rc bucket create --ignore-existing --format human local/${{ lane.bucket }}
 
   # Run by `devlanes lane clean`, never by `devlanes stop`.
@@ -81,8 +86,9 @@ global_env:
   MAILPIT_URL: http://127.0.0.1:${{ infra.mailpit.ports['8025'] }}
 
 tasks:
+  # A new worktree has no node_modules, so the lane installs them before its first start.
   install:
-    run: npm install --no-audit --no-fund
+    run: [npm, install]
     when: lane.create
 
 services:
@@ -90,7 +96,7 @@ services:
     run_script:
       file: package.json
       name: dev
-    hosts: ${{ lane.domain }}
+    hosts: "${{ lane.domain }}"
     ready:
       http:
         path: /healthz

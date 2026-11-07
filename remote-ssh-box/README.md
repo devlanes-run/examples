@@ -1,6 +1,6 @@
 # Remote SSH box
 
-`box-setup.sh` turns a fresh Linux VPS into a devlanes box: it installs Git and devlanes into `~/.devlanes/bin`, turns on systemd linger, gives the box its own `ports.range`, clones this repository, starts [basics-hello-node](../basics-hello-node) and prints a pairing code. Your laptop then runs `devlanes remote connect` over SSH and opens `https://hello-node.localhost` from the box as if it ran locally. `ssh_config.example` has `Host` entries for plain SSH, Tailscale and Cloudflare Tunnel.
+`box-setup.sh` turns a fresh Linux VPS into a devlanes box: it installs Git and devlanes into `~/.devlanes/bin`, turns on systemd linger, gives the box its own `ports.range`, clones this repository, starts [basics-hello-node](../basics-hello-node) and prints a pairing code. Your laptop then runs `devlanes remote connect` over SSH and opens `https://example-hello-node.localhost` from the box as if it ran locally. `ssh_config.example` has `Host` entries for plain SSH, Tailscale and Cloudflare Tunnel.
 
 ## Requirements
 
@@ -8,8 +8,9 @@ On the box:
 
 - Linux with glibc 2.35 or newer (Debian 12, Ubuntu 22.04 and later), x86_64 or arm64
 - an ordinary user with `sudo` and SSH key login; the script refuses to run as root
-- `curl`, or `sudo` to install it
-- Node 22 or later for basics-hello-node, installed where a non-interactive SSH session finds it (`/usr/local/bin`, or a package in `/usr/bin`). Debian 12 and Ubuntu 22.04 ship Node 18 and 12 in their own repositories, so use Node's own builds. A Node that only nvm in `~/.bashrc` puts on `PATH` is missing for the box daemon. Not needed with `--no-start`.
+- `bash`, which Debian and Ubuntu ship
+- `git` and `curl`, or `sudo` to install them
+- Node 22 or later for basics-hello-node, with npm for its install task, installed where a non-interactive SSH session finds it (`/usr/local/bin`, or a package in `/usr/bin`). Debian 12 and Ubuntu 22.04 ship Node 18 and 12 in their own repositories, so use Node's own builds. A Node that only nvm in `~/.bashrc` puts on `PATH` is missing for the box daemon. Not needed with `--no-start`.
 
 On the laptop:
 
@@ -32,14 +33,14 @@ Copy the script to the box and run it there. `-t` gives `sudo` a terminal to ask
 ```sh
 cd remote-ssh-box
 scp box-setup.sh acme-box:
-ssh -t acme-box sh box-setup.sh
+ssh -t acme-box bash box-setup.sh
 ```
 
 A run on a Debian 12 container with systemd printed this (apt-get's own lines left out). That run passed `--repo` with a local copy of this repository, so the clone line names it:
 
 ```text
 ==> glibc 2.36
-==> installing git
+==> installing git curl
 ==> git version 2.39.5
 ==> installing devlanes into /home/acme/.devlanes/bin
 Installed devlanes 0.11.3 to /home/acme/.devlanes/bin
@@ -48,16 +49,18 @@ Installed devlanes 0.11.3 to /home/acme/.devlanes/bin
 ==> added /home/acme/.devlanes/bin to PATH in /home/acme/.profile for new login shells
 ==> turned linger on for acme
 ==> ports.range is 25000-32767 on this box
-==> cloning /srv/examples into /home/acme/examples
+==> cloning /srv/examples.git into /home/acme/examples
 ==> starting basics-hello-node
-hello-node@0 · main
+… tasks: install
+✓ install
+example-hello-node@0 · main
 ✓ services  1 of 1 ready
-  ✓  web  https://hello-node.localhost
-hello-node.localhost needs devlanes setup (CA not trusted)
+  ✓  web  https://example-hello-node.localhost
+example-hello-node.localhost needs devlanes setup (CA not trusted)
 ==> pairing code for your laptop
-pairing code: R0SZ-27CY
+pairing code: GCXQ-DD42
 it works once and expires in 10 minutes
-on your other machine, run: devlanes remote connect <box> --code R0SZ-27CY
+on your other machine, run: devlanes remote connect <box> --code GCXQ-DD42
 ```
 
 The `CA not trusted` line is about browsers on the box itself and can be ignored: the laptop serves the box's hostnames with its own CA.
@@ -67,7 +70,7 @@ Back on the laptop, give it a port range that does not overlap the box's `25000-
 ```sh
 devlanes config set ports.range 20000-24999
 devlanes daemon restart # only if the daemon was already running
-devlanes remote connect acme-box --code R0SZ-27CY
+devlanes remote connect acme-box --code GCXQ-DD42
 devlanes remote ls
 ```
 
@@ -83,7 +86,7 @@ items:
   lanes: 1
   ports:
     port: 25000
-    lane: hello-node@0
+    lane: example-hello-node@0
     unit: web
     kind: service
     state: bound
@@ -91,29 +94,29 @@ items:
     conflicts: -
     relay: -
   routes:
-    host: hello-node.localhost
+    host: example-hello-node.localhost
     port: 25000
-    lane: hello-node@0
+    lane: example-hello-node@0
     unit: web
-    url: https://hello-node.localhost
+    url: https://example-hello-node.localhost
     state: ready
 ```
 
-Open the route's `url` in your browser. The page says `This is lane 0 of hello-node.`, and https://hello-node.localhost/lane answers with the box's port:
+Open the route's `url` in your browser. The page says `This is lane 0 of example-hello-node.`, and https://example-hello-node.localhost/lane answers with the box's port:
 
 ```json
 {
-  "project": "hello-node",
+  "project": "example-hello-node",
   "lane": 0,
   "lane_name": "main",
   "branch": "main",
   "service": "web",
   "port": 25000,
-  "url": "https://hello-node.localhost"
+  "url": "https://example-hello-node.localhost"
 }
 ```
 
-The test box could bind port 443. On a VPS where an ordinary user cannot, the box's proxy falls back to 8443 and its URLs read `https://hello-node.localhost:8443`; the laptop then listens on 8443 too and the URL opens unchanged ([box proxy on another port](https://github.com/devlanes-run/devlanes/blob/main/docs/guides/remote-setup.md#box-proxy-on-another-port)).
+The test box could bind port 443. On a VPS where an ordinary user cannot, the box's proxy falls back to 8443 and its URLs read `https://example-hello-node.localhost:8443`; the laptop then listens on 8443 too and the URL opens unchanged ([box proxy on another port](https://github.com/devlanes-run/devlanes/blob/main/docs/guides/remote-setup.md#box-proxy-on-another-port)).
 
 The pairing code lasts 10 minutes. For a new one, run `ssh acme-box '~/.devlanes/bin/devlanes daemon pair'`, which prints only the code.
 
@@ -127,7 +130,7 @@ Each step checks first, so a second run skips what is done and leaves an existin
 4. Runs `sudo loginctl enable-linger "$USER"` when systemd runs, so the box daemon survives your last SSH session. Without it, `devlanes remote ls` on the laptop shows `the box stops your processes at logout`.
 5. Sets `ports.range` to `25000-32767` when the box still has the default `20000-32767`.
 6. Clones this repository into `~/examples`.
-7. Runs `devlanes start --no-ui` in `~/examples/basics-hello-node`, which also starts the box daemon with the script's `PATH`.
+7. Runs `devlanes start --no-ui` in `~/examples/basics-hello-node`, which runs the example's `npm install` task and starts the box daemon with the script's `PATH`. For an example with a `package.json`, the script stops before this when `node` is not on that `PATH`.
 8. Runs `devlanes daemon pair`.
 
 Options:
@@ -141,13 +144,14 @@ Options:
 - Start a second lane on the box: `cd ~/examples && git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/basics-hello-node && devlanes start --no-ui`. Without reconnecting, `devlanes url ls` on the laptop lists both:
 
   ```text
-  HOST                       TARGET            PORT   STATE
-  hello-node.localhost   ->  hello-node@0:web  25000  ready
-  hello-node1.localhost  ->  hello-node@1:web  25010  ready
+  HOST                               TARGET                    PORT   STATE
+  example-hello-node.localhost   ->  example-hello-node@0:web  25000  ready
+  example-hello-node1.localhost  ->  example-hello-node@1:web  25010  ready
+  proxy: http :80, https :443
   ```
 
-- `devlanes stop` in that worktree on the box. https://hello-node1.localhost on the laptop then answers 503 with the proxy's `DL201 Service not running` page, which names the box and the command to run there, `devlanes start --lane hello-node@1`.
-- `devlanes daemon clients` on the box lists the laptop as paired and connected, with its address and how many ports it mirrors. `devlanes url print web` in `~/examples/basics-hello-node` adds a line per connected client with the URL that opens there, such as `on laptop: https://hello-node.localhost`.
+- `devlanes stop` in that worktree on the box. https://example-hello-node1.localhost on the laptop then answers 503 with the proxy's `DL201 Service not running` page, which names the box and the command to run there, `devlanes start --lane example-hello-node@1`.
+- `devlanes daemon clients` on the box lists the laptop as paired and connected, with its address and how many ports it mirrors. `devlanes url print web` in `~/examples/basics-hello-node` adds a line per connected client with the URL that opens there, such as `on acme-laptop: https://example-hello-node.localhost`.
 - `devlanes remote disconnect acme-box` on the laptop removes the mirrored port and hostname. When you are done with the box, run `devlanes lane clean <lane> --yes` there for each lane.
 
 ## Tailscale
@@ -167,11 +171,11 @@ Publish the box's `localhost:22` as an SSH application behind Cloudflare Access,
 
 ## Tested
 
-Tested with devlanes 0.11.3 on Debian 12 containers with sshd, one with systemd as PID 1: the full script on a fresh box, a second run, linger on and off, a Linux client connecting over SSH with the `acme-box` block and `curl` against the mirrored hostname, and a Windows 11 client reaching the same box through a `remote.boxes` command that runs `ssh -F`. On Ubuntu 22.04 and Debian 11 only the glibc check ran. A real VPS, arm64, the `dnf` path and the Tailscale and Cloudflare blocks are untested.
+Tested with devlanes 0.11.3 on a Debian 12 container with systemd as PID 1 and sshd: the full script on a fresh box, a run that stops because `node` is missing, a second run, `--no-start`, linger on and off, a Linux client connecting over SSH with the `acme-box` block and `curl` against the mirrored hostname, and a Windows 11 client reaching the same box through a `remote.boxes` command that runs `ssh -F`. A Debian 12 container without systemd ran the script with `--no-start`. On Ubuntu 22.04, Debian 11 and Alpine only the checks before the installs ran. A real VPS, arm64, the `dnf` path and the Tailscale and Cloudflare blocks are untested.
 
 ## Files
 
-- `box-setup.sh`: prepares the box, starts an example and prints a pairing code. POSIX `sh`.
+- `box-setup.sh`: prepares the box, starts an example and prints a pairing code. Bash, Linux only.
 - `ssh_config.example`: `Host` entries for plain SSH, Tailscale and Cloudflare Tunnel.
 
 ## Docs

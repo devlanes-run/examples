@@ -1,14 +1,17 @@
 {
-  "name": "workflows-queue-workers",
+  "name": "example-queue-workers",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.13.0",
-  "scripts": {
-    "api": "node api.mjs",
-    "worker": "node worker.mjs",
-    "cleanup": "node cleanup.mjs"
+  "engines": {
+    "node": ">=22"
   },
-  "dependencies": {
-    "redis": "6.3.1"
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

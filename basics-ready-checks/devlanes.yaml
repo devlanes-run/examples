@@ -1,13 +1,19 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: ready-checks
+project: example-ready-checks
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
   INDEX_URL: ${{ services.index.public_url }}
 
-# Every service runs the same server.mjs. What differs is its ready check and
-# the two variables the server reads: START_DELAY_MS and ALLOWED_HOST.
+tasks:
+  # A new worktree has no node_modules, so the lane installs them before its first start.
+  install:
+    run: [npm, install]
+    when: lane.create
+
+# Every service runs the same server. MODE picks its behaviour (src/modes/), and
+# its ready check is the part to read.
 templates:
   node:
     run_script:
@@ -22,6 +28,7 @@ services:
       http:
         path: /healthz
     env:
+      MODE: index
       HTTP_CHECK_URL: ${{ services.http_check.public_url }}
       TCP_CHECK_URL: ${{ services.tcp_check.public_url }}
       LOG_CHECK_URL: ${{ services.log_check.public_url }}
@@ -33,6 +40,8 @@ services:
   http-check:
     extends: node
     hosts: http-check.${{ lane.domain }}
+    env:
+      MODE: http
     ready:
       http:
         path: /healthz
@@ -42,6 +51,8 @@ services:
   tcp-check:
     extends: node
     hosts: tcp-check.${{ lane.domain }}
+    env:
+      MODE: tcp
     # Passes as soon as the socket is open. Services with hosts get this check
     # when they set no ready at all.
     ready:
@@ -51,7 +62,7 @@ services:
     extends: node
     hosts: log-check.${{ lane.domain }}
     env:
-      START_DELAY_MS: 3000
+      MODE: log
     # The server prints this line once it listens, after its 3 s warm-up.
     ready:
       log: listening on http://
@@ -60,6 +71,7 @@ services:
     extends: node
     hosts: own-host.${{ lane.domain }}
     env:
+      MODE: own-host
       ALLOWED_HOST: ${{ self.hosts[0] }}
     # The app refuses any other Host, and the check's default Host is
     # 127.0.0.1:<port>, so send the hostname instead.
@@ -72,6 +84,7 @@ services:
     extends: node
     hosts: own-host-cmd.${{ lane.domain }}
     env:
+      MODE: own-host
       ALLOWED_HOST: ${{ self.hosts[0] }}
     # The same check written as a command, for when the check needs more than
     # a path and a Host header (another header, a client certificate, a script).
@@ -86,7 +99,7 @@ services:
       host: legacy-host.${{ lane.domain }}
       host_header: upstream
     env:
-      ALLOWED_HOST: 127.0.0.1:${{ self.port }}
+      MODE: legacy-host
     # The check already sends Host: 127.0.0.1:<port>, so it needs no host.
     ready:
       http:
@@ -96,8 +109,9 @@ services:
     extends: node
     hosts: slow-start.${{ lane.domain }}
     env:
-      START_DELAY_MS: 8000
-    # devlanes start waits about 8 s for it; devlanes status shows it starting.
+      MODE: slow-start
+    # The app sleeps 8 s before it listens, so devlanes start waits for it and
+    # devlanes status shows it starting.
     ready:
       http:
         path: /healthz

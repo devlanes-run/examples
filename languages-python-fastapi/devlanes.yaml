@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: python-fastapi
+project: example-python-fastapi
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
@@ -15,7 +15,7 @@ services:
   web:
     # uvicorn is a tool, not a [project.scripts] entry, so this is a run string with the port as a flag.
     # --proxy-headers makes request.url https behind the proxy; --reload-dir keeps the watcher out of .venv.
-    run: uv run uvicorn acme.web:app --host 127.0.0.1 --port ${{ self.port }} --reload --reload-dir acme --proxy-headers
+    run: uv run uvicorn acme.web.main:app --host 127.0.0.1 --port ${{ self.port }} --reload --reload-dir src --proxy-headers
     hosts: "${{ lane.domain }}"
     env:
       # public_url on purpose: the point is an HTTPS call that trusts the devlanes CA through SSL_CERT_FILE.

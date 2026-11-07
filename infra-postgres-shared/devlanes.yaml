@@ -1,15 +1,16 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: postgres-shared
+project: example-postgres-shared
 
 lanes:
   vars:
-    # One database per lane in the shared container: postgres_shared_main, postgres_shared_lane1.
+    # One database per lane in the shared container: example_postgres_shared_main,
+    # example_postgres_shared_lane1.
     db_name: ${{ project.name | replace('-', '_') }}_${{ lane.name }}
 
 infra:
   compose: docker-compose.yml
-  # Fixed, so docker compose -p postgres-shared reaches the container outside devlanes.
-  project_name: postgres-shared
+  # Fixed, so docker compose -p example-postgres-shared reaches the container outside devlanes.
+  project_name: ${{ project.name }}
   setup:
     # Postgres has no CREATE DATABASE IF NOT EXISTS; \gexec runs the CREATE only when the
     # SELECT returns a row, so running this again (reset-db, a new lane) is safe.
@@ -28,18 +29,20 @@ global_env:
   DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ infra.postgres.port }}/${{ lane.db_name }}
 
 tasks:
+  # A new worktree has no node_modules, so the lane installs them before its first start.
   install:
-    run: npm ci
+    run: [npm, install]
     when: lane.create
+  # Every start, before services; src/scripts/migrate.ts skips migrations already applied.
   migrate:
     run_script:
       file: package.json
-      name: migrate
+      name: db:migrate
     when: lane.start
   seed:
     run_script:
       file: package.json
-      name: seed
+      name: db:seed
     when: lane.create
     # Seeds through the API, so it waits until api is ready.
     after: services

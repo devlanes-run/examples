@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.worker.tsbuildinfo",
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    // Bindings and the workerd runtime, generated from wrangler.jsonc by `npm run cf-typegen`.
+    "types": ["./worker-configuration.d.ts"],
+    "noEmit": true
+  },
+  "include": ["src/worker"]
+}

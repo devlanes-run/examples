@@ -1,15 +1,15 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: dotenv
+project: example-dotenv
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
-  # The one value the app needs per lane. urls.mjs derives the web, api and
-  # asset URLs and the cookie domain from it, so .env holds no URLs at all.
+  # The one value the apps need per lane. packages/config derives the web, api
+  # and asset URLs and the cookie domain from it, so .env holds no URLs at all.
   APP_DOMAIN: ${{ lane.domain }}
   # .env is gitignored, so a new worktree has none. devlanes' own ${{ env.X }}
   # already falls back to the primary worktree's .env; these two paths let the
-  # app find the same file when it reads .env itself.
+  # web app find the same file when it lists its keys.
   DOTENV_ROOT: ${{ project.primary_path }}
   LANE_PATH: ${{ lane.path }}
   # devlanes never injects .env into processes. Each key a process needs is
@@ -19,11 +19,19 @@ global_env:
   # Optional: empty or missing turns Sentry off instead of failing the start.
   SENTRY_DSN: ${{ env.SENTRY_DSN | default('') }}
 
+tasks:
+  # A new worktree has no node_modules; one install at the root covers every app.
+  install:
+    run: [npm, install]
+    when: lane.create
+
 services:
   web:
     run_script:
-      file: package.json
-      name: web
+      file: apps/web/package.json
+      name: dev
+    # The page loads its CSS and logo from assets.<domain>, another URL derived
+    # from APP_DOMAIN.
     hosts:
       - ${{ lane.domain }}
       - assets.${{ lane.domain }}
@@ -32,8 +40,8 @@ services:
         path: /healthz
   api:
     run_script:
-      file: package.json
-      name: api
+      file: apps/api/package.json
+      name: dev
     hosts: api.${{ lane.domain }}
     ready:
       http:

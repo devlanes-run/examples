@@ -86,6 +86,12 @@ web-frontend-api/
     shared/   only when two apps need the same code (lane values, a typed client)
 ```
 
+A shared package (as in `web-provider-stubs`) is consumed from source in development and from `dist/` in production:
+
+- its `package.json` `exports` has `types` and `development` conditions pointing at `./src/index.ts` and `default` at `./dist/index.js`, plus a `build` script (`tsc`), so type checks work on a fresh clone without building it;
+- apps run `tsx watch --tsconfig ../../tsconfig.base.json --conditions=development src/index.ts`, so the shared JSX compiles with `hono/jsx` and an edit there restarts the apps without a build;
+- the root `workspaces` list puts `packages/*` before `apps/*`, so `npm run build --workspaces` builds the shared package first.
+
 `devlanes.yaml` points each service at its package with `run_script: { file: apps/api/package.json, name: dev }`. One `npm install` at the example root installs every app, so the `install` task runs once.
 
 ## Code
@@ -110,7 +116,7 @@ General rules, every language:
 - Port-less workers live in `src/index.ts` with the loop, the connection and the shutdown handler as separate functions.
 - One-off jobs devlanes runs as tasks (migrations, seeds, cleanup) are files under `src/scripts/` run by package scripts (`"db:migrate": "tsx src/scripts/migrate.ts"`), and the task uses `run_script`.
 - Frontends are Vite + React + TypeScript: `index.html`, `vite.config.ts`, `src/main.tsx`, `src/App.tsx`, `src/components/`, `src/api.ts` for calls to the backend, `src/env.ts` for `import.meta.env`. Next.js uses the App Router with `app/`, `components/` and `lib/`.
-- Cloudflare Workers use Hono on Workers in `src/index.ts`, typed bindings from `wrangler types`, and `build` runs `wrangler deploy --dry-run --outdir dist`.
+- Cloudflare Workers use Hono on Workers in `src/index.ts`, typed bindings from `wrangler types` run by a `postinstall` script (the generated `worker-configuration.d.ts` is gitignored), and `build` runs `wrangler deploy --dry-run --outdir dist`.
 
 ### Python
 
@@ -168,7 +174,7 @@ Anything an example renders for a person uses the devlanes look, never the frame
 The look lives in one place: `_internal/brand/devlanes.css` and `_internal/brand/logo.svg`. Never copy them. Each package that renders pages has a `brand` symbolic link to `_internal/brand` (`ln -s ../_internal/brand brand` at the example root, more `../` in nested apps), so a change to the brand reaches every example. On Windows, create links from Git Bash with `MSYS=winsymlinks:nativestrict ln -s ...` (Developer Mode on), and check that `git status` shows the link, not a copy.
 
 - Hono servers serve the link with `serveStatic({ root: "./" })` under `/brand/*`, as in `basics-hello-node`.
-- Vite apps import `../brand/devlanes.css` from `src/main.tsx` and set `resolve.preserveSymlinks: true` so the file stays inside the app's root; check that the dev server and `vite build` both load it.
+- Vite apps import `../brand/devlanes.css` from `src/main.tsx` and set `resolve.preserveSymlinks: true` so the file stays inside the app's root; check that the dev server and `vite build` both load it. In pnpm workspaces `preserveSymlinks` breaks resolution through pnpm's linked `node_modules`, so those apps add the link's target to `server.fs.allow` instead (as in `workflows-pnpm-monorepo`).
 - Python serves the link as a static folder; Rust embeds it with `include_str!`.
 - Example-specific styles go in one small stylesheet next to the components (`src/styles.css`), using the brand's variables and classes. No inline styles except the lane colour variable.
 

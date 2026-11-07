@@ -1,0 +1,17 @@
+// Wrangler bundles each worker with esbuild, so tsc only type checks and resolves imports the way
+// a bundler does. Runtime types come from each app's worker-configuration.d.ts (`npm run types`).
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "types": []
+  }
+}

@@ -1,6 +1,6 @@
 # Copy to .github/workflows/ to run this example's tests in GitHub Actions.
 # The examples repository's own CI does not run it.
-name: ci-with
+name: example-ci-with
 
 on:
   push:

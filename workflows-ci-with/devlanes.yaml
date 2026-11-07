@@ -1,17 +1,32 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: ci-with
+project: example-ci-with
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
 
+tasks:
+  # One npm install at the workspace root installs both apps and the test runner in a new worktree.
+  install:
+    run: [npm, install]
+    when: lane.create
+
+  # The e2e profile runs `node dist/index.js`, so every e2e start compiles the apps first.
+  # A plain `devlanes start` skips this task and runs the sources with tsx watch.
+  build:
+    run_script:
+      file: package.json
+      name: build
+    when: lane.start
+    profiles: [e2e]
+
 services:
   api:
     run_script:
-      file: api/package.json
+      file: apps/api/package.json
       name: dev
-    # Tests read this as DEVLANES_PUBLIC_URL_API, so they never hardcode the
-    # lane's domain: api.ci-with.localhost in lane 0, api.ci-with1.localhost in lane 1.
+    # Tests read this as DEVLANES_PUBLIC_URL_API, so they never hardcode the lane's
+    # domain: api.example-ci-with.localhost in lane 0, api.example-ci-with1.localhost in lane 1.
     hosts: api.${{ lane.domain }}
     ready:
       http:
@@ -19,18 +34,19 @@ services:
 
   web:
     run_script:
-      file: web/package.json
+      file: apps/web/package.json
       name: dev
     hosts: ${{ lane.domain }}
     ready:
       http:
         path: /healthz
     env:
+      # The browser calls the API, so this is its https hostname.
       API_URL: ${{ services.api.public_url }}
 
 profiles:
   # For `devlanes with --profile e2e` and the GitHub Action's `profile: e2e`:
-  # every service runs its `start` script instead of `dev`, without --watch.
+  # every service runs its `start` script instead of `dev`, without a watcher.
   e2e:
     include: ["*"]
     run_scripts:

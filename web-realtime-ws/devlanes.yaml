@@ -1,18 +1,19 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: realtime-ws
+project: example-realtime-ws
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
 
 tasks:
-  # A new worktree has no node_modules.
+  # A new worktree has no node_modules, so the lane installs them before its first start.
   install:
-    run: [npm, install, --no-audit, --no-fund]
+    run: [npm, install]
     when: lane.create
 
 services:
   realtime:
+    # npm comes from packageManager in package.json, so devlanes runs `npm run dev`.
     run_script:
       file: package.json
       name: dev
@@ -28,6 +29,7 @@ services:
         port: ws
       - host: admin.${{ lane.domain }}
         port: admin
+    # The server opens the main port last, so this check passes once all three ports listen.
     ready:
       http:
         path: /healthz

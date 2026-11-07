@@ -1,26 +1,23 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: frontend-api
+project: example-frontend-api
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
 
 tasks:
+  # One npm install at the workspace root installs both apps in a new worktree.
   install:
-    # npm install rather than npm ci: lanes added to this folder with
-    # `devlanes lane new` share web/node_modules, and ci would delete it under a
-    # running Vite.
-    run: [npm, install, --no-audit, --no-fund]
-    cwd: web
+    run: [npm, install]
     when: lane.create
 
 services:
   api:
     run_script:
-      file: api/package.json
+      file: apps/api/package.json
       name: dev
-    # api.frontend-api.localhost in lane 0: a sibling of the page's host, so both
-    # share the site frontend-api.localhost.
+    # api.example-frontend-api.localhost in lane 0: a sibling of the page's host, so
+    # both share the site example-frontend-api.localhost.
     hosts: "api.${{ lane.domain }}"
     ready:
       http:
@@ -31,9 +28,10 @@ services:
       COOKIE_DOMAIN: ${{ lane.domain }}
 
   web:
+    # Adds --port, --strictPort and --host to `npm run dev`, which runs vite.
     preset: vite
     run_script:
-      file: web/package.json
+      file: apps/web/package.json
       name: dev
     hosts: "${{ lane.domain }}"
     ready:

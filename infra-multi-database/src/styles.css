@@ -1,0 +1,28 @@
+.store-try {
+  padding: 0 22px 20px;
+}
+
+/* The brand button is dark for the yellow page; inside a dark card it takes the paint colour. */
+.store-try .dl-button {
+  border-color: var(--dl-paint);
+  background: var(--dl-paint);
+  color: var(--dl-ink);
+}
+
+.store-try .dl-button:hover {
+  background: transparent;
+  color: var(--dl-paint);
+}
+
+.dl-card pre.dl-ok,
+.dl-card pre.dl-bad {
+  padding-top: 0;
+}
+
+.dl-card pre.dl-ok {
+  color: var(--dl-ok);
+}
+
+.dl-card pre.dl-bad {
+  color: var(--dl-bad);
+}

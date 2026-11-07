@@ -1,0 +1,15 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  // public/brand links to _internal/brand, so /brand/devlanes.css and /brand/logo.svg are static
+  // assets. Every other path falls through to the worker.
+  "assets": { "directory": "./public" },
+  // wrangler dev finds the worker named "catalog" in the dev registry, which devlanes keeps per
+  // lane.
+  "services": [{ "binding": "CATALOG", "service": "catalog" }],
+  "dev": {
+    "ip": "127.0.0.1",
+  },
+}

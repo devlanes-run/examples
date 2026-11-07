@@ -1,0 +1,21 @@
+{
+  "name": "@example-dotenv/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsc -p tsconfig.client.json && tsx watch --tsconfig ../../tsconfig.base.json --conditions=development src/index.ts",
+    "build": "tsc && tsc -p tsconfig.client.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.client.json --noEmit"
+  },
+  "dependencies": {
+    "@example-dotenv/config": "*",
+    "@hono/node-server": "2.1.6",
+    "hono": "4.13.16"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}

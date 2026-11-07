@@ -1,0 +1,22 @@
+{
+  "name": "@queue-workers/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite build && tsx watch --tsconfig ../../tsconfig.base.json --conditions=development src/index.ts",
+    "build": "tsc && tsc -p tsconfig.client.json && vite build",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.client.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.6",
+    "@queue-workers/queue": "*",
+    "hono": "4.13.16"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.6"
+  }
+}

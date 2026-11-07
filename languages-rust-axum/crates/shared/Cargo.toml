@@ -1,0 +1,13 @@
+[package]
+name = "shared"
+description = "Config, lane values and brand assets for the web and api binaries"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+axum.workspace = true
+serde.workspace = true
+tokio.workspace = true

@@ -1,8 +1,25 @@
 {
-  "name": "showcase-broken",
+  "name": "example-broken",
   "private": true,
+  "type": "module",
   "packageManager": "npm@11.13.0",
   "engines": {
     "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "serve": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.6",
+    "hono": "4.13.16"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
   }
 }

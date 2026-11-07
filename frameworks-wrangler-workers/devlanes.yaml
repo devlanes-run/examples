@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: wrangler-workers
+project: example-wrangler-workers
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
@@ -15,17 +15,10 @@ lanes:
   hosts_file: always
 
 tasks:
-  # npm install rather than npm ci: lanes added with `devlanes lane new` share
-  # this folder's node_modules, and ci would delete it under a running wrangler.
+  # A new worktree has no node_modules; one install at the root covers both workers.
   install:
-    steps: [install-gateway, install-catalog]
+    run: [npm, install]
     when: lane.create
-  install-gateway:
-    run: [npm, install, --no-audit, --no-fund]
-    cwd: gateway
-  install-catalog:
-    run: [npm, install, --no-audit, --no-fund]
-    cwd: catalog
 
 templates:
   worker:
@@ -38,7 +31,7 @@ templates:
         timeout: 180s
     wrangler:
       # Workers do not see the process environment. These become --var flags,
-      # so each worker reads them from env.
+      # so each worker reads them from its env bindings.
       vars:
         DEVLANES_LANE_PROJECT: ${{ project.name }}
         DEVLANES_LANE: ${{ lane.index }}
@@ -55,7 +48,7 @@ services:
   gateway:
     extends: worker
     run_script:
-      file: gateway/package.json
+      file: apps/gateway/package.json
       name: dev
     wrangler:
       vars:
@@ -65,7 +58,8 @@ services:
       - ${{ lane.domain }}
       # Wrangler's DevTools endpoint, on the inspector port the preset
       # allocates. Wrangler refuses a DevTools WebSocket whose Host header is
-      # not localhost or 127.0.0.1, so the proxy sends the local address.
+      # not localhost or 127.0.0.1, so host_header: upstream makes the proxy
+      # send the local address instead of the inspect-* hostname.
       - host: inspect-gateway.${{ lane.domain }}
         port: inspector
         host_header: upstream
@@ -73,10 +67,12 @@ services:
   catalog:
     extends: worker
     run_script:
-      file: catalog/package.json
+      file: apps/catalog/package.json
       name: dev
     hosts:
       - catalog.${{ lane.domain }}
+      # Same as the gateway's inspector: without host_header: upstream the
+      # DevTools WebSocket fails with "Disallowed `Host` header".
       - host: inspect-catalog.${{ lane.domain }}
         port: inspector
         host_header: upstream

@@ -1,0 +1,16 @@
+// The browser module the page loads from /client/session.js. It has no imports, so tsc alone
+// builds it.
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2023", "DOM"],
+    "types": [],
+    "strict": true,
+    "skipLibCheck": true,
+    "rootDir": "src/client",
+    "outDir": "dist/client"
+  },
+  "include": ["src/client"]
+}

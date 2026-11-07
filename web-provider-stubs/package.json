@@ -1,11 +1,17 @@
 {
-  "name": "provider-stubs",
+  "name": "example-provider-stubs",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "api": "node api.mjs",
-    "sms-stub": "node stub.mjs sms",
-    "email-stub": "node stub.mjs email"
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

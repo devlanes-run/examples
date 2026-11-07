@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
 
 # Copy to devlanes.local.yaml, which Git ignores. It is merged over
-# devlanes.yaml, so it also reaches dev-and-prod-release, whose
+# devlanes.yaml, so it also reaches example-dev-and-prod-release, whose
 # devlanes.prod.yaml extends devlanes.yaml. A worktree without its own copy
 # uses the primary worktree's.
 services:
@@ -15,7 +15,7 @@ services:
   # A service only this machine runs.
   scratch:
     run_script:
-      file: scratch/package.json
+      file: apps/scratch/package.json
       name: dev
     hosts: "scratch.${{ lane.domain }}"
     ready:

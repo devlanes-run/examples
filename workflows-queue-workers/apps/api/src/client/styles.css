@@ -1,0 +1,39 @@
+/* The enqueue form and the finished-jobs table on top of devlanes.css. */
+.enqueue {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 24px;
+}
+
+.enqueue input {
+  width: 5em;
+  padding: 7px 10px;
+  border: 1px solid var(--dl-ink);
+  border-radius: 5px;
+  background: transparent;
+  font: 600 14px var(--dl-sans);
+}
+
+.jobs {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.jobs th,
+.jobs td {
+  padding: 3px 22px;
+  text-align: left;
+  font-weight: 400;
+}
+
+.jobs th {
+  padding-top: 16px;
+  color: var(--dl-term-dim);
+}
+
+.jobs tr:last-child td {
+  padding-bottom: 16px;
+}

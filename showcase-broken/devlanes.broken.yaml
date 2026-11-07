@@ -1,8 +1,10 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
 # A project file with a typo, for `devlanes --file devlanes.broken.yaml config check`.
-project: broken-config
+project: example-broken-config
 
 services:
   web:
-    run: [node, server.mjs]
+    run_script:
+      file: package.json
+      name: dev
     hots: web.${{ lane.domain }}

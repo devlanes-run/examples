@@ -1,3 +1,7 @@
 packages:
   - apps/*
   - packages/*
+# tsx depends on esbuild, whose install script checks its platform binary. pnpm 11 stops the
+# install on build scripts nobody approved.
+allowBuilds:
+  esbuild: true

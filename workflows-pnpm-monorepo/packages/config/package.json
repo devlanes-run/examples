@@ -1,6 +1,5 @@
 {
   "name": "@acme/config",
-  "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -10,8 +9,8 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "7.0.2"

@@ -1,11 +1,24 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "cloudflare-vite",
-  "main": "worker/index.js",
+  "name": "example-cloudflare-vite",
+  "main": "src/worker/index.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
     "not_found_handling": "single-page-application",
+    // These paths reach the Worker; every other path is the React app.
     "run_worker_first": ["/api/*", "/lane", "/healthz"],
   },
   "kv_namespaces": [{ "binding": "COUNTER" }],
+  // Declared so `wrangler types` types them. vite.config.ts fills them from the lane's
+  // environment, and src/worker/env.ts refuses the empty defaults.
+  "vars": {
+    "DEVLANES_LANE_PROJECT": "",
+    "DEVLANES_LANE": "",
+    "DEVLANES_LANE_NAME": "",
+    "DEVLANES_SERVICE": "",
+    "LANE_LABEL": "",
+    "PORT": "",
+    "INSPECTOR_PORT": "",
+    "STATE_PATH": "",
+  },
 }

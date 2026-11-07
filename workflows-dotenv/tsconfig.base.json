@@ -1,0 +1,16 @@
+// The apps' dev scripts run tsx with --conditions=development, which loads packages/config from
+// its TypeScript source, and point tsx at this file, since tsx applies an app's own tsconfig only
+// to files inside that app.
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "types": ["node"]
+  }
+}

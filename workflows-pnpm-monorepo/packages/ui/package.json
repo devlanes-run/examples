@@ -1,19 +1,16 @@
 {
   "name": "@acme/ui",
-  "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./devlanes.css": "./devlanes.css",
-    "./logo.svg": "./logo.svg"
+    }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "react": "19.3.1"

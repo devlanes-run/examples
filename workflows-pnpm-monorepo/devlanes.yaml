@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: pnpm-monorepo
+project: example-pnpm-monorepo
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
@@ -15,9 +15,9 @@ global_env:
   VITE_API_URL: ${{ services.api.public_url }}
   VITE_WEB_URL: ${{ services.web.public_url }}
   VITE_ADMIN_URL: ${{ services.admin.public_url }}
-  # pnpm-billing is the project in apps/billing/devlanes.yaml (the dash becomes
-  # an underscore here). Empty while none of its lanes runs.
-  VITE_BILLING_URL: ${{ projects.pnpm_billing.services.web.public_url | default('') }}
+  # example-pnpm-billing is the project in apps/billing/devlanes.yaml (each dash
+  # becomes an underscore here). Empty while none of its lanes runs.
+  VITE_BILLING_URL: ${{ projects.example_pnpm_billing.services.web.public_url | default('') }}
 
 tags:
   api: { color: cyan, description: Node servers in apps/ }

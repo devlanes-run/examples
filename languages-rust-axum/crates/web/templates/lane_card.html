@@ -1,0 +1,25 @@
+        <div class="dl-card">
+          <div class="dl-bar">
+            <span class="dl-dots"><i></i><i></i><i></i></span>
+            <span>{{ info.project }}@{{ info.lane }}:{{ info.service }}</span>
+            <span></span>
+          </div>
+          <dl class="dl-rows">
+            <dt>lane</dt>
+            <dd>{{ info.lane }} <span class="dl-key">{{ info.lane_name }}</span></dd>
+            <dt>branch</dt>
+            <dd>{{ info.branch }}</dd>
+            <dt>service</dt>
+            <dd>{{ info.service }}</dd>
+            <dt>port</dt>
+            <dd>{{ info.port }}</dd>
+            <dt>url</dt>
+            <dd>
+              {%- if let Some(url) = info.url -%}
+              <a href="{{ url }}">{{ url }}</a>
+              {%- else -%}
+              <span class="dl-bad">not through the proxy</span>
+              {%- endif -%}
+            </dd>
+          </dl>
+        </div>

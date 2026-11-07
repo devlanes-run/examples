@@ -5,9 +5,9 @@
 # devlanes.yaml, devlanes.local.yaml, this file, devlanes.prod.local.yaml.
 extends: devlanes.yaml
 
-# Its own lanes, ports and hostnames: dev-and-prod-release.localhost in lane 0,
-# next to dev-and-prod.localhost from the same worktree.
-project: dev-and-prod-release
+# Its own lanes, ports and hostnames: example-dev-and-prod-release.localhost in
+# lane 0, next to example-dev-and-prod.localhost from the same worktree.
+project: example-dev-and-prod-release
 
 global_env:
   PROJECT_FILE: devlanes.prod.yaml

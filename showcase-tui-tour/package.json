@@ -1,26 +1,16 @@
 {
-  "name": "showcase-tui-tour",
+  "name": "example-tui-tour",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.13.0",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.12"
   },
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "api": "node api.mjs",
-    "web": "vite web",
-    "worker": "node worker.mjs",
-    "flaky": "node flaky.mjs",
-    "migrate": "node migrate.mjs",
-    "seed": "node seed.mjs",
-    "load": "node --use-system-ca load.mjs"
-  },
-  "dependencies": {
-    "nodemailer": "10.3.1",
-    "pg": "8.23.1",
-    "redis": "6.3.1"
-  },
-  "devDependencies": {
-    "vite": "8.3.6"
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

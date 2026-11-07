@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: rust-axum
+project: example-rust-axum
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
@@ -7,12 +7,14 @@ global_env:
 
 services:
   web:
-    # cargo run --bin web. The Cargo.toml file also makes the platform rust,
-    # which sets SSL_CERT_FILE to the devlanes CA bundle.
-    # After editing src/, run `devlanes restart web` to rebuild and start it again.
+    # The workspace Cargo.toml: devlanes finds the member that owns the `web` binary and runs
+    # `cargo run -p web --bin web`. The file also makes the platform rust, which sets
+    # SSL_CERT_FILE to the devlanes CA bundle.
+    # Nothing watches crates/, so after an edit `devlanes restart web` rebuilds and starts it.
     run_script:
       file: Cargo.toml
       name: web
+    # example-rust-axum.localhost in lane 0, example-rust-axum1.localhost in lane 1.
     hosts: ${{ lane.domain }}
     env:
       # public_url on purpose: the call goes through the proxy over HTTPS, so

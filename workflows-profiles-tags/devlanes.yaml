@@ -1,9 +1,16 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: profiles-tags
+project: example-profiles-tags
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # A new worktree has no node_modules, so the lane installs them before its first start.
+  # One install at the root covers every workspace.
+  install:
+    run: [npm, install]
+    when: lane.create
 
 # A service takes the colour of the first of its tags that has one, so every
 # service lists its category tag (api, web, worker, docs) first and its
@@ -22,28 +29,24 @@ tags:
   email: { color: bright-magenta, description: Outgoing mail }
 
 templates:
-  # Every service runs the same server.mjs; ROLE decides what it does.
+  # Every app has a dev script; each service only names its package.json.
   node:
     run_script:
-      file: package.json
-      name: start
-  api:
+      name: dev
+  server:
     extends: node
     ready:
       http:
         path: /healthz
+  api:
+    extends: server
     env:
-      ROLE: api
       # Records live in a JSON file in the lane's data folder; the test profile
       # points this at another file.
       DATA_FILE: ${{ lane.data_path }}/${{ self.name }}.json
   web:
-    extends: node
-    ready:
-      http:
-        path: /healthz
+    extends: server
     env:
-      ROLE: web
       # url for the page's server-side fetch, public_url for the link it shows.
       ACCOUNTS_API_URL: ${{ services.accounts_api.url }}
       ACCOUNTS_API_PUBLIC_URL: ${{ services.accounts_api.public_url }}
@@ -60,58 +63,49 @@ templates:
     # suspend the mailer along with everything else.
     keep_awake: true
     env:
-      ROLE: worker
       DATA_FILE: ${{ lane.data_path }}/${{ self.name }}.json
 
 services:
   accounts-api:
     extends: api
+    run_script: { file: apps/accounts-api/package.json }
     tags: [api, essential, auth]
     hosts: "accounts.${{ lane.domain }}"
-    env:
-      RECORDS: users
   billing-api:
     extends: api
+    run_script: { file: apps/billing-api/package.json }
     tags: [api, payments]
     hosts: "billing.${{ lane.domain }}"
-    env:
-      RECORDS: invoices
   catalog-api:
     extends: api
+    run_script: { file: apps/catalog-api/package.json }
     tags: [api, essential, catalog]
     hosts: "catalog.${{ lane.domain }}"
-    env:
-      RECORDS: products
   shop-web:
     extends: web
+    run_script: { file: apps/shop-web/package.json }
     tags: [web, essential, shop]
     hosts: "${{ lane.domain }}"
-    env:
-      APIS: catalog-api,accounts-api
   admin-web:
     extends: web
+    run_script: { file: apps/admin-web/package.json }
     tags: [web, admin]
     hosts: "admin.${{ lane.domain }}"
-    env:
-      APIS: accounts-api,billing-api,catalog-api
   mailer:
     extends: worker
+    run_script: { file: apps/mailer/package.json }
     tags: [worker, essential, email]
     env:
       ACCOUNTS_API_URL: ${{ services.accounts_api.url }}
   docs:
-    extends: node
+    extends: server
+    run_script: { file: apps/docs/package.json }
     # Shown in the TUI and in status instead of the key; commands still say docs.
     name: Component docs
     tags: [docs]
     hosts: "docs.${{ lane.domain }}"
-    ready:
-      http:
-        path: /healthz
     # Only `devlanes start docs` (or +docs) starts it; globs such as * skip it.
     autostart: false
-    env:
-      ROLE: docs
 
 profiles:
   # The first plain `devlanes start`, and the next one after `devlanes stop`.

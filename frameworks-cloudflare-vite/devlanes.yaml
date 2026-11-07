@@ -1,20 +1,19 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: cloudflare-vite
+project: example-cloudflare-vite
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
 
 tasks:
+  # A new worktree has no node_modules, so the lane installs them before its first start.
   install:
-    # npm install rather than npm ci: lanes added to this folder with
-    # `devlanes lane new` share node_modules, and ci would delete it under a
-    # running Vite.
-    run: [npm, install, --no-audit, --no-fund]
+    run: [npm, install]
     when: lane.create
 
 services:
   web:
+    # Adds --port, --strictPort and --host to `vite`, so the port never hops.
     preset: vite
     run_script:
       file: package.json
@@ -32,7 +31,8 @@ services:
         # Answered by the Worker, so the check waits for workerd as well as Vite.
         path: /healthz
     env:
-      # vite.config.js hands this to the plugin's inspectorPort. Without it the
-      # plugin takes 9229, or the next free port when another lane holds 9229,
-      # and inspect.<lane domain> has no allocated port to route to.
+      # vite.config.ts hands this to the plugin's inspectorPort. Referencing it
+      # allocates a second port per lane, which the inspect hostname routes to.
       INSPECTOR_PORT: ${{ self.ports.inspector }}
+      VITE_LANE: ${{ lane.index }}
+      VITE_INSPECT_URL: https://inspect.${{ lane.domain }}

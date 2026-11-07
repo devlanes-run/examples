@@ -1,9 +1,15 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: next-app
+project: example-next-app
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # A new worktree has no node_modules. One install at the workspace root covers both apps.
+  install:
+    run: [npm, install]
+    when: lane.create
 
 services:
   web:
@@ -11,7 +17,7 @@ services:
     # so the script stays a plain `next dev`.
     preset: next
     run_script:
-      file: package.json
+      file: apps/web/package.json
       name: dev
     env:
       # The page fetches both: public_url goes through the HTTPS proxy, url
@@ -27,8 +33,8 @@ services:
 
   api:
     run_script:
-      file: package.json
-      name: api
+      file: apps/api/package.json
+      name: dev
     hosts: "api.${{ lane.domain }}"
     ready:
       http:

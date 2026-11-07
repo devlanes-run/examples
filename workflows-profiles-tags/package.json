@@ -1,9 +1,17 @@
 {
-  "name": "profiles-tags",
+  "name": "example-profiles-tags",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "start": "node server.mjs"
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

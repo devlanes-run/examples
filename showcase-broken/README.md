@@ -1,11 +1,11 @@
 # Services built to fail
 
-One Node file runs every service of this project in a different mode, and all but one are broken on purpose: a crash on boot, a crash on request, a missing program, a wrong port, a ready check that never passes and a proxy loop. Each one, started by name, shows what devlanes prints in `devlanes start`, `devlanes debug why` and the proxy's error pages (DL101 to DL303). A `default` profile keeps a plain `devlanes start` healthy, and `devlanes.broken.yaml` holds a config typo for `devlanes config check`.
+One TypeScript server runs every service of this project in a different `MODE`, and all but one are broken on purpose: a crash on boot, a crash on request, a reset connection, a stray 101 answer, a missing program, a wrong port, a ready check that never passes and a proxy loop. Each one, started by name, shows what devlanes prints in `devlanes start`, `devlanes debug why` and the proxy's error pages (DL101 to DL303). A `default` profile keeps a plain `devlanes start` healthy, and `devlanes.broken.yaml` holds a config typo for `devlanes config check`.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22 or later (tested with Node 24)
+- Node 22 or later (tested with Node 24 and npm 11)
 
 ## Run it
 
@@ -14,43 +14,58 @@ cd showcase-broken
 devlanes start
 ```
 
-Open https://broken.localhost. The page shows lane 0 of `broken` and lists every broken service with its hostname, the error it causes and the command that starts it.
+On a terminal, `devlanes start` opens the TUI. With `--no-ui --output plain` it prints:
+
+```text
+ok install
+example-broken@0 · main
+ok services  1 of 1 ready
+  ok  index  https://example-broken.localhost
+```
+
+Open https://example-broken.localhost. The page says `This is lane 0 of example-broken.` and lists every broken service with the error it causes, its hostname and the command that starts it.
 
 ## During a start
 
-The `default` profile names only `index`, so a plain start runs that one service and waits for `/healthz`. The other services have hostnames from the start: until one is started, its hostname answers DL201. Every broken service extends the `broken` template, so `+broken` selects them all.
+devlanes calls each worktree of the repository a lane. A fresh clone on `main` is lane 0.
+
+1. The first start of a lane runs the `install` task (`npm install`).
+2. The `default` profile names only `index`, so a plain start runs that one service (`npm run dev`, which is `tsx watch src/index.ts` with `MODE=index`) and waits for `/healthz`.
+3. The other services have hostnames from the start: until one is started, its hostname answers DL201.
+
+Every broken service extends the `broken` template, which runs `npm run serve` (`tsx src/index.ts` without watch, so a crash ends the process) and tags it `broken`, so `+broken` selects them all. `src/index.ts` reads `MODE` and runs the matching module from `src/modes/`.
 
 A plain `devlanes start` brings back what the lane ran before, broken services included. `devlanes stop` without names forgets them, and the next plain start runs only `index` again.
 
 ## Try next
 
-The output below was captured without a terminal (`--output plain`) and trimmed. On a terminal, `devlanes start` runs in the TUI unless you pass `--no-ui`. On Windows, add `--ssl-revoke-best-effort` to the `curl` commands.
+The output below was captured with `--output plain` and trimmed. On Windows, add `--ssl-revoke-best-effort` to the `curl` commands.
 
 ### Crash on boot
 
-`crash` prints a message and exits 1 before it listens:
+`crash-on-boot` prints a message and exits 1 before it listens:
 
 ```sh
-devlanes start crash --no-ui
+devlanes start crash-on-boot --no-ui
 ```
 
 ```text
-broken@0 · main
+example-broken@0 · main
 failed services  0 of 1 ready
-  failed  crash  exited 1   crash: ACME_API_KEY is not set, refusing to boot
+  failed  crash-on-boot  exited 1   crash-on-boot: ACME_API_KEY is not set, refusing to boot
 
-logs: devlanes logs broken@0:crash --tail 200
+logs: devlanes logs example-broken@0:crash-on-boot --tail 200
 ```
 
-The unit stays failed. devlanes does not restart it, and `devlanes status` still shows `failed (1)` later. `devlanes debug errors` lists it with its crash count, and `devlanes debug why crash` gives the reason:
+The unit stays failed. devlanes does not restart it, and `devlanes status` still shows `failed=crash-on-boot` later. `devlanes debug errors` lists it with its crash count, and `devlanes debug why crash-on-boot` gives the reason:
 
 ```text
-failed broken@0:crash
-  exited with code 1 (devlanes logs broken@0:crash --tail 200)
-  not selected by profile default (devlanes start broken@0:crash)
+failed example-broken@0:crash-on-boot
+  exited with code 1 (devlanes logs example-broken@0:crash-on-boot --tail 200)
+  not selected by profile default (devlanes start example-broken@0:crash-on-boot)
 ```
 
-`curl https://crash.broken.localhost/` gets the DL203 page with the end of the output:
+`curl https://crash-on-boot.example-broken.localhost/` gets the DL203 page with the end of the output:
 
 ````text
 # DL203 Service failed
@@ -62,38 +77,44 @@ The service exited or its ready check failed.
 Recent output:
 
 ```
-crash: ACME_API_KEY is not set, refusing to boot
+
+> serve
+> tsx src/index.ts
+
+crash-on-boot: ACME_API_KEY is not set, refusing to boot
 ```
 
 ## Diagnose
 
-- Show the cause and a fix: `devlanes debug why broken@0:crash`
-- Read its output since the last start: `devlanes logs broken@0:crash --since start`
-- Restart it: `devlanes restart broken@0:crash`
+- Show the cause and a fix: `devlanes debug why example-broken@0:crash-on-boot`
+- Read its output since the last start: `devlanes logs example-broken@0:crash-on-boot --since start`
+- Restart it: `devlanes restart example-broken@0:crash-on-boot`
 ````
 
 ### Crash on request
 
-`fragile` starts healthy. `/crash` answers, then throws a second later:
+`crash-route` starts healthy. `/crash` answers, then throws a second later:
 
 ```sh
-devlanes start fragile --no-ui
-curl https://fragile.broken.localhost/crash
-curl https://fragile.broken.localhost/
+devlanes start crash-route --no-ui
+curl https://crash-route.example-broken.localhost/crash
+curl https://crash-route.example-broken.localhost/
 ```
 
 ```text
-fragile exits in 1 second
+crash-route exits in 1 second
 ```
 
-The second request gets DL203 with the stack trace under "Recent output", ending in `Error: crash requested through /crash`, and `devlanes status` shows `fragile failed (1)`.
+The second request gets DL203 with the stack trace under "Recent output", ending in `Error: crash requested through /crash` and `Node.js v24.16.0`, and `devlanes status` shows `failed=crash-route`. `devlanes restart crash-route --no-ui` brings it back.
 
 ### Reset and 101
 
-`devlanes restart fragile --no-ui` brings it back. `/reset` destroys the socket without an answer:
+`reset` closes the connection to `/` without an answer, and `upgrade` answers a plain GET with `101 Switching Protocols`. Both pass their ready check, since `/healthz` behaves:
 
 ```sh
-curl https://fragile.broken.localhost/reset
+devlanes start reset upgrade --no-ui
+curl https://reset.example-broken.localhost/
+curl https://upgrade.example-broken.localhost/
 ```
 
 ```text
@@ -104,12 +125,6 @@ curl https://fragile.broken.localhost/reset
 The service closed the connection or sent an invalid HTTP/1.1 response.
 ```
 
-`/upgrade` answers a plain GET with `101 Switching Protocols`:
-
-```sh
-curl https://fragile.broken.localhost/upgrade
-```
-
 ```text
 # DL303 Unexpected protocol upgrade
 
@@ -118,13 +133,13 @@ curl https://fragile.broken.localhost/upgrade
 The service answered 101 Switching Protocols to a request that did not ask for an upgrade.
 ```
 
-Both leave the process running.
+Both processes keep running, and `devlanes logs reset` shows `/: destroying the socket without an answer`.
 
 ### Stopped service
 
 ```sh
-devlanes stop fragile
-curl https://fragile.broken.localhost/
+devlanes stop reset
+curl https://reset.example-broken.localhost/
 ```
 
 ```text
@@ -136,37 +151,37 @@ The service behind this hostname is stopped.
 
 ## Diagnose
 
-- Start the whole lane: `devlanes start --lane broken@0`
-- Start the service: `devlanes start broken@0:fragile`
-- Show why it is not running: `devlanes debug why broken@0:fragile`
+- Start the whole lane: `devlanes start --lane example-broken@0`
+- Start the service: `devlanes start example-broken@0:reset`
+- Show why it is not running: `devlanes debug why example-broken@0:reset`
 ```
 
-A service that was never started gets the same page.
+A service that was never started gets the same page. A failed one keeps its DL203 page: `devlanes stop crash-route` answers `nothing was running`.
 
 ### Missing program
 
-`missing` runs `acme-dev-server`, which is not installed. Its `run` is a list, so no shell is involved and devlanes reports the spawn failure itself:
+`missing-program` runs `acme-dev-server`, which is not installed. Its `run` is a list, so no shell is involved and devlanes reports the spawn failure itself:
 
 ```sh
-devlanes start missing --no-ui
+devlanes start missing-program --no-ui
 ```
 
 ```text
-broken@0 · main
-  failed  missing  couldn't start: acme-dev-server: command not found on PATH
+example-broken@0 · main
+  failed  missing-program  couldn't start: acme-dev-server: command not found on PATH
 
-hint: check the lane's PATH: devlanes env show missing --lane broken@0
+hint: check the lane's PATH: devlanes env show missing-program --lane example-broken@0
 ```
 
-`devlanes logs missing` has the same line with the PATH that was searched. The process never ran, so `devlanes status` lists `missing` as `idle` and its hostname answers DL201.
+`devlanes logs missing-program` has the same line with the PATH that was searched. The process never ran, so `devlanes status` lists `missing-program` as `idle` and its hostname answers DL201.
 
 ### Wrong port
 
-`wrongport` ignores `PORT` and lets the OS pick a port. With `ready: started` the start passes anyway:
+`wrong-port` ignores `PORT` and lets the OS pick a port. With `ready: started` the start passes anyway:
 
 ```sh
-devlanes start wrongport --no-ui
-curl https://wrongport.broken.localhost/
+devlanes start wrong-port --no-ui
+curl https://wrong-port.example-broken.localhost/
 ```
 
 ```text
@@ -177,26 +192,26 @@ curl https://wrongport.broken.localhost/
 devlanes has the service as running, but nothing accepted connections on its port while the proxy retried.
 ```
 
-The page took about 8 seconds of retries. `devlanes debug why wrongport` finds nothing wrong (`no blocking reason found`), since the unit is ready. Comparing `devlanes url ls` with `devlanes logs wrongport` shows the mistake:
+The page took about 8 seconds of retries. `devlanes debug why wrong-port` finds nothing wrong (`no blocking reason found`), since the unit is ready. Comparing `devlanes url ls` with `devlanes logs wrong-port` shows the mistake:
 
 ```text
-wrongport.broken.localhost                ->  broken@0:wrongport             20446  ready
-wrongport#1 wrongport listening on http://127.0.0.1:58077
+ready wrong-port.example-broken.localhost -> example-broken@0:wrong-port port=20618
+wrong-port#5 wrong-port listening on http://127.0.0.1:58106
 ```
 
 ### Ready check that never passes
 
-`neverready` listens on `PORT`, but its `/healthz` answers 503. Its ready timeout is 45 seconds, longer than the 30 seconds the proxy holds a request. Start it with a short `--timeout` so the command returns while the service is still starting:
+`never-ready` listens on `PORT`, but its `/healthz` answers 503. Its ready timeout is 45 seconds, longer than the 30 seconds the proxy holds a request. Start it with a short `--timeout` so the command returns while the service is still starting:
 
 ```sh
-devlanes start neverready --no-ui --timeout 5s
-curl https://neverready.broken.localhost/
+devlanes start never-ready --no-ui --timeout 5s
+curl https://never-ready.example-broken.localhost/
 ```
 
 ```text
-broken@0 · main
+example-broken@0 · main
 failed services  0 of 1 ready
-  starting  neverready
+  starting  never-ready
 timed out before every unit was ready
 ```
 
@@ -210,29 +225,29 @@ timed out before every unit was ready
 The proxy held the request while the service started, but its ready check did not pass in time. Reload when it is ready.
 ```
 
-`devlanes wait neverready` exits 1 when the 45 seconds run out:
+`devlanes wait never-ready` exits 1 when the 45 seconds run out:
 
 ```text
-failed broken@0:neverready
-  wasn't ready in time; GET /healthz (Host: 127.0.0.1:20445) answered 503
-  | neverready listening on http://127.0.0.1:20445
-  more: devlanes logs broken@0:neverready --tail 200
+failed example-broken@0:never-ready
+  wasn't ready in time; GET /healthz (Host: 127.0.0.1:20614) answered 503
+  | never-ready listening on http://127.0.0.1:20614
+  more: devlanes logs example-broken@0:never-ready --tail 200
 ```
 
-From then on the hostname answers DL203. The process keeps running, and `devlanes debug why neverready` suggests a fix:
+From then on the hostname answers DL203. The process keeps running, and `devlanes debug why never-ready` suggests a fix:
 
 ```text
-failed broken@0:neverready
-  did not become ready before the timeout; GET /healthz (Host: 127.0.0.1:20445) answered 503 (use a `ready.http.path` that answers 2xx, set `ready.http.host` if the app routes by hostname, or set `ready.http.status: 503`)
+failed example-broken@0:never-ready
+  did not become ready before the timeout; GET /healthz (Host: 127.0.0.1:20614) answered 503 (use a `ready.http.path` that answers 2xx, set `ready.http.host` if the app routes by hostname, or set `ready.http.status: 503`)
 ```
 
 ### Proxy loop
 
-`loop` forwards each request to its own `public_url` and keeps the `Host` header, as a dev server proxy without `changeOrigin` does:
+`proxy-loop` forwards each request to its own `public_url` and keeps the `Host` header, as a dev server proxy without `changeOrigin` does:
 
 ```sh
-devlanes start loop --no-ui
-curl https://loop.broken.localhost/
+devlanes start proxy-loop --no-ui
+curl https://proxy-loop.example-broken.localhost/
 ```
 
 ```text
@@ -248,7 +263,7 @@ This request already passed through this route. A dev server proxy probably sent
 The proxy has no certificate for an unknown hostname, so HTTPS fails in the TLS handshake (curl exit 35 on Windows). Use `http://`:
 
 ```sh
-curl http://nothing.broken.localhost/
+curl http://nothing.example-broken.localhost/
 ```
 
 ```text
@@ -258,7 +273,7 @@ curl http://nothing.broken.localhost/
 
 No lane routes this hostname. While the daemon runs, it answers every request to this machine's HTTP and HTTPS ports, including requests meant for other servers.
 
-Did you mean `missing.broken.localhost` (broken@0)?
+Did you mean `reset.example-broken.localhost` (example-broken@0)?
 ```
 
 The page then lists the hostnames this machine routes.
@@ -272,25 +287,29 @@ devlanes --file devlanes.broken.yaml config check
 ```
 
 ```text
-error: ...\showcase-broken\devlanes.broken.yaml is invalid at line 8, column 11: services.web.hots: unknown key `hots`; did you mean `hosts`?
-hint: edit ...\showcase-broken\devlanes.broken.yaml at line 8, then run this again
+error: ...\showcase-broken\devlanes.broken.yaml is invalid at line 10, column 11: services.web.hots: unknown key `hots`; did you mean `hosts`?
+hint: edit ...\showcase-broken\devlanes.broken.yaml at line 10, then run this again
 ```
 
-The check exits 1 and does not register the file's project: `devlanes lane ls -p broken-config` answers `error: broken-config not found` afterwards.
+The check exits 1 and does not register the file's project: `devlanes lane ls -p example-broken-config` answers `error: example-broken-config not found` afterwards.
 
 ### A second lane
 
-`devlanes lane new --name review --start --no-ui` adds lane 1 in this folder. https://broken1.localhost shows `This is lane 1 of broken.`, and `devlanes --lane review start crash --no-ui` fails only lane 1's `crash`, whose page names `broken@1:crash`.
+`git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/showcase-broken && devlanes start`. The new worktree is lane 1, and https://example-broken1.localhost says `This is lane 1 of example-broken.` with another lane colour. `devlanes start crash-on-boot --no-ui` there fails only lane 1's `crash-on-boot`, whose page names `example-broken@1:crash-on-boot`, while lane 0 keeps running.
 
-`devlanes lane clean review --yes` and `devlanes lane clean 0 --yes` remove both lanes.
+That worktree step was not run for this README. To get lane 1 without a worktree, run `devlanes lane new --name example-broken-review --start --no-ui` in this folder and use `devlanes --lane example-broken-review start crash-on-boot --no-ui`; the results above came from that.
+
+When you are done, `devlanes lane clean 0 --yes` removes lane 0. Run it with `1` for the second lane.
 
 ## Files
 
 - `devlanes.yaml`: the healthy `index`, the `broken` template, one service per failure and the `default` profile.
 - `devlanes.broken.yaml`: a project file with a typo, for `config check`.
-- `server.mjs`: every service, picked by `MODE`; the index page lists the failures.
-- `package.json`: no dependencies; it makes devlanes detect Node and give the services the devlanes CA.
-- `devlanes.css`, `logo.svg`: the page's look, from `_template`.
+- `src/index.ts`: reads `MODE` and runs one module from `src/modes/`.
+- `src/modes/`: one small module per mode. `reset.ts` and `upgrade.ts` write to the raw socket, and `proxy-loop.ts` forwards with `node:https`.
+- `src/failures.ts`: the table the index page lists; `src/views/` renders it.
+- `src/env.ts`: every variable the server reads, parsed once.
+- `brand`: a link to `_internal/brand`, the CSS and logo all examples share.
 
 ## Docs
 

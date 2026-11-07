@@ -1,0 +1,43 @@
+/* The send forms and results on top of devlanes.css. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 880px;
+  margin: 0 auto 24px;
+}
+.grid .dl-card {
+  max-width: none;
+  margin: 0;
+}
+.send-form {
+  display: grid;
+  gap: 12px;
+  padding: 20px 22px;
+}
+.send-form label {
+  display: grid;
+  gap: 4px;
+  color: var(--dl-term-dim);
+}
+.send-form input {
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: var(--dl-term-raised);
+  color: var(--dl-term-ink);
+  font: inherit;
+}
+.send-form .dl-button {
+  justify-self: start;
+  border-color: var(--dl-paint);
+  background: var(--dl-paint);
+  color: var(--dl-ink);
+}
+.send-form .dl-button:hover {
+  background: transparent;
+  color: var(--dl-paint);
+}
+.dl-card pre {
+  overflow-wrap: anywhere;
+}

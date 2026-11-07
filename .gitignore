@@ -12,3 +12,5 @@ dist/
 devlanes.local.yaml
 *.local.yaml
 .DS_Store
+# Runtime types `wrangler types` writes on every npm install (about 600 KB each).
+worker-configuration.d.ts

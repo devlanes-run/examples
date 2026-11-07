@@ -1,0 +1,10 @@
+/* Styles this page needs on top of brand/devlanes.css. */
+.nowrap {
+  white-space: nowrap;
+}
+
+.session-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}

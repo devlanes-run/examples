@@ -1,0 +1,4 @@
+/* Styles this page needs on top of brand/devlanes.css. */
+.nowrap {
+  white-space: nowrap;
+}

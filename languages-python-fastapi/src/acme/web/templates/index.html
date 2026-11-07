@@ -1,0 +1,74 @@
+{% extends "base.html" %} {% block main %}
+<h1 class="dl-title">This is lane {{ info.lane }} of {{ info.project }}.</h1>
+<p class="dl-lede">
+  The <code>{{ info.service }}</code> service, FastAPI under uvicorn, rendered this page from the
+  worktree on <code>{{ info.branch }}</code>.
+</p>
+{% include "lane_card.html" %}
+
+<h2 class="dl-h2">Behind the proxy</h2>
+<p class="dl-lede">
+  uvicorn listens on plain HTTP. With <code>--proxy-headers</code> it reads
+  <code>X-Forwarded-Proto</code> from the devlanes proxy, so <code>request.url</code> has the scheme
+  the browser used.
+</p>
+<div class="dl-card">
+  <dl class="dl-rows">
+    <dt>request.url</dt>
+    <dd>{{ request.url }}</dd>
+    <dt>scheme</dt>
+    <dd>
+      {% if request.url.scheme == "https" %}
+      <span class="dl-ok">https</span>
+      {% else %}
+      <span class="dl-bad">{{ request.url.scheme }}</span>
+      {% endif %}
+    </dd>
+    <dt>X-Forwarded-Proto</dt>
+    <dd>{{ forwarded_proto or "missing" }}</dd>
+  </dl>
+</div>
+
+<h2 class="dl-h2">A call to quotes over HTTPS</h2>
+<p class="dl-lede">
+  This page asked the lane's <code>quotes</code> service for its data with httpx, through the proxy.
+  The certificate checks out because devlanes sets <code>SSL_CERT_FILE</code>.
+</p>
+<div class="dl-card">
+  <dl class="dl-rows">
+    <dt>GET</dt>
+    <dd><a href="{{ quotes_url }}/">{{ quotes_url }}/</a></dd>
+    <dt>SSL_CERT_FILE</dt>
+    <dd>{{ ssl_cert_file or "not set" }}</dd>
+    {% if quotes.body %}
+    <dt>status</dt>
+    <dd><span class="dl-ok">{{ quotes.status }}</span></dd>
+    <dt>answered by</dt>
+    <dd>
+      lane {{ quotes.body.lane }}, service {{ quotes.body.service }}, port {{ quotes.body.port }}
+    </dd>
+    {% for quote in quotes.body.quotes %}
+    <dt>quote {{ quote.id }}</dt>
+    <dd>{{ quote.text }}</dd>
+    {% endfor %} {% else %}
+    <dt>error</dt>
+    <dd><span class="dl-bad">{{ quotes.error }}</span></dd>
+    {% endif %}
+  </dl>
+</div>
+
+<h2 class="dl-h2">From the browser</h2>
+<p class="dl-lede">
+  Your browser calls the same service from this page's origin. quotes allows the origins in
+  <code>DEVLANES_ORIGINS</code>, which lists this lane's hostnames.
+</p>
+<div class="dl-card">
+  <dl class="dl-rows">
+    <dt>fetch</dt>
+    <dd>{{ quotes_url }}/api/quotes</dd>
+    <dt>result</dt>
+    <dd id="cors-result" data-url="{{ quotes_url }}/api/quotes">waiting</dd>
+  </dl>
+</div>
+<script type="module" src="{{ url_for('static', path='cors-check.js') }}"></script>
+{% endblock %}

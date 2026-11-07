@@ -1,2 +1,2 @@
-# The data file the apps use when DATA_FILE is unset (the mprocs setup).
+# The data file the api uses when DATA_FILE is unset (the mprocs setup).
 .data/

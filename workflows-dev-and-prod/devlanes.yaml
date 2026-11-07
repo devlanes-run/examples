@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: dev-and-prod
+project: example-dev-and-prod
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
@@ -8,21 +8,20 @@ global_env:
   PROJECT_FILE: devlanes.yaml
   # vite build writes here and vite preview serves from here. The lane data
   # folder belongs to one lane of one project, so the prod profile, a second
-  # lane and the dev-and-prod-release project never share a build.
+  # lane and the example-dev-and-prod-release project never share a bundle.
   WEB_OUT_DIR: ${{ lane.data_path }}/web-dist
 
 tasks:
+  # One npm install at the workspace root installs every app in a new worktree.
   install:
-    # npm install rather than npm ci: every lane and both projects of this
-    # folder share web/node_modules, and ci would delete it under a running Vite.
     # --include=dev because profile env reaches tasks too, and npm leaves out
-    # devDependencies such as vite when NODE_ENV is production.
-    run: [npm, install, --include=dev, --no-audit, --no-fund]
-    cwd: web
+    # devDependencies such as vite and tsc when NODE_ENV is production.
+    run: [npm, install, --include=dev]
     when: lane.create
   build:
+    # tsc for api and scratch, tsc and vite build for web.
     run_script:
-      file: web/package.json
+      file: package.json
       name: build
     when: lane.start
     # Only `devlanes start --profile prod` builds; the dev servers need no build.
@@ -31,7 +30,7 @@ tasks:
 services:
   api:
     run_script:
-      file: api/package.json
+      file: apps/api/package.json
       name: dev
     hosts: "api.${{ lane.domain }}"
     ready:
@@ -39,15 +38,17 @@ services:
         path: /healthz
 
   web:
+    # Adds --port, --strictPort and --host to `vite` and to `vite preview`.
     preset: vite
     run_script:
-      file: web/package.json
+      file: apps/web/package.json
       name: dev
     hosts: "${{ lane.domain }}"
     ready:
       http:
         path: /healthz
     env:
+      # The page reads it from /mode and calls the api from the browser.
       API_PUBLIC_URL: ${{ services.api.public_url }}
 
 profiles:
@@ -62,7 +63,7 @@ profiles:
   prod:
     include: ["*"]
     # Services whose run_script names dev run start from the same package.json:
-    # `node server.mjs` for api, `vite preview` for web.
+    # `node dist/index.js` for api, `vite preview` for web.
     run_scripts:
       dev: start
     env:

@@ -1,12 +1,26 @@
 {
-  "name": "infra-plain-containers",
+  "name": "example-plain-containers",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "node server.mjs"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "docs": "tsx src/scripts/docs-server.ts 4800"
   },
   "dependencies": {
+    "@hono/node-server": "2.1.6",
+    "hono": "4.13.16",
     "openid-client": "6.8.9"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
   }
 }

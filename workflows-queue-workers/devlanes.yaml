@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: queue-workers
+project: example-queue-workers
 
 lanes:
   vars:
@@ -8,7 +8,7 @@ lanes:
 
 infra:
   compose: docker-compose.yml
-  project_name: queue-workers
+  project_name: example-queue-workers
   teardown:
     # Redis outlives the lane, so lane clean deletes only this lane's keys.
     queue: docker compose exec -T redis sh -c "redis-cli --scan --pattern '${{ lane.queue_prefix }}:*' | xargs -r redis-cli del"
@@ -20,20 +20,21 @@ global_env:
   QUEUE_PREFIX: ${{ lane.queue_prefix }}
 
 tasks:
+  # A new worktree has no node_modules; one install at the root covers every app.
   install:
-    run: [npm, ci]
+    run: [npm, install]
     when: lane.create
   # A cron-like job is a task, run on demand; a service that exits shows as failed.
   cleanup:
     run_script:
-      file: package.json
+      file: apps/worker/package.json
       name: cleanup
 
 services:
   api:
     run_script:
-      file: package.json
-      name: api
+      file: apps/api/package.json
+      name: dev
     hosts: "${{ lane.domain }}"
     ready:
       http:
@@ -41,8 +42,8 @@ services:
 
   worker:
     run_script:
-      file: package.json
-      name: worker
+      file: apps/worker/package.json
+      name: dev
     # Two units, worker.1 and worker.2, consuming the same lane queue.
     replicas: 2
     env:

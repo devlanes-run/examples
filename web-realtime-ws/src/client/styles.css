@@ -1,0 +1,30 @@
+.chat {
+  display: flex;
+  gap: 8px;
+  padding: 0 22px 20px;
+}
+
+.chat input,
+.chat select,
+.chat button {
+  font: inherit;
+  color: var(--dl-term-ink);
+  background: var(--dl-term-raised);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  padding: 6px 10px;
+}
+
+.chat input {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat button {
+  cursor: pointer;
+}
+
+.dl-card .chat-log {
+  min-height: 5em;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}

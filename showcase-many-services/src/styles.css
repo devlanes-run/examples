@@ -1,0 +1,51 @@
+.wide {
+  max-width: 880px;
+}
+
+.units {
+  padding: 16px 22px;
+  overflow-x: auto;
+}
+
+.units table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.units th,
+.units td {
+  padding: 2px 22px 2px 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.units th {
+  color: var(--dl-term-dim);
+  font-weight: 400;
+}
+
+.units td {
+  color: var(--dl-term-out);
+}
+
+.units .num {
+  text-align: right;
+}
+
+/* The same colours as the tags in devlanes.yaml, so the page matches the TUI. */
+.kind-api {
+  color: #7fd3d8;
+}
+
+.kind-web {
+  color: var(--dl-ok);
+}
+
+.kind-worker {
+  color: #d7a1d8;
+}
+
+.kind-job {
+  color: var(--dl-url);
+}

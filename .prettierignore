@@ -13,6 +13,9 @@ uv.lock
 Cargo.lock
 worker-configuration.d.ts
 
+# Jinja and askama templates: Prettier's HTML parser rewrites their {% %} tags.
+templates/
+
 # Each example's brand/ links to _internal/brand, which is formatted once there.
 */brand/
 */**/brand/

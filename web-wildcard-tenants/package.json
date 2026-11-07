@@ -1,15 +1,22 @@
 {
-  "name": "web-wildcard-tenants",
+  "name": "example-wildcard-tenants",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.13.0",
   "engines": {
     "node": ">=22"
   },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "app": "node services/app.mjs",
-    "sites": "node services/sites.mjs",
-    "gateway": "node services/gateway.mjs",
-    "links": "node services/links.mjs"
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
   }
 }

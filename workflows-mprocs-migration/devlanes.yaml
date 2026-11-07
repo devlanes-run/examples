@@ -2,7 +2,7 @@
 # The stack from before/mprocs.yaml. Comments name the mprocs, Caddy or slot.sh
 # piece each key replaces. before/scripts/slot.sh has no replacement line: every
 # worktree is a lane with its own ports, hostnames and data folder.
-project: mprocs-migration
+project: example-mprocs-migration
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
@@ -16,18 +16,23 @@ global_env:
   # Node units, and web calls the api over http now.
 
 tasks:
+  # A new worktree has no node_modules; one install at the root covers every app.
+  # Under mprocs each person ran it by hand after a checkout.
+  install:
+    run: [npm, install]
+    when: lane.create
   # The migrate pane (autostart: false) people forgot to run after a pull.
   migrate:
     run_script:
-      file: package.json
-      name: migrate
+      file: apps/api/package.json
+      name: db:migrate
     when: lane.start
   # The seed pane. It posts through the api, so it waits for the services, and
   # runs once per lane; `devlanes run seed` queues more.
   seed:
     run_script:
-      file: package.json
-      name: seed
+      file: apps/api/package.json
+      name: db:seed
     when: lane.create
     after: services
   # docker-up and docker-down only ran Caddy, which `hosts` replaces. btop is
@@ -36,8 +41,8 @@ tasks:
 services:
   api:
     run_script:
-      file: package.json
-      name: api
+      file: apps/api/package.json
+      name: dev
     env:
       # The app reads API_PORT, not PORT, so it gets the lane's port under its
       # own name. Its default, 4000, is what mprocs used.
@@ -52,8 +57,8 @@ services:
   web:
     # Reads PORT, which devlanes sets; the mprocs pane ran PORT=$WEB_PORT.
     run_script:
-      file: package.json
-      name: web
+      file: apps/web/package.json
+      name: dev
     env:
       API_PUBLIC_URL: ${{ services.api.public_url }}
       SMS_PUBLIC_URL: ${{ services.sms_stub.public_url }}
@@ -66,20 +71,22 @@ services:
 
   worker:
     run_script:
-      file: package.json
-      name: worker
+      file: apps/worker/package.json
+      name: dev
     env:
       SMS_URL: ${{ services.sms_stub.url }}
-    # No port. The worker prints this once the api has answered.
+    # No port. The worker prints this once the api has answered, which covers
+    # what `deps: [api]` did under mprocs.
     ready:
       log: "worker ready"
+    # It polls without inbound requests, so an idle lane must not freeze it.
     keep_awake: true
     tags: [worker, essential]
 
   sms-stub:
     run_script:
-      file: package.json
-      name: sms-stub
+      file: apps/sms-stub/package.json
+      name: dev
     env:
       # Clients outside this repository post to 127.0.0.1:4010, so the stub
       # keeps its literal port. It is the same in every lane, so one lane at a

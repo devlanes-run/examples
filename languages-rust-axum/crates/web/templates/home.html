@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Lane {{ info.lane }} of {{ info.project }}{% endblock %}
+
+{% block content %}
+        <h1 class="dl-title">This is lane {{ info.lane }} of {{ info.project }}.</h1>
+        <p class="dl-lede">
+          The <code>{{ info.service }}</code> service, an axum binary that <code>cargo run</code>
+          built in the worktree on <code>{{ info.branch }}</code>.
+        </p>
+{% include "lane_card.html" %}
+
+        <h2 class="dl-h2">The api over HTTPS</h2>
+        <p class="dl-lede">
+          reqwest calls <a href="{{ api.base_url }}">{{ api.base_url }}</a> through the devlanes
+          proxy and trusts its certificate through <code>SSL_CERT_FILE</code>.
+        </p>
+        <div class="dl-card">
+          <div class="dl-bar">
+            <span class="dl-dots"><i></i><i></i><i></i></span>
+            <span>GET /api/items</span>
+            <span></span>
+          </div>
+          <dl class="dl-rows">
+            <dt>request</dt>
+            <dd class="dl-url">{{ api.url }}</dd>
+            <dt>status</dt>
+            <dd><span class="{{ api.status_class }}">{{ api.status }}</span></dd>
+            <dt>latency</dt>
+            <dd>{{ api.ms }} ms</dd>
+            <dt>SSL_CERT_FILE</dt>
+            <dd>{{ ssl_cert_file }}</dd>
+          </dl>
+          <pre>{{ api.body }}</pre>
+        </div>
+{% endblock %}

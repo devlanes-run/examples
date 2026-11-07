@@ -1,9 +1,15 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: broken
+project: example-broken
 
 global_env:
   LANE_LABEL: ${{ lane.label }}
   LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # A new worktree has no node_modules, so the lane installs them before its first start.
+  install:
+    run: [npm, install]
+    when: lane.create
 
 profiles:
   # A plain `devlanes start` runs only the healthy index; each broken service starts by name.
@@ -11,12 +17,17 @@ profiles:
 
 templates:
   broken:
-    run: [node, server.mjs]
+    # Not `dev`: tsx watch stays alive when the script crashes, so the unit would never fail.
+    run_script:
+      file: package.json
+      name: serve
     tags: [broken]
 
 services:
   index:
-    run: [node, server.mjs]
+    run_script:
+      file: package.json
+      name: dev
     env:
       MODE: index
     hosts: ${{ lane.domain }}
@@ -25,54 +36,74 @@ services:
         path: /healthz
 
   # Exits 1 before it listens: the start fails and the unit stays failed.
-  crash:
+  crash-on-boot:
     extends: broken
     env:
-      MODE: crash
-    hosts: crash.${{ lane.domain }}
+      MODE: crash-on-boot
+    hosts: crash-on-boot.${{ lane.domain }}
 
-  # Healthy until a request to /crash, /reset or /upgrade.
-  fragile:
+  # Healthy until a request to /crash.
+  crash-route:
     extends: broken
     env:
-      MODE: fragile
-    hosts: fragile.${{ lane.domain }}
+      MODE: crash-route
+    hosts: crash-route.${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+
+  # Ready, then closes every connection to / without an answer.
+  reset:
+    extends: broken
+    env:
+      MODE: reset
+    hosts: reset.${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+
+  # Ready, then answers plain requests to / with 101 Switching Protocols.
+  upgrade:
+    extends: broken
+    env:
+      MODE: upgrade
+    hosts: upgrade.${{ lane.domain }}
     ready:
       http:
         path: /healthz
 
   # A list is run without a shell, so devlanes itself reports the missing program.
-  missing:
+  missing-program:
     extends: broken
     run: [acme-dev-server, "--port=${{ self.port }}"]
-    hosts: missing.${{ lane.domain }}
+    hosts: missing-program.${{ lane.domain }}
 
   # `started` counts it ready without probing the port it was given.
-  wrongport:
+  wrong-port:
     extends: broken
     env:
-      MODE: wrongport
-    hosts: wrongport.${{ lane.domain }}
+      MODE: wrong-port
+    hosts: wrong-port.${{ lane.domain }}
     ready: started
 
   # The timeout is above the proxy's 30 second wait, so requests see DL202 before DL203.
-  neverready:
+  never-ready:
     extends: broken
     env:
-      MODE: neverready
-    hosts: neverready.${{ lane.domain }}
+      MODE: never-ready
+    hosts: never-ready.${{ lane.domain }}
     ready:
       http:
         path: /healthz
       timeout: 45s
 
   # Forwards to its own public URL with the original Host header.
-  loop:
+  proxy-loop:
     extends: broken
     env:
-      MODE: loop
+      MODE: proxy-loop
       PUBLIC_URL: ${{ self.public_url }}
-    hosts: loop.${{ lane.domain }}
+    hosts: proxy-loop.${{ lane.domain }}
     ready:
       http:
         path: /healthz

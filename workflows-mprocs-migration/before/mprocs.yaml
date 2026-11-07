@@ -1,6 +1,7 @@
 # Reference only: the setup ../devlanes.yaml replaces. Started through
 # scripts/slot.sh, which exports the worktree's ports and URLs and then runs
-# `mprocs --config before/mprocs.yaml` from the example folder.
+# `mprocs --config before/mprocs.yaml` from the example folder. Run
+# `npm install` there first, after every checkout.
 procs:
   docker-up:
     # Only Caddy (docker-compose.yml), which needs Docker Desktop running.
@@ -12,21 +13,21 @@ procs:
     autostart: false
 
   migrate:
-    shell: npm run migrate
+    shell: npm run db:migrate --workspace apps/api
     cwd: <CONFIG_DIR>/..
     autostart: false
   seed:
-    shell: npm run seed
+    shell: npm run db:seed --workspace apps/api
     cwd: <CONFIG_DIR>/..
     autostart: false
 
   api:
     # Reads API_PORT (4000 when unset); slot.sh exports it.
-    shell: npm run api
+    shell: npm run dev --workspace apps/api
     cwd: <CONFIG_DIR>/..
     autorestart: true
   web:
-    shell: PORT=${WEB_PORT:-3000} API_URL=${API_PUBLIC_URL:-https://api.acme.localhost} npm run web
+    shell: PORT=${WEB_PORT:-3000} API_URL=${API_PUBLIC_URL:-https://api.acme.localhost} npm run dev --workspace apps/web
     cwd: <CONFIG_DIR>/..
     env:
       # Caddy's root certificate, copied out of its container, was imported
@@ -34,14 +35,14 @@ procs:
       # flag, and web fetched the api through Caddy.
       NODE_OPTIONS: --use-system-ca
   worker:
-    shell: npm run worker
+    shell: npm run dev --workspace apps/worker
     cwd: <CONFIG_DIR>/..
     autorestart: true
     deps: [api]
   sms-stub:
     # Clients outside this repository post to 127.0.0.1:4010, so slot.sh never
     # moves it and only one worktree at a time can run it.
-    shell: PORT=4010 npm run sms-stub
+    shell: PORT=4010 npm run dev --workspace apps/sms-stub
     cwd: <CONFIG_DIR>/..
 
   btop:

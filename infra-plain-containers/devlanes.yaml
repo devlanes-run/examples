@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: plain-containers
+project: example-plain-containers
 
 infra:
   containers:
@@ -11,7 +11,7 @@ infra:
       per_lane: true
       env:
         JSON_CONFIG_PATH: /config/oidc.json
-      volumes: ["./oidc.json:/config/oidc.json:ro"]
+      volumes: ["./infra/oidc.json:/config/oidc.json:ro"]
       ready:
         http:
           path: /isalive
@@ -36,8 +36,9 @@ global_env:
   WHOAMI_URL: http://127.0.0.1:${{ infra.whoami.ports.http }}
 
 tasks:
+  # A new worktree has no node_modules, so the lane installs them before its first start.
   install:
-    run: [npm, ci]
+    run: [npm, install]
     when: lane.create
 
 services:

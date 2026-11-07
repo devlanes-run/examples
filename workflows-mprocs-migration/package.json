@@ -1,14 +1,17 @@
 {
-  "name": "mprocs-migration",
+  "name": "example-mprocs-migration",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "api": "node --watch api.mjs",
-    "web": "node --watch web.mjs",
-    "worker": "node --watch worker.mjs",
-    "sms-stub": "node sms-stub.mjs",
-    "migrate": "node db/migrate.mjs",
-    "seed": "node db/seed.mjs"
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

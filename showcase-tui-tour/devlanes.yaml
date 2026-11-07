@@ -1,22 +1,24 @@
 # yaml-language-server: $schema=https://devlanes.run/v1/schema.json
-project: tui-tour
+project: example-tui-tour
 
 lanes:
   vars:
-    # tui_tour_main in lane 0, tui_tour_lane1 in lane 1, in the one shared Postgres.
+    # example_tui_tour_main in lane 0, example_tui_tour_lane1 in lane 1, in the one shared Postgres.
     db_name: ${{ project.name | replace('-', '_') }}_${{ lane.name }}
     # Redis has 16 database indexes by default, enough for lanes 0 to 15.
     redis_db: "${{ lane.index }}"
 
 infra:
   compose: docker-compose.yml
-  # Fixed, so `docker compose -p tui-tour ...` reaches the shared containers.
-  project_name: tui-tour
+  # Fixed, so `docker compose -p example-tui-tour ...` reaches the shared containers.
+  project_name: ${{ project.name }}
   per_lane: [mailpit]
   hosts:
     mailpit: "mail.${{ lane.domain }}"
   # The setup group under infra in the TUI lists these; s on one runs it again.
   setup:
+    # Postgres has no CREATE DATABASE IF NOT EXISTS; \gexec runs the CREATE only when the
+    # SELECT returns a row, so running it again is safe.
     database: |
       printf '%s\n' "SELECT 'CREATE DATABASE ${{ lane.db_name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ lane.db_name }}') \gexec" |
         docker compose exec -T postgres psql -U postgres -v ON_ERROR_STOP=1
@@ -33,20 +35,19 @@ global_env:
   SMTP_URL: smtp://127.0.0.1:${{ infra.mailpit.ports['1025'] }}
 
 tasks:
+  # One npm install at the workspace root installs every app in a new worktree.
   install:
-    # npm install rather than npm ci: lanes added with `devlanes lane new` share
-    # this folder's node_modules, and ci would delete it under a running Vite.
-    run: [npm, install, --no-audit, --no-fund]
+    run: [npm, install]
     when: lane.create
   migrate:
     run_script:
-      file: package.json
-      name: migrate
+      file: apps/api/package.json
+      name: db:migrate
     when: lane.start
   seed:
     run_script:
-      file: package.json
-      name: seed
+      file: apps/api/package.json
+      name: db:seed
     when: lane.create
     # Seeds through the API, so it waits until api is ready.
     after: services
@@ -57,8 +58,8 @@ services:
   api:
     tags: [api]
     run_script:
-      file: package.json
-      name: api
+      file: apps/api/package.json
+      name: dev
     hosts: "api.${{ lane.domain }}"
     ready:
       http:
@@ -66,10 +67,11 @@ services:
 
   web:
     tags: [web]
+    # Adds --port, --strictPort and --host to `npm run dev`, which runs vite.
     preset: vite
     run_script:
-      file: package.json
-      name: web
+      file: apps/web/package.json
+      name: dev
     hosts: "${{ lane.domain }}"
     ready:
       http:
@@ -88,8 +90,8 @@ services:
   worker:
     tags: [worker]
     run_script:
-      file: package.json
-      name: worker
+      file: apps/worker/package.json
+      name: dev
     # No port to probe. Unanchored, because a ^ pattern misses the line under
     # the Windows pseudoterminal.
     ready:
@@ -99,9 +101,11 @@ services:
 
   flaky:
     tags: [jobs]
+    # Its dev script is `tsx` without watch: tsx watch would keep the process
+    # alive after the crash, and the unit would never fail.
     run_script:
-      file: package.json
-      name: flaky
+      file: apps/flaky/package.json
+      name: dev
     ready:
       log: "flaky ready:"
     # Only `devlanes start flaky`, s in the TUI or the everything profile start
