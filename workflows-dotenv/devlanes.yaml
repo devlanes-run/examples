@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: dotenv
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  # The one value the app needs per lane. urls.mjs derives the web, api and
+  # asset URLs and the cookie domain from it, so .env holds no URLs at all.
+  APP_DOMAIN: ${{ lane.domain }}
+  # .env is gitignored, so a new worktree has none. devlanes' own ${{ env.X }}
+  # already falls back to the primary worktree's .env; these two paths let the
+  # app find the same file when it reads .env itself.
+  DOTENV_ROOT: ${{ project.primary_path }}
+  LANE_PATH: ${{ lane.path }}
+  # devlanes never injects .env into processes. Each key a process needs is
+  # named here; a key missing from both .env and the shell fails the start.
+  ACME_API_TOKEN: ${{ env.ACME_API_TOKEN }}
+  FEATURE_FLAGS: ${{ env.FEATURE_FLAGS | default('') }}
+  # Optional: empty or missing turns Sentry off instead of failing the start.
+  SENTRY_DSN: ${{ env.SENTRY_DSN | default('') }}
+
+services:
+  web:
+    run_script:
+      file: package.json
+      name: web
+    hosts:
+      - ${{ lane.domain }}
+      - assets.${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+  api:
+    run_script:
+      file: package.json
+      name: api
+    hosts: api.${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz

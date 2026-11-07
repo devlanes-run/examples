@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: profiles-tags
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+# A service takes the colour of the first of its tags that has one, so every
+# service lists its category tag (api, web, worker, docs) first and its
+# selection tags after it.
+tags:
+  api: { color: cyan, description: HTTP APIs the web apps call }
+  web: { color: green, description: Pages people open in a browser }
+  worker: { color: magenta, description: Background processes without a port }
+  docs: { color: yellow, description: Documentation sites nobody needs on every start }
+  essential: { color: white, description: The smallest set that lets you use the shop }
+  auth: { color: blue, description: Sign-in and user accounts }
+  payments: { color: red, description: Invoices and payment providers }
+  catalog: { color: bright-cyan, description: Products and prices }
+  shop: { color: bright-green, description: The customer-facing storefront }
+  admin: { color: bright-blue, description: Back-office tools for staff }
+  email: { color: bright-magenta, description: Outgoing mail }
+
+templates:
+  # Every service runs the same server.mjs; ROLE decides what it does.
+  node:
+    run_script:
+      file: package.json
+      name: start
+  api:
+    extends: node
+    ready:
+      http:
+        path: /healthz
+    env:
+      ROLE: api
+      # Records live in a JSON file in the lane's data folder; the test profile
+      # points this at another file.
+      DATA_FILE: ${{ lane.data_path }}/${{ self.name }}.json
+  web:
+    extends: node
+    ready:
+      http:
+        path: /healthz
+    env:
+      ROLE: web
+      # url for the page's server-side fetch, public_url for the link it shows.
+      ACCOUNTS_API_URL: ${{ services.accounts_api.url }}
+      ACCOUNTS_API_PUBLIC_URL: ${{ services.accounts_api.public_url }}
+      BILLING_API_URL: ${{ services.billing_api.url }}
+      BILLING_API_PUBLIC_URL: ${{ services.billing_api.public_url }}
+      CATALOG_API_URL: ${{ services.catalog_api.url }}
+      CATALOG_API_PUBLIC_URL: ${{ services.catalog_api.public_url }}
+  worker:
+    extends: node
+    # No port to probe, so the start waits for this line.
+    ready:
+      log: "worker ready:"
+    # Workers do their job without inbound requests; a frozen lane would
+    # suspend the mailer along with everything else.
+    keep_awake: true
+    env:
+      ROLE: worker
+      DATA_FILE: ${{ lane.data_path }}/${{ self.name }}.json
+
+services:
+  accounts-api:
+    extends: api
+    tags: [api, essential, auth]
+    hosts: "accounts.${{ lane.domain }}"
+    env:
+      RECORDS: users
+  billing-api:
+    extends: api
+    tags: [api, payments]
+    hosts: "billing.${{ lane.domain }}"
+    env:
+      RECORDS: invoices
+  catalog-api:
+    extends: api
+    tags: [api, essential, catalog]
+    hosts: "catalog.${{ lane.domain }}"
+    env:
+      RECORDS: products
+  shop-web:
+    extends: web
+    tags: [web, essential, shop]
+    hosts: "${{ lane.domain }}"
+    env:
+      APIS: catalog-api,accounts-api
+  admin-web:
+    extends: web
+    tags: [web, admin]
+    hosts: "admin.${{ lane.domain }}"
+    env:
+      APIS: accounts-api,billing-api,catalog-api
+  mailer:
+    extends: worker
+    tags: [worker, essential, email]
+    env:
+      ACCOUNTS_API_URL: ${{ services.accounts_api.url }}
+  docs:
+    extends: node
+    # Shown in the TUI and in status instead of the key; commands still say docs.
+    name: Component docs
+    tags: [docs]
+    hosts: "docs.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+    # Only `devlanes start docs` (or +docs) starts it; globs such as * skip it.
+    autostart: false
+    env:
+      ROLE: docs
+
+profiles:
+  # The first plain `devlanes start`, and the next one after `devlanes stop`.
+  default: [+essential]
+  backend: [+api, +worker]
+  web: [+web]
+  # Everything with a page or an API. The glob skips docs (autostart: false).
+  all:
+    include: ["*"]
+    exclude: [+worker]
+  test:
+    include: [+essential]
+    # Same lane, other files: the dev records are still there after the run.
+    env:
+      DATA_FILE: ${{ lane.data_path }}/test/${{ self.name }}.json
+  attach:
+    include: [+web]
+    # Nothing to skip in this example; in a repository with containers this
+    # keeps the lane from starting its own databases.
+    infra: false
+    env:
+      ACCOUNTS_API_URL: ${{ lanes.main.services.accounts_api.url }}
+      ACCOUNTS_API_PUBLIC_URL: ${{ lanes.main.services.accounts_api.public_url }}
+      BILLING_API_URL: ${{ lanes.main.services.billing_api.url }}
+      BILLING_API_PUBLIC_URL: ${{ lanes.main.services.billing_api.public_url }}
+      CATALOG_API_URL: ${{ lanes.main.services.catalog_api.url }}
+      CATALOG_API_PUBLIC_URL: ${{ lanes.main.services.catalog_api.public_url }}

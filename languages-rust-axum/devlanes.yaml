@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: rust-axum
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+services:
+  web:
+    # cargo run --bin web. The Cargo.toml file also makes the platform rust,
+    # which sets SSL_CERT_FILE to the devlanes CA bundle.
+    # After editing src/, run `devlanes restart web` to rebuild and start it again.
+    run_script:
+      file: Cargo.toml
+      name: web
+    hosts: ${{ lane.domain }}
+    env:
+      # public_url on purpose: the call goes through the proxy over HTTPS, so
+      # reqwest has to trust the devlanes CA.
+      API_URL: ${{ services.api.public_url }}
+    ready:
+      http:
+        path: /healthz
+        # The first start compiles every dependency, and web and api share one
+        # target/ directory, so one of them waits for the other's build.
+        timeout: 10m
+
+  api:
+    run_script:
+      file: Cargo.toml
+      name: api
+    hosts: api.${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+        timeout: 10m

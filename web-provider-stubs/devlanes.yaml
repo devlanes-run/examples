@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: provider-stubs
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+# The stubs share a colour in the TUI and start or stop together as +stub.
+tags:
+  stub:
+    color: magenta
+    description: Fake third-party providers
+
+services:
+  api:
+    run_script:
+      file: package.json
+      name: api
+    hosts: api.${{ lane.domain }}
+    tags: [api]
+    ready:
+      http:
+        path: /healthz
+    env:
+      # In production these URLs point at the real providers. Here each lane's
+      # api reaches its own lane's stubs over HTTPS, so lane 1 never writes into
+      # lane 0's inbox. A profile's env or devlanes.local.yaml could point them
+      # elsewhere, such as a provider's sandbox.
+      SMS_API_URL: ${{ services.sms_stub.public_url }}
+      SMS_API_KEY: sms_test_key
+      EMAIL_API_URL: ${{ services.email_stub.public_url }}
+      EMAIL_API_KEY: email_test_key
+
+  sms-stub:
+    run_script:
+      file: package.json
+      name: sms-stub
+    hosts: sms.${{ lane.domain }}
+    tags: [stub]
+    ready:
+      http:
+        path: /healthz
+    env:
+      API_KEY: sms_test_key
+      APP_URL: ${{ services.api.public_url }}
+
+  email-stub:
+    run_script:
+      file: package.json
+      name: email-stub
+    hosts: mail.${{ lane.domain }}
+    tags: [stub]
+    ready:
+      http:
+        path: /healthz
+    env:
+      API_KEY: email_test_key
+      APP_URL: ${{ services.api.public_url }}

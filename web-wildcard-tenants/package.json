@@ -1,0 +1,15 @@
+{
+  "name": "web-wildcard-tenants",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "app": "node services/app.mjs",
+    "sites": "node services/sites.mjs",
+    "gateway": "node services/gateway.mjs",
+    "links": "node services/links.mjs"
+  }
+}

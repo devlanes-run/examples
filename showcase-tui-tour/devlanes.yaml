@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: tui-tour
+
+lanes:
+  vars:
+    # tui_tour_main in lane 0, tui_tour_lane1 in lane 1, in the one shared Postgres.
+    db_name: ${{ project.name | replace('-', '_') }}_${{ lane.name }}
+    # Redis has 16 database indexes by default, enough for lanes 0 to 15.
+    redis_db: "${{ lane.index }}"
+
+infra:
+  compose: docker-compose.yml
+  # Fixed, so `docker compose -p tui-tour ...` reaches the shared containers.
+  project_name: tui-tour
+  per_lane: [mailpit]
+  hosts:
+    mailpit: "mail.${{ lane.domain }}"
+  # The setup group under infra in the TUI lists these; s on one runs it again.
+  setup:
+    database: |
+      printf '%s\n' "SELECT 'CREATE DATABASE ${{ lane.db_name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ lane.db_name }}') \gexec" |
+        docker compose exec -T postgres psql -U postgres -v ON_ERROR_STOP=1
+    redis: docker compose exec -T redis redis-cli -n ${{ lane.redis_db }} SET lane:owner ${{ lane.name }}
+  teardown:
+    database: docker compose exec -T postgres dropdb -U postgres --if-exists --force ${{ lane.db_name }}
+    redis: docker compose exec -T redis redis-cli -n ${{ lane.redis_db }} FLUSHDB
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ infra.postgres.port }}/${{ lane.db_name }}
+  REDIS_URL: redis://127.0.0.1:${{ infra.redis.port }}/${{ lane.redis_db }}
+  SMTP_URL: smtp://127.0.0.1:${{ infra.mailpit.ports['1025'] }}
+
+tasks:
+  install:
+    # npm install rather than npm ci: lanes added with `devlanes lane new` share
+    # this folder's node_modules, and ci would delete it under a running Vite.
+    run: [npm, install, --no-audit, --no-fund]
+    when: lane.create
+  migrate:
+    run_script:
+      file: package.json
+      name: migrate
+    when: lane.start
+  seed:
+    run_script:
+      file: package.json
+      name: seed
+    when: lane.create
+    # Seeds through the API, so it waits until api is ready.
+    after: services
+    env:
+      API_URL: ${{ services.api.url }}
+
+services:
+  api:
+    tags: [api]
+    run_script:
+      file: package.json
+      name: api
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+
+  web:
+    tags: [web]
+    preset: vite
+    run_script:
+      file: package.json
+      name: web
+    hosts: "${{ lane.domain }}"
+    ready:
+      http:
+        path: /
+    env:
+      # These end up in the browser, so they are the https hostnames.
+      VITE_API_URL: ${{ services.api.public_url }}
+      VITE_MAIL_URL: https://mail.${{ lane.domain }}
+      VITE_PROJECT: ${{ project.name }}
+      VITE_LANE: ${{ lane.index }}
+      VITE_LANE_NAME: ${{ lane.name }}
+      VITE_LANE_LABEL: ${{ lane.label }}
+      VITE_SERVICE: ${{ self.name }}
+      VITE_PORT: ${{ self.port }}
+
+  worker:
+    tags: [worker]
+    run_script:
+      file: package.json
+      name: worker
+    # No port to probe. Unanchored, because a ^ pattern misses the line under
+    # the Windows pseudoterminal.
+    ready:
+      log: "worker ready:"
+    # No keep_awake: the worker waits on Redis without using CPU, so the lane
+    # can be throttled and frozen like any idle lane.
+
+  flaky:
+    tags: [jobs]
+    run_script:
+      file: package.json
+      name: flaky
+    ready:
+      log: "flaky ready:"
+    # Only `devlanes start flaky`, s in the TUI or the everything profile start
+    # it. It crashes about 20 seconds in, to show a failed unit.
+    autostart: false
+
+profiles:
+  default: [+api, +web, +worker]
+  backend: [+api, +worker]
+  # * skips services with autostart: false, so flaky is named.
+  everything: ["*", flaky]

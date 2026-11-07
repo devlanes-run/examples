@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+# A second project in the same worktree. Commands run anywhere under
+# apps/billing use this file, the nearest devlanes.yaml; everywhere else in the
+# example uses the root one. Relative paths below start at apps/billing.
+project: pnpm-billing
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # pnpm installs the whole workspace from any package in it, so this works
+  # whichever project starts first in a new worktree.
+  install:
+    run: [pnpm, install, --frozen-lockfile]
+    when: lane.create
+    timeout: 10m
+  # turbo run build --filter=@acme/billing^...: only the packages billing
+  # imports, @acme/config and @acme/ui.
+  build-deps:
+    run_script:
+      file: package.json
+      name: build-deps
+    when: lane.create
+
+services:
+  web:
+    run_script:
+      file: package.json
+      name: dev
+    hosts: "${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+    env:
+      MONOREPO_WEB_URL: ${{ projects.pnpm_monorepo.services.web.public_url | default('') }}

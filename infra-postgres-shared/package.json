@@ -1,0 +1,14 @@
+{
+  "name": "infra-postgres-shared",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "dev": "node server.mjs",
+    "migrate": "node migrate.mjs",
+    "seed": "node seed.mjs"
+  },
+  "dependencies": {
+    "pg": "8.23.1"
+  }
+}

@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: cloudflare-vite
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  install:
+    # npm install rather than npm ci: lanes added to this folder with
+    # `devlanes lane new` share node_modules, and ci would delete it under a
+    # running Vite.
+    run: [npm, install, --no-audit, --no-fund]
+    when: lane.create
+
+services:
+  web:
+    preset: vite
+    run_script:
+      file: package.json
+      name: dev
+    hosts:
+      - "${{ lane.domain }}"
+      # The Worker's DevTools inspector, which the plugin opens on its own port.
+      # Miniflare closes inspector WebSockets whose Host is not 127.0.0.1 or
+      # localhost, so the proxy sends the local address instead of this name.
+      - host: "inspect.${{ lane.domain }}"
+        port: inspector
+        host_header: upstream
+    ready:
+      http:
+        # Answered by the Worker, so the check waits for workerd as well as Vite.
+        path: /healthz
+    env:
+      # vite.config.js hands this to the plugin's inspectorPort. Without it the
+      # plugin takes 9229, or the next free port when another lane holds 9229,
+      # and inspect.<lane domain> has no allocated port to route to.
+      INSPECTOR_PORT: ${{ self.ports.inspector }}

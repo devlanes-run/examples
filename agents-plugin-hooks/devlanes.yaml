@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: agent-hooks
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+services:
+  api:
+    run_script:
+      file: package.json
+      name: api
+    hosts: api.${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+
+  web:
+    # The `dev` script is what an agent reaches for with `npm run dev &`. devlanes
+    # runs it here, and the hook in .claude/settings.json refuses the backgrounded copy.
+    run_script:
+      file: package.json
+      name: dev
+    hosts: ${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+    env:
+      # Server-side fetch, so no TLS or proxy hop.
+      API_URL: ${{ services.api.url }}

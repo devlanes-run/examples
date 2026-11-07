@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: plain-containers
+
+infra:
+  containers:
+    # One mock OIDC provider per lane, run from the image without a Compose file.
+    oidc:
+      image: ghcr.io/navikt/mock-oauth2-server:6.1.1
+      ports:
+        http: 8080
+      per_lane: true
+      env:
+        JSON_CONFIG_PATH: /config/oidc.json
+      volumes: ["./oidc.json:/config/oidc.json:ro"]
+      ready:
+        http:
+          path: /isalive
+    # One whoami for every lane: no per_lane, so all lanes read the same port.
+    whoami:
+      image: traefik/whoami:v1.11.0
+      ports:
+        http: 80
+      ready:
+        http:
+          path: /health
+  hosts:
+    # The provider builds its issuer from the Host header, so the browser and the
+    # app must both reach it on this name for the ID token's iss to match.
+    oidc: "auth.${{ lane.domain }}"
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  OIDC_ISSUER: https://auth.${{ lane.domain }}/default
+  OIDC_PORT: ${{ infra.oidc.ports.http }}
+  WHOAMI_URL: http://127.0.0.1:${{ infra.whoami.ports.http }}
+
+tasks:
+  install:
+    run: [npm, ci]
+    when: lane.create
+
+services:
+  web:
+    run_script:
+      file: package.json
+      name: dev
+    hosts: "${{ lane.domain }}"
+    env:
+      # The OIDC callback goes back to this lane's own hostname.
+      PUBLIC_URL: ${{ self.public_url }}
+    ready:
+      http:
+        path: /healthz

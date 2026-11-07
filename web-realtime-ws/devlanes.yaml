@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: realtime-ws
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # A new worktree has no node_modules.
+  install:
+    run: [npm, install, --no-audit, --no-fund]
+    when: lane.create
+
+services:
+  realtime:
+    run_script:
+      file: package.json
+      name: dev
+    env:
+      # Mentioning self.ports.<name> gives the service one more port per name, stable per lane.
+      WS_PORT: ${{ self.ports.ws }}
+      ADMIN_PORT: ${{ self.ports.admin }}
+    hosts:
+      # The main port serves the page, SSE on /events and a WebSocket on /ws.
+      # The proxy needs no setting for either.
+      - ${{ lane.domain }}
+      - host: ws.${{ lane.domain }}
+        port: ws
+      - host: admin.${{ lane.domain }}
+        port: admin
+    ready:
+      http:
+        path: /healthz

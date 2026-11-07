@@ -1,0 +1,12 @@
+{
+  "name": "infra-plain-containers",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "dev": "node server.mjs"
+  },
+  "dependencies": {
+    "openid-client": "6.8.9"
+  }
+}

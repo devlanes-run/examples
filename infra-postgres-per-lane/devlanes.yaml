@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: postgres-per-lane
+
+lanes:
+  vars:
+    # Lane 0 uses Redis database 0, lane 1 database 1, in the one shared Redis.
+    redis_db: ${{ lane.index }}
+
+infra:
+  compose: docker-compose.yml
+  # Names the shared project (Redis) after the example instead of the folder.
+  project_name: postgres-per-lane
+  # Each lane gets its own Postgres container, port and pgdata volume, in the
+  # Compose project postgres-per-lane-lane<N>. Redis is not listed, so it is shared.
+  per_lane: [postgres]
+  setup:
+    # Plain `docker compose` would target the shared project, where Postgres does not run.
+    schema: docker compose -p "$DEVLANES_COMPOSE_LANE_PROJECT" exec -T postgres psql -U postgres -d app -c "CREATE TABLE IF NOT EXISTS notes (id serial PRIMARY KEY, body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now())"
+  teardown:
+    # The Redis container outlives the lane, so lane clean empties the lane's database index.
+    redis: docker compose exec -T redis redis-cli -n ${{ lane.redis_db }} FLUSHDB
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  # infra.postgres.port is a different host port in every lane.
+  DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ infra.postgres.port }}/app
+  REDIS_URL: redis://127.0.0.1:${{ infra.redis.port }}/${{ lane.redis_db }}
+
+tasks:
+  install:
+    run: [npm, ci]
+    when: lane.create
+
+services:
+  api:
+    run_script:
+      file: package.json
+      name: dev
+    hosts: "${{ lane.domain }}"
+    env:
+      # Services do not get DEVLANES_COMPOSE_LANE_PROJECT, so the page builds
+      # the container name Compose gives the lane's Postgres.
+      POSTGRES_CONTAINER: ${{ project.name }}-lane${{ lane.index }}-postgres-1
+    ready:
+      http:
+        path: /healthz

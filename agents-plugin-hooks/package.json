@@ -1,0 +1,11 @@
+{
+  "name": "agent-hooks",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "dev": "node --watch web.mjs",
+    "api": "node --watch api.mjs",
+    "test": "node --test"
+  }
+}

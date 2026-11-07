@@ -1,0 +1,41 @@
+# Host entries for ~/.ssh/config on the laptop (%USERPROFILE%\.ssh\config on
+# Windows). Copy the block that matches how you reach the box and replace the
+# names and addresses. The Host name is what `devlanes remote connect` takes.
+# devlanes runs the system ssh, so anything else ssh supports (IdentityFile,
+# ProxyJump, certificates) works here too.
+
+# Plain SSH to a VPS with a public address.
+Host acme-box
+  HostName 203.0.113.10
+  User acme
+  # On a slow or high-latency link. It costs CPU on both machines and applies
+  # from the next connection (remote disconnect, then remote connect).
+  # Compression yes
+
+# Tailscale with MagicDNS. The full name and the Tailscale IP (100.x.y.z) work
+# whatever the client's DNS settings; the short name relies on the search
+# domain Tailscale adds.
+#
+# With Tailscale SSH, a policy rule with "action": "check" (the default rule of
+# a new tailnet) waits for a browser sign-in whose URL devlanes never shows.
+# Use an "accept" rule for this box and account, or run `ssh acme-tailnet true`
+# first, sign in, and connect within the rule's checkPeriod.
+Host acme-tailnet
+  HostName acme-box.example.ts.net
+  User acme
+
+# Cloudflare Tunnel with a published SSH application on ssh.example.com behind
+# Cloudflare Access.
+#
+# Write the full path to cloudflared: ssh runs as a child of the devlanes daemon
+# and sees the daemon's PATH, which may lack /opt/homebrew/bin. On Windows:
+#   ProxyCommand "C:\tools\cloudflared\cloudflared.exe" access ssh --hostname %h
+#
+# cloudflared needs an Access token, and the login URL it prints never reaches
+# `remote connect`. Get the token in a terminal first with
+# `ssh acme-cloudflare true`, and again once the session expires (24 hours by
+# default).
+Host acme-cloudflare
+  HostName ssh.example.com
+  User acme
+  ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h

@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: wildcard-tenants
+
+lanes:
+  vars:
+    # Tenant pages get a site of their own: wildcard-sites.localhost in lane 0,
+    # wildcard-sites1.localhost in lane 1. The app's cookie for the lane domain never reaches them.
+    sites_domain: ${{ domain('wildcard-sites') }}
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  SITES_DOMAIN: ${{ lane.sites_domain }}
+
+services:
+  app:
+    run_script: { file: package.json, name: app }
+    hosts: app.${{ lane.domain }}
+    ready:
+      http: { path: /healthz }
+
+  sites:
+    run_script: { file: package.json, name: sites }
+    # Quoted: an unquoted leading * is a YAML alias.
+    hosts: "*.${{ lane.sites_domain }}"
+    ready:
+      http: { path: /healthz }
+
+  gateway:
+    run_script: { file: package.json, name: gateway }
+    hosts:
+      # Catches every subdomain of the lane that no other route claims, exact or wildcard.
+      - host: "*.${{ lane.domain }}"
+        fallback: true
+    ready:
+      http: { path: /healthz }
+
+  links:
+    run_script: { file: package.json, name: links }
+    # An exact hostname, so it wins over the gateway's wildcard.
+    hosts: go.${{ lane.domain }}
+    ready:
+      http: { path: /healthz }

@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: pnpm-monorepo
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  # Lane values for the browser. Vite exposes VITE_* to the page in dev and
+  # copies them into the bundle on vite build, which is why turbo.json lists
+  # VITE_* in globalEnv. They sit here rather than on the web template so the
+  # build task below sees them too.
+  VITE_PROJECT: ${{ project.name }}
+  VITE_LANE: ${{ lane.index }}
+  VITE_LANE_NAME: ${{ lane.name }}
+  VITE_LANE_LABEL: ${{ lane.label }}
+  VITE_API_URL: ${{ services.api.public_url }}
+  VITE_WEB_URL: ${{ services.web.public_url }}
+  VITE_ADMIN_URL: ${{ services.admin.public_url }}
+  # pnpm-billing is the project in apps/billing/devlanes.yaml (the dash becomes
+  # an underscore here). Empty while none of its lanes runs.
+  VITE_BILLING_URL: ${{ projects.pnpm_billing.services.web.public_url | default('') }}
+
+tags:
+  api: { color: cyan, description: Node servers in apps/ }
+  web: { color: green, description: Vite apps in apps/ }
+
+tasks:
+  # A new worktree has no node_modules and no packages/*/dist; these two make
+  # `git worktree add` followed by `devlanes start` work. lane.create runs them
+  # until they succeed once per lane.
+  install:
+    run: [pnpm, install, --frozen-lockfile]
+    when: lane.create
+    timeout: 10m
+  build-deps:
+    run_script:
+      file: package.json
+      name: build-deps
+    when: lane.create
+  # On demand: devlanes run typecheck, devlanes run build.
+  typecheck:
+    run_script:
+      file: package.json
+      name: typecheck
+  build:
+    run_script:
+      file: package.json
+      name: build
+
+templates:
+  api:
+    tags: [api]
+    ready:
+      http:
+        path: /healthz
+  web:
+    preset: vite
+    tags: [web]
+    ready:
+      http:
+        path: /
+    env:
+      VITE_SERVICE: ${{ self.name }}
+      VITE_PORT: ${{ self.port }}
+
+services:
+  api:
+    extends: api
+    run_script:
+      file: apps/api/package.json
+      name: dev
+    hosts: "api.${{ lane.domain }}"
+  web:
+    extends: web
+    run_script:
+      file: apps/web/package.json
+      name: dev
+    hosts: "${{ lane.domain }}"
+  admin:
+    extends: web
+    run_script:
+      file: apps/admin/package.json
+      name: dev
+    hosts: "admin.${{ lane.domain }}"

@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/turbo/schema.json",
+  // Plain log lines: devlanes shows task output in its own logs and TUI.
+  "ui": "stream",
+  // devlanes.yaml sets the lane's URLs and index as VITE_* in global_env, and
+  // vite build copies them into the bundle. They must be part of the cache key,
+  // or lane 1's build would replay lane 0's cached bundle with lane 0's URLs.
+  "globalEnv": ["VITE_*"],
+  // devlanes sets DEVLANES_* on every task. turbo's strict env mode hides
+  // variables it is not told about, so pass them through for scripts that ask
+  // which lane they run in, but keep them out of the cache key: values such as
+  // DEVLANES_LANE_DATA differ per lane without changing what a build produces.
+  "globalPassThroughEnv": ["DEVLANES_*"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    }
+  }
+}

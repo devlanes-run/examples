@@ -1,0 +1,93 @@
+# Every port is published on loopback with an ephemeral host port; devlanes
+# reads the port back from `docker compose ps` and hands it to the lanes.
+services:
+  postgres:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports: ["127.0.0.1::5432"]
+    volumes: [pgdata:/var/lib/postgresql]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      retries: 30
+
+  redis:
+    image: redis:8.10.3-alpine
+    ports: ["127.0.0.1::6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.36.3-alpine
+    environment:
+      CLICKHOUSE_USER: app
+      CLICKHOUSE_PASSWORD: app
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports: ["127.0.0.1::8123"]
+    volumes: [chdata:/var/lib/clickhouse]
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8123/ping"]
+      interval: 2s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:4.3.7-management-alpine
+    # RabbitMQ keeps its data under the node name, which comes from the
+    # hostname; a fixed one lets a recreated container find its vhosts again.
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: app
+    ports: ["127.0.0.1::5672", "127.0.0.1::15672"]
+    volumes: [rabbitdata:/var/lib/rabbitmq]
+    healthcheck:
+      # `ping` passes as soon as the Erlang node answers, before RabbitMQ
+      # itself has started and rabbitmqctl can add a vhost.
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      retries: 30
+
+  # S3-compatible object store with a web console. MinIO's images are no
+  # longer published, so this example runs RustFS in its place.
+  rustfs:
+    image: rustfs/rustfs:1.0.4
+    environment:
+      RUSTFS_ACCESS_KEY: rustfsadmin
+      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports: ["127.0.0.1::9000", "127.0.0.1::9001"]
+    volumes: [s3data:/data]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health"]
+      interval: 2s
+      retries: 30
+
+  # S3 command line for infra.setup and infra.teardown, run with
+  # `docker compose run --rm rc ...`. The profile keeps it out of `up`.
+  rc:
+    image: rustfs/rc:v0.1.37
+    profiles: [tools]
+    environment:
+      RC_HOST_local: http://rustfsadmin:rustfsadmin@rustfs:9000
+
+  # Listed in infra.per_lane, so every lane runs its own copy.
+  mailpit:
+    image: axllent/mailpit:v1.33.0
+    ports: ["127.0.0.1::8025", "127.0.0.1::1025"]
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      retries: 30
+
+volumes:
+  pgdata:
+  redisdata:
+  chdata:
+  rabbitdata:
+  s3data:

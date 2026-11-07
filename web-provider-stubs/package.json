@@ -1,0 +1,11 @@
+{
+  "name": "provider-stubs",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "api": "node api.mjs",
+    "sms-stub": "node stub.mjs sms",
+    "email-stub": "node stub.mjs email"
+  }
+}

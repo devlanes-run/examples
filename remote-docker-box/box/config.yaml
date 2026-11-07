@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/user-schema.json
+# The box's ~/.devlanes/config.yaml. Its lanes take ports outside the client's default
+# pool (20000-32767), so the client mirrors them under the same numbers.
+ports:
+  range: 41000-41999

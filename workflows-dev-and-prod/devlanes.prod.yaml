@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+
+# A second project in this folder: the services of devlanes.yaml, always run
+# from the built code. Merged in this order, later files winning:
+# devlanes.yaml, devlanes.local.yaml, this file, devlanes.prod.local.yaml.
+extends: devlanes.yaml
+
+# Its own lanes, ports and hostnames: dev-and-prod-release.localhost in lane 0,
+# next to dev-and-prod.localhost from the same worktree.
+project: dev-and-prod-release
+
+global_env:
+  PROJECT_FILE: devlanes.prod.yaml
+
+tasks:
+  build:
+    # Lists replace, so this project builds on a plain start.
+    profiles: [default]
+
+profiles:
+  # Merges into devlanes.yaml's default profile: the include and APP_PROFILE
+  # stay, run_scripts is added and NODE_ENV is replaced.
+  default:
+    run_scripts:
+      dev: start
+    env:
+      NODE_ENV: production

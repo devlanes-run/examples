@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: postgres-shared
+
+lanes:
+  vars:
+    # One database per lane in the shared container: postgres_shared_main, postgres_shared_lane1.
+    db_name: ${{ project.name | replace('-', '_') }}_${{ lane.name }}
+
+infra:
+  compose: docker-compose.yml
+  # Fixed, so docker compose -p postgres-shared reaches the container outside devlanes.
+  project_name: postgres-shared
+  setup:
+    # Postgres has no CREATE DATABASE IF NOT EXISTS; \gexec runs the CREATE only when the
+    # SELECT returns a row, so running this again (reset-db, a new lane) is safe.
+    database: |
+      docker compose exec -T postgres psql -U postgres -v ON_ERROR_STOP=1 <<'SQL'
+      SELECT 'CREATE DATABASE ${{ lane.db_name }}'
+      WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ lane.db_name }}')\gexec
+      SQL
+  teardown:
+    # --force ends the API's open connections, so reset-db works while the lane runs.
+    database: docker compose exec -T postgres dropdb -U postgres --if-exists --force ${{ lane.db_name }}
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ infra.postgres.port }}/${{ lane.db_name }}
+
+tasks:
+  install:
+    run: npm ci
+    when: lane.create
+  migrate:
+    run_script:
+      file: package.json
+      name: migrate
+    when: lane.start
+  seed:
+    run_script:
+      file: package.json
+      name: seed
+    when: lane.create
+    # Seeds through the API, so it waits until api is ready.
+    after: services
+    env:
+      API_URL: ${{ services.api.url }}
+  reset-db:
+    steps: [infra.teardown.database, infra.setup.database, migrate, seed]
+    confirm: Drop ${{ lane.db_name }} and seed it again?
+
+services:
+  api:
+    run_script:
+      file: package.json
+      name: dev
+    hosts: ${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz

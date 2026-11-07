@@ -1,0 +1,14 @@
+{
+  "name": "mprocs-migration",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "api": "node --watch api.mjs",
+    "web": "node --watch web.mjs",
+    "worker": "node --watch worker.mjs",
+    "sms-stub": "node sms-stub.mjs",
+    "migrate": "node db/migrate.mjs",
+    "seed": "node db/seed.mjs"
+  }
+}

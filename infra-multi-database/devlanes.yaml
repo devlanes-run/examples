@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: multi-database
+
+lanes:
+  # One name per store and lane. Setup, teardown and global_env all read these,
+  # so the namespace a lane creates is the one its clean removes.
+  vars:
+    db_name: "app_${{ lane.name }}"
+    # Redis has 16 database indexes by default, so lanes 16 and up would need
+    # `databases` raised in the Redis config.
+    redis_db: "${{ lane.index }}"
+    ch_db: "app_${{ lane.name }}"
+    vhost: "app_${{ lane.name }}"
+    # S3 bucket names allow no underscores.
+    bucket: "app-${{ lane.name }}"
+
+infra:
+  compose: docker-compose.yml
+  # A fixed name, so `docker compose -p multi-database ...` reaches the shared
+  # containers from any folder.
+  project_name: multi-database
+  # Mail is the one store with nothing to namespace, so each lane gets its own
+  # Mailpit and inbox.
+  per_lane: [mailpit]
+  hosts:
+    rustfs: { host: "rustfs.${{ lane.domain }}", port: "9001" }
+    rabbitmq: { host: "rabbitmq.${{ lane.domain }}", port: "15672" }
+    clickhouse: "clickhouse.${{ lane.domain }}"
+    mailpit: "mail.${{ lane.domain }}"
+  # Postgres and Redis expose only a raw database port, and a machine connected
+  # with `devlanes remote connect` never mirrors hidden containers. Remove a
+  # name here to point a local psql or GUI client at the box's database.
+  hidden: [postgres, redis]
+
+  # Each entry runs once per lane after the containers are healthy, and each is
+  # safe to run again (`devlanes run infra.setup.<name>`).
+  setup:
+    postgres: |
+      printf '%s\n' "SELECT 'CREATE DATABASE ${{ lane.db_name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ lane.db_name }}') \gexec" |
+        docker compose exec -T postgres psql -U postgres -v ON_ERROR_STOP=1
+    # Marks the index as taken; the dashboard shows the key.
+    redis: docker compose exec -T redis redis-cli -n ${{ lane.redis_db }} SET lane:owner ${{ lane.name }}
+    clickhouse: docker compose exec -T clickhouse clickhouse-client --user app --password app -q "CREATE DATABASE IF NOT EXISTS ${{ lane.ch_db }}"
+    rabbitmq:
+      # await_startup covers a rerun that starts while the restarted node is
+      # still booting; add_vhost is a no-op for a vhost that exists.
+      run: |
+        docker compose exec -T rabbitmq rabbitmqctl await_startup &&
+        docker compose exec -T rabbitmq rabbitmqctl add_vhost ${{ lane.vhost }} &&
+        docker compose exec -T rabbitmq rabbitmqctl set_permissions -p ${{ lane.vhost }} app '.*' '.*' '.*'
+      # Vhosts live inside the RabbitMQ node; run again whenever the container
+      # restarts, in case it came back without them.
+      container: rabbitmq
+      timeout: 2m
+    s3: docker compose run --rm rc bucket create --ignore-existing --format human local/${{ lane.bucket }}
+
+  # Run by `devlanes lane clean`, never by `devlanes stop`.
+  teardown:
+    postgres: docker compose exec -T postgres dropdb -U postgres --if-exists --force ${{ lane.db_name }}
+    redis: docker compose exec -T redis redis-cli -n ${{ lane.redis_db }} FLUSHDB
+    clickhouse: docker compose exec -T clickhouse clickhouse-client --user app --password app -q "DROP DATABASE IF EXISTS ${{ lane.ch_db }}"
+    rabbitmq:
+      run: docker compose exec -T rabbitmq rabbitmqctl delete_vhost ${{ lane.vhost }}
+      # A vhost that is already gone is fine.
+      ignore_errors: true
+    s3:
+      run: docker compose run --rm rc bucket remove --force --format human local/${{ lane.bucket }}
+      ignore_errors: true
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  # One URL per store: host port of the shared container plus this lane's namespace.
+  DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ infra.postgres.port }}/${{ lane.db_name }}
+  REDIS_URL: redis://127.0.0.1:${{ infra.redis.port }}/${{ lane.redis_db }}
+  CLICKHOUSE_URL: http://app:app@127.0.0.1:${{ infra.clickhouse.port }}/${{ lane.ch_db }}
+  AMQP_URL: amqp://app:app@127.0.0.1:${{ infra.rabbitmq.ports['5672'] }}/${{ lane.vhost }}
+  S3_URL: http://rustfsadmin:rustfsadmin@127.0.0.1:${{ infra.rustfs.ports['9000'] }}/${{ lane.bucket }}
+  # Mailpit runs per lane, so these ports differ in every lane.
+  SMTP_URL: smtp://127.0.0.1:${{ infra.mailpit.ports['1025'] }}
+  MAILPIT_URL: http://127.0.0.1:${{ infra.mailpit.ports['8025'] }}
+
+tasks:
+  install:
+    run: npm install --no-audit --no-fund
+    when: lane.create
+
+services:
+  api:
+    run_script:
+      file: package.json
+      name: dev
+    hosts: ${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz

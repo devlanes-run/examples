@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+# basics-hello-node's devlanes.local.yaml in the box: what only the box adds.
+services:
+  admin:
+    run_script:
+      file: package.json
+      name: dev
+    hosts: "admin.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+    # Runs in the box only: clients never see it, mirror its port or route its hostname.
+    hidden: true
+  web:
+    # Each connected client gets its own copy of this folder while web runs.
+    sync:
+      - from: outbox

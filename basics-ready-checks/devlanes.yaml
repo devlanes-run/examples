@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: ready-checks
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  INDEX_URL: ${{ services.index.public_url }}
+
+# Every service runs the same server.mjs. What differs is its ready check and
+# the two variables the server reads: START_DELAY_MS and ALLOWED_HOST.
+templates:
+  node:
+    run_script:
+      file: package.json
+      name: dev
+
+services:
+  index:
+    extends: node
+    hosts: ${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+    env:
+      HTTP_CHECK_URL: ${{ services.http_check.public_url }}
+      TCP_CHECK_URL: ${{ services.tcp_check.public_url }}
+      LOG_CHECK_URL: ${{ services.log_check.public_url }}
+      OWN_HOST_URL: ${{ services.own_host.public_url }}
+      OWN_HOST_CMD_URL: ${{ services.own_host_cmd.public_url }}
+      LEGACY_HOST_URL: ${{ services.legacy_host.public_url }}
+      SLOW_START_URL: ${{ services.slow_start.public_url }}
+
+  http-check:
+    extends: node
+    hosts: http-check.${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+      # Short, so a wrong path fails after 15 s instead of the default 60 s.
+      timeout: 15s
+
+  tcp-check:
+    extends: node
+    hosts: tcp-check.${{ lane.domain }}
+    # Passes as soon as the socket is open. Services with hosts get this check
+    # when they set no ready at all.
+    ready:
+      tcp: true
+
+  log-check:
+    extends: node
+    hosts: log-check.${{ lane.domain }}
+    env:
+      START_DELAY_MS: 3000
+    # The server prints this line once it listens, after its 3 s warm-up.
+    ready:
+      log: listening on http://
+
+  own-host:
+    extends: node
+    hosts: own-host.${{ lane.domain }}
+    env:
+      ALLOWED_HOST: ${{ self.hosts[0] }}
+    # The app refuses any other Host, and the check's default Host is
+    # 127.0.0.1:<port>, so send the hostname instead.
+    ready:
+      http:
+        path: /healthz
+        host: ${{ self.hosts[0] }}
+
+  own-host-cmd:
+    extends: node
+    hosts: own-host-cmd.${{ lane.domain }}
+    env:
+      ALLOWED_HOST: ${{ self.hosts[0] }}
+    # The same check written as a command, for when the check needs more than
+    # a path and a Host header (another header, a client certificate, a script).
+    ready:
+      cmd: 'curl -fsS -H "Host: ${{ self.hosts[0] }}" ${{ self.url }}/healthz'
+
+  legacy-host:
+    extends: node
+    # The app accepts only its own address as Host, so the proxy sends
+    # 127.0.0.1:<port> instead of legacy-host.<lane domain>.
+    hosts:
+      host: legacy-host.${{ lane.domain }}
+      host_header: upstream
+    env:
+      ALLOWED_HOST: 127.0.0.1:${{ self.port }}
+    # The check already sends Host: 127.0.0.1:<port>, so it needs no host.
+    ready:
+      http:
+        path: /healthz
+
+  slow-start:
+    extends: node
+    hosts: slow-start.${{ lane.domain }}
+    env:
+      START_DELAY_MS: 8000
+    # devlanes start waits about 8 s for it; devlanes status shows it starting.
+    ready:
+      http:
+        path: /healthz

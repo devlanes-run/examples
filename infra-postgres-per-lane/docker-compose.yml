@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    ports: ["127.0.0.1::5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      # -h 127.0.0.1 so the check fails while the image's init server, which
+      # listens on the Unix socket only, is still running.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d app"]
+      interval: 2s
+      retries: 30
+
+  redis:
+    image: redis:8.2.11-alpine
+    ports: ["127.0.0.1::6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+
+volumes:
+  pgdata:

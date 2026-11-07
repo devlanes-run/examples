@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: hello-node
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+services:
+  web:
+    # npm comes from packageManager in package.json, so devlanes runs `npm run dev`.
+    run_script:
+      file: package.json
+      name: dev
+    # hello-node.localhost in lane 0, hello-node1.localhost in lane 1.
+    hosts: "${{ lane.domain }}"
+    # An open port is not enough: the start waits until the app itself answers.
+    ready:
+      http:
+        path: /healthz

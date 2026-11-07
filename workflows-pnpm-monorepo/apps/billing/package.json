@@ -1,0 +1,19 @@
+{
+  "name": "@acme/billing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.ts",
+    "build-deps": "turbo run build --filter=@acme/billing^...",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@acme/config": "workspace:*",
+    "@acme/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "workflows-queue-workers",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "api": "node api.mjs",
+    "worker": "node worker.mjs",
+    "cleanup": "node cleanup.mjs"
+  },
+  "dependencies": {
+    "redis": "6.3.1"
+  }
+}

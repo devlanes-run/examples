@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: python-fastapi
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # A new worktree has no .venv. This runs before the services on a lane's first start.
+  sync:
+    run: [uv, sync, --frozen]
+    when: lane.create
+
+services:
+  web:
+    # uvicorn is a tool, not a [project.scripts] entry, so this is a run string with the port as a flag.
+    # --proxy-headers makes request.url https behind the proxy; --reload-dir keeps the watcher out of .venv.
+    run: uv run uvicorn acme.web:app --host 127.0.0.1 --port ${{ self.port }} --reload --reload-dir acme --proxy-headers
+    hosts: "${{ lane.domain }}"
+    env:
+      # public_url on purpose: the point is an HTTPS call that trusts the devlanes CA through SSL_CERT_FILE.
+      QUOTES_URL: ${{ services.quotes.public_url }}
+    ready:
+      http:
+        path: /healthz
+        # Long enough for uv to sync the environment if uv.lock changed since the last start.
+        timeout: 3m
+
+  quotes:
+    # The python runner: `uv run quotes`, the entry point in [project.scripts].
+    run_script:
+      file: pyproject.toml
+      name: quotes
+    hosts: "quotes.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+        timeout: 3m

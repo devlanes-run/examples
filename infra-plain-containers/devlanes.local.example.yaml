@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+# Copy to devlanes.local.yaml (gitignored) to route a docs server only you run.
+infra:
+  external:
+    docs:
+      # Fixed, below ports.range, so no lane is ever given this port.
+      address: 127.0.0.1:4800
+      hosts: "docs.${{ lane.domain }}"

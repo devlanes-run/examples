@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "gateway",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./public" },
+  // wrangler dev finds the worker named "catalog" in the dev registry, which
+  // devlanes keeps per lane.
+  "services": [{ "binding": "CATALOG", "service": "catalog" }],
+  "dev": {
+    "ip": "127.0.0.1"
+  }
+}

@@ -1,0 +1,33 @@
+# Reference only. Fixed names to fixed host ports, one block per slot that
+# scripts/slot.sh hands out. A new slot meant new blocks here and a Caddy reload.
+{
+	local_certs
+}
+
+# slot 0
+acme.localhost {
+	reverse_proxy host.docker.internal:3000
+}
+api.acme.localhost {
+	reverse_proxy host.docker.internal:4000
+}
+# Never slotted: the stub's port is fixed.
+sms.acme.localhost {
+	reverse_proxy host.docker.internal:4010
+}
+
+# slot 1
+s1.acme.localhost {
+	reverse_proxy host.docker.internal:3100
+}
+api.s1.acme.localhost {
+	reverse_proxy host.docker.internal:4100
+}
+
+# slot 2
+s2.acme.localhost {
+	reverse_proxy host.docker.internal:3200
+}
+api.s2.acme.localhost {
+	reverse_proxy host.docker.internal:4200
+}

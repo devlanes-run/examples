@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: frontend-api
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  install:
+    # npm install rather than npm ci: lanes added to this folder with
+    # `devlanes lane new` share web/node_modules, and ci would delete it under a
+    # running Vite.
+    run: [npm, install, --no-audit, --no-fund]
+    cwd: web
+    when: lane.create
+
+services:
+  api:
+    run_script:
+      file: api/package.json
+      name: dev
+    # api.frontend-api.localhost in lane 0: a sibling of the page's host, so both
+    # share the site frontend-api.localhost.
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+    env:
+      # The cookie's Domain=. The API reads DEVLANES_ORIGINS, which devlanes sets
+      # on every service, for its CORS allow-list.
+      COOKIE_DOMAIN: ${{ lane.domain }}
+
+  web:
+    preset: vite
+    run_script:
+      file: web/package.json
+      name: dev
+    hosts: "${{ lane.domain }}"
+    ready:
+      http:
+        path: /
+    env:
+      # Ends up in the browser, so it is the https hostname.
+      VITE_API_URL: ${{ services.api.public_url }}
+      # Used by Vite's server.proxy on this machine, so it is http://127.0.0.1:<port>.
+      API_PROXY_TARGET: ${{ services.api.url }}
+      VITE_PROJECT: ${{ project.name }}
+      VITE_LANE: ${{ lane.index }}
+      VITE_LANE_NAME: ${{ lane.name }}
+      VITE_LANE_LABEL: ${{ lane.label }}
+      VITE_SERVICE: ${{ self.name }}
+      VITE_PORT: ${{ self.port }}

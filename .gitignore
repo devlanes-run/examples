@@ -1,0 +1,14 @@
+node_modules/
+target/
+.venv/
+__pycache__/
+dist/
+.next/
+.wrangler/
+.turbo/
+.env
+.env.*
+!.env.example
+devlanes.local.yaml
+*.local.yaml
+.DS_Store

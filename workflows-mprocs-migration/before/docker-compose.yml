@@ -1,0 +1,16 @@
+# Reference only. The one container the mprocs setup ran: Caddy in front of
+# the processes on the host, with HTTPS from its own local CA.
+services:
+  caddy:
+    image: caddy:2.10.2
+    ports:
+      - "80:80"
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+
+volumes:
+  caddy-data:

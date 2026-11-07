@@ -1,0 +1,49 @@
+# Reference only: the setup ../devlanes.yaml replaces. Started through
+# scripts/slot.sh, which exports the worktree's ports and URLs and then runs
+# `mprocs --config before/mprocs.yaml` from the example folder.
+procs:
+  docker-up:
+    # Only Caddy (docker-compose.yml), which needs Docker Desktop running.
+    cmd: [docker, compose, up, -d]
+    cwd: <CONFIG_DIR>
+  docker-down:
+    cmd: [docker, compose, down]
+    cwd: <CONFIG_DIR>
+    autostart: false
+
+  migrate:
+    shell: npm run migrate
+    cwd: <CONFIG_DIR>/..
+    autostart: false
+  seed:
+    shell: npm run seed
+    cwd: <CONFIG_DIR>/..
+    autostart: false
+
+  api:
+    # Reads API_PORT (4000 when unset); slot.sh exports it.
+    shell: npm run api
+    cwd: <CONFIG_DIR>/..
+    autorestart: true
+  web:
+    shell: PORT=${WEB_PORT:-3000} API_URL=${API_PUBLIC_URL:-https://api.acme.localhost} npm run web
+    cwd: <CONFIG_DIR>/..
+    env:
+      # Caddy's root certificate, copied out of its container, was imported
+      # into the OS trust store by hand. Node reads that store only with this
+      # flag, and web fetched the api through Caddy.
+      NODE_OPTIONS: --use-system-ca
+  worker:
+    shell: npm run worker
+    cwd: <CONFIG_DIR>/..
+    autorestart: true
+    deps: [api]
+  sms-stub:
+    # Clients outside this repository post to 127.0.0.1:4010, so slot.sh never
+    # moves it and only one worktree at a time can run it.
+    shell: PORT=4010 npm run sms-stub
+    cwd: <CONFIG_DIR>/..
+
+  btop:
+    cmd: [btop]
+    autostart: false

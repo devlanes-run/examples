@@ -1,0 +1,82 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: wrangler-workers
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+lanes:
+  # workerd sends *.localhost to DNS instead of answering it with loopback, so
+  # the gateway's fetch to https://catalog.<lane domain> needs the names in
+  # /etc/hosts. devlanes writes them on macOS and Linux once `devlanes setup`
+  # has installed its helper. On Windows devlanes never writes the hosts file,
+  # so this key changes nothing there; Windows 11 resolves *.localhost itself.
+  # The service binding needs no hostname at all.
+  hosts_file: always
+
+tasks:
+  # npm install rather than npm ci: lanes added with `devlanes lane new` share
+  # this folder's node_modules, and ci would delete it under a running wrangler.
+  install:
+    steps: [install-gateway, install-catalog]
+    when: lane.create
+  install-gateway:
+    run: [npm, install, --no-audit, --no-fund]
+    cwd: gateway
+  install-catalog:
+    run: [npm, install, --no-audit, --no-fund]
+    cwd: catalog
+
+templates:
+  worker:
+    preset: wrangler
+    ready:
+      http:
+        path: /healthz
+        # wrangler dev bundles the worker and boots workerd before /healthz
+        # answers; a first start on a cold machine may pass the default 60s.
+        timeout: 180s
+    wrangler:
+      # Workers do not see the process environment. These become --var flags,
+      # so each worker reads them from env.
+      vars:
+        DEVLANES_LANE_PROJECT: ${{ project.name }}
+        DEVLANES_LANE: ${{ lane.index }}
+        DEVLANES_LANE_NAME: ${{ lane.name }}
+        DEVLANES_SERVICE: ${{ self.name }}
+        LANE_LABEL: ${{ lane.label }}
+        LANE_DOMAIN: ${{ lane.domain }}
+        PORT: ${{ self.port }}
+      # KV state goes to the lane data folder instead of .wrangler/ in the
+      # worker's folder, so two lanes of one folder keep separate counters.
+      args: [--persist-to, "${{ lane.data_path }}/wrangler/${{ self.name }}"]
+
+services:
+  gateway:
+    extends: worker
+    run_script:
+      file: gateway/package.json
+      name: dev
+    wrangler:
+      vars:
+        PUBLIC_BASE_URL: ${{ self.public_url }}
+        CATALOG_URL: ${{ services.catalog.public_url }}
+    hosts:
+      - ${{ lane.domain }}
+      # Wrangler's DevTools endpoint, on the inspector port the preset
+      # allocates. Wrangler refuses a DevTools WebSocket whose Host header is
+      # not localhost or 127.0.0.1, so the proxy sends the local address.
+      - host: inspect-gateway.${{ lane.domain }}
+        port: inspector
+        host_header: upstream
+
+  catalog:
+    extends: worker
+    run_script:
+      file: catalog/package.json
+      name: dev
+    hosts:
+      - catalog.${{ lane.domain }}
+      - host: inspect-catalog.${{ lane.domain }}
+        port: inspector
+        host_header: upstream

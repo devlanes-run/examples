@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: dev-and-prod
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  # Shown on the pages; devlanes.prod.yaml sets its own.
+  PROJECT_FILE: devlanes.yaml
+  # vite build writes here and vite preview serves from here. The lane data
+  # folder belongs to one lane of one project, so the prod profile, a second
+  # lane and the dev-and-prod-release project never share a build.
+  WEB_OUT_DIR: ${{ lane.data_path }}/web-dist
+
+tasks:
+  install:
+    # npm install rather than npm ci: every lane and both projects of this
+    # folder share web/node_modules, and ci would delete it under a running Vite.
+    # --include=dev because profile env reaches tasks too, and npm leaves out
+    # devDependencies such as vite when NODE_ENV is production.
+    run: [npm, install, --include=dev, --no-audit, --no-fund]
+    cwd: web
+    when: lane.create
+  build:
+    run_script:
+      file: web/package.json
+      name: build
+    when: lane.start
+    # Only `devlanes start --profile prod` builds; the dev servers need no build.
+    profiles: [prod]
+
+services:
+  api:
+    run_script:
+      file: api/package.json
+      name: dev
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+
+  web:
+    preset: vite
+    run_script:
+      file: web/package.json
+      name: dev
+    hosts: "${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+    env:
+      API_PUBLIC_URL: ${{ services.api.public_url }}
+
+profiles:
+  # Globs skip services with `autostart: false`, so devlanes.local.yaml can turn
+  # one off without editing this list.
+  default:
+    include: ["*"]
+    env:
+      NODE_ENV: development
+      APP_PROFILE: default
+  # The same services in the same lane, run from the built code.
+  prod:
+    include: ["*"]
+    # Services whose run_script names dev run start from the same package.json:
+    # `node server.mjs` for api, `vite preview` for web.
+    run_scripts:
+      dev: start
+    env:
+      NODE_ENV: production
+      APP_PROFILE: prod

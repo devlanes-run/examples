@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: next-app
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+services:
+  web:
+    # The preset appends `-- --port <port> --hostname 127.0.0.1` to `npm run dev`,
+    # so the script stays a plain `next dev`.
+    preset: next
+    run_script:
+      file: package.json
+      name: dev
+    env:
+      # The page fetches both: public_url goes through the HTTPS proxy, url
+      # goes straight to the api's port.
+      API_PUBLIC_URL: ${{ services.api.public_url }}
+      API_URL: ${{ services.api.url }}
+    hosts: "${{ lane.domain }}"
+    # next dev compiles a route on its first request, so give it time.
+    ready:
+      http:
+        path: /healthz
+        timeout: 120s
+
+  api:
+    run_script:
+      file: package.json
+      name: api
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz

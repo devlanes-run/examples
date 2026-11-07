@@ -1,0 +1,9 @@
+{
+  "name": "hello-node",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "dev": "node --watch server.mjs"
+  }
+}

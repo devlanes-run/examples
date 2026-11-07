@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: queue-workers
+
+lanes:
+  vars:
+    # One Redis serves every lane; the key prefix keeps each lane's queue apart.
+    queue_prefix: jobs:${{ lane.name }}
+
+infra:
+  compose: docker-compose.yml
+  project_name: queue-workers
+  teardown:
+    # Redis outlives the lane, so lane clean deletes only this lane's keys.
+    queue: docker compose exec -T redis sh -c "redis-cli --scan --pattern '${{ lane.queue_prefix }}:*' | xargs -r redis-cli del"
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+  REDIS_URL: redis://127.0.0.1:${{ infra.redis.port }}
+  QUEUE_PREFIX: ${{ lane.queue_prefix }}
+
+tasks:
+  install:
+    run: [npm, ci]
+    when: lane.create
+  # A cron-like job is a task, run on demand; a service that exits shows as failed.
+  cleanup:
+    run_script:
+      file: package.json
+      name: cleanup
+
+services:
+  api:
+    run_script:
+      file: package.json
+      name: api
+    hosts: "${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+
+  worker:
+    run_script:
+      file: package.json
+      name: worker
+    # Two units, worker.1 and worker.2, consuming the same lane queue.
+    replicas: 2
+    env:
+      WORKER_ID: ${{ replica.index }}
+    # No port to probe, so wait for the line the worker prints once connected.
+    ready:
+      log: worker ${{ replica.index }} ready
+    pty: false
+    # A worker gets no requests, so without this its lane would freeze after
+    # lanes.freeze_after and stop taking jobs.
+    keep_awake: true
+    # The worker finishes its in-flight job on SIGINT; 15s covers a 2s job.
+    stop:
+      signal: SIGINT
+      timeout: 15s
+    tags: [worker]

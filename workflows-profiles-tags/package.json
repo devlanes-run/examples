@@ -1,0 +1,9 @@
+{
+  "name": "profiles-tags",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}
