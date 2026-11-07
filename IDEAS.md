@@ -35,5 +35,5 @@ These need something devlanes plans but does not ship today.
 ## Repository
 
 - `e2e/`: a harness that runs every `ready` example on each devlanes release. The devlanes e2e crate has the pieces to reuse: a short `DEVLANES_HOME` per test, a `config.yaml` that pins `ports.range` and proxy ports, `curl --resolve --cacert` against the hostnames, and cleanup by PID and Compose project.
-- CI on pull requests plus Dependabot (or Renovate) for npm, Cargo, uv, Docker image tags and GitHub Actions, so pinned versions stay current, with CI running the examples a bump touches.
+- CI on pull requests running `./format.sh --check` and `./build.sh`, plus Dependabot (or Renovate) for npm, Cargo, uv, Docker image tags and GitHub Actions, so pinned versions stay current, with CI building the examples a bump touches.
 - A minimum devlanes version per example, checked by the e2e harness.

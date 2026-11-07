@@ -1,0 +1,18 @@
+# Dependencies, build output and generated files
+node_modules/
+dist/
+target/
+.venv/
+.next/
+.wrangler/
+.turbo/
+devlanes-logs/
+package-lock.json
+pnpm-lock.yaml
+uv.lock
+Cargo.lock
+worker-configuration.d.ts
+
+# Each example's brand/ links to _internal/brand, which is formatted once there.
+*/brand/
+*/**/brand/

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "devlanes examples catalog",
+  "type": "object",
+  "required": ["examples"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "examples": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/example" }
+    }
+  },
+  "$defs": {
+    "example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slug",
+        "title",
+        "description",
+        "category",
+        "languages",
+        "frameworks",
+        "features",
+        "requires",
+        "status"
+      ],
+      "properties": {
+        "slug": {
+          "description": "The example's folder name.",
+          "type": "string",
+          "pattern": "^[a-z]+(-[a-z0-9]+)+$"
+        },
+        "title": {
+          "description": "Sentence-case title, as in the example's README heading.",
+          "type": "string",
+          "maxLength": 60
+        },
+        "description": {
+          "description": "One sentence on what the example teaches, for the docs examples page.",
+          "type": "string",
+          "maxLength": 200
+        },
+        "category": {
+          "enum": [
+            "basics",
+            "web",
+            "languages",
+            "frameworks",
+            "infra",
+            "workflows",
+            "showcase",
+            "remote"
+          ]
+        },
+        "languages": {
+          "description": "Languages a reader sees in the example's code, most important first.",
+          "type": "array",
+          "items": {
+            "enum": ["typescript", "javascript", "python", "rust", "shell", "go", "deno"]
+          }
+        },
+        "frameworks": {
+          "description": "Frameworks and notable tools, lowercase (hono, react, vite, next, fastapi, axum, wrangler, docker-compose).",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "features": {
+          "description": "devlanes config keys and commands the example teaches, as written in devlanes.yaml or on the command line.",
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "requires": {
+          "description": "Tools a reader needs besides devlanes and Git.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "status": {
+          "description": "ready once the example runs as its README describes.",
+          "enum": ["ready", "planned"]
+        }
+      }
+    }
+  }
+}

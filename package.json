@@ -1,0 +1,18 @@
+{
+  "name": "devlanes-examples",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "format": "./format.sh",
+    "build": "./build.sh",
+    "catalog": "node _internal/scripts/catalog.ts"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10",
+    "prettier-plugin-sh": "0.20.2"
+  }
+}

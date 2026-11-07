@@ -1,0 +1,447 @@
+{
+  "$schema": "./_internal/catalog.schema.json",
+  "examples": [
+    {
+      "slug": "basics-hello-node",
+      "title": "Hello Node",
+      "description": "Run one TypeScript server per worktree: devlanes gives it a port, an HTTPS hostname and a ready check.",
+      "category": "basics",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": ["run_script", "hosts", "ready.http", "tasks.when: lane.create", "global_env"],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "basics-ready-checks",
+      "title": "Ready checks",
+      "description": "Pick the right ready check for each service: http, tcp, log and cmd, including apps that answer only on their own hostname.",
+      "category": "basics",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": [
+        "ready.http",
+        "ready.tcp",
+        "ready.log",
+        "ready.cmd",
+        "ready.http.host",
+        "hosts.host_header",
+        "devlanes debug why",
+        "devlanes wait"
+      ],
+      "requires": ["node", "curl"],
+      "status": "ready"
+    },
+    {
+      "slug": "web-frontend-api",
+      "title": "Frontend and API",
+      "description": "Connect a React frontend to its API per lane: public_url for the browser, url for server-to-server calls, CORS from DEVLANES_ORIGINS and a cookie on the lane domain.",
+      "category": "web",
+      "languages": ["typescript"],
+      "frameworks": ["react", "vite", "hono"],
+      "features": [
+        "preset: vite",
+        "services.<name>.public_url",
+        "services.<name>.url",
+        "DEVLANES_ORIGINS"
+      ],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "web-next-app",
+      "title": "Next.js app",
+      "description": "Run Next.js per lane with the next preset, and fetch an HTTPS sibling from a server component without TLS workarounds.",
+      "category": "web",
+      "languages": ["typescript"],
+      "frameworks": ["next", "react", "hono"],
+      "features": [
+        "preset: next",
+        "NODE_EXTRA_CA_CERTS",
+        "services.<name>.public_url",
+        "services.<name>.url"
+      ],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "web-realtime-ws",
+      "title": "WebSockets and SSE",
+      "description": "Serve WebSockets and server-sent events through the proxy, with extra named ports routed to their own hostnames.",
+      "category": "web",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": ["self.ports.<name>", "hosts[].port", "devlanes debug freeze"],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "web-wildcard-tenants",
+      "title": "Wildcard tenants",
+      "description": "Serve tenant subdomains on a site with its own cookies, behind a fallback wildcard gateway and an exact short-link host.",
+      "category": "web",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": ["hosts wildcard", "hosts.fallback", "domain()", "lanes.vars"],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "web-provider-stubs",
+      "title": "Provider stubs",
+      "description": "Replace third-party SMS and email providers with local fakes per lane, so each lane's messages land in its own inbox.",
+      "category": "web",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": ["services.<name>.public_url", "tags", "devlanes stop"],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "languages-python-fastapi",
+      "title": "Python and FastAPI",
+      "description": "Run FastAPI under uv behind the HTTPS proxy, with forwarded headers, Jinja pages and HTTPS calls trusted through SSL_CERT_FILE.",
+      "category": "languages",
+      "languages": ["python"],
+      "frameworks": ["fastapi", "uvicorn", "jinja"],
+      "features": [
+        "run",
+        "run_script (pyproject.toml)",
+        "platform: python",
+        "SSL_CERT_FILE",
+        "DEVLANES_ORIGINS"
+      ],
+      "requires": ["uv"],
+      "status": "ready"
+    },
+    {
+      "slug": "languages-rust-axum",
+      "title": "Rust and axum",
+      "description": "Run Rust services with run_script on Cargo.toml, a ready timeout for the first build, and reqwest trusting the devlanes CA.",
+      "category": "languages",
+      "languages": ["rust"],
+      "frameworks": ["axum", "tokio", "reqwest"],
+      "features": ["run_script (Cargo.toml)", "ready.http.timeout", "SSL_CERT_FILE"],
+      "requires": ["rust"],
+      "status": "ready"
+    },
+    {
+      "slug": "languages-polyglot",
+      "title": "Polyglot lane",
+      "description": "Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.",
+      "category": "languages",
+      "languages": ["typescript", "python", "rust", "deno"],
+      "frameworks": [],
+      "features": ["run_script", "platform"],
+      "requires": ["node", "bun", "deno", "uv", "rust", "just", "make"],
+      "status": "planned"
+    },
+    {
+      "slug": "frameworks-wrangler-workers",
+      "title": "Cloudflare Workers",
+      "description": "Run two Workers per lane with the wrangler preset: a service binding resolved through the lane's own dev registry, KV state in the lane data folder and inspector hostnames.",
+      "category": "frameworks",
+      "languages": ["typescript"],
+      "frameworks": ["wrangler", "hono"],
+      "features": [
+        "preset: wrangler",
+        "wrangler.vars",
+        "wrangler.args",
+        "lane.data_path",
+        "lanes.hosts_file"
+      ],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "frameworks-cloudflare-vite",
+      "title": "Cloudflare Vite plugin",
+      "description": "Run a React app and a Worker in one Vite server per lane, with the inspector port and persisted state taken from devlanes.",
+      "category": "frameworks",
+      "languages": ["typescript"],
+      "frameworks": ["vite", "react", "cloudflare-vite-plugin", "hono"],
+      "features": ["preset: vite", "self.ports.<name>", "hosts.host_header", "DEVLANES_LANE_DATA"],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "frameworks-tauri-desktop",
+      "title": "Tauri desktop app",
+      "description": "Run a Tauri 2 app per lane with its own identifier per lane and replica, against a Vite frontend devlanes runs.",
+      "category": "frameworks",
+      "languages": ["typescript", "rust"],
+      "frameworks": ["tauri", "vite"],
+      "features": ["preset: tauri", "replicas", "replica.index"],
+      "requires": ["node", "rust", "tauri"],
+      "status": "planned"
+    },
+    {
+      "slug": "infra-postgres-shared",
+      "title": "Shared Postgres",
+      "description": "Share one Postgres container between lanes with a database per lane, and run setup, migrations, seeds and resets at the right lane events.",
+      "category": "infra",
+      "languages": ["typescript"],
+      "frameworks": ["hono", "docker-compose", "postgres"],
+      "features": [
+        "infra.compose",
+        "infra.setup",
+        "infra.teardown",
+        "lanes.vars",
+        "tasks.when",
+        "tasks.after",
+        "tasks.steps",
+        "tasks.confirm"
+      ],
+      "requires": ["node", "docker"],
+      "status": "ready"
+    },
+    {
+      "slug": "infra-postgres-per-lane",
+      "title": "Postgres per lane",
+      "description": "Give each lane its own Postgres container next to a shared Redis, and remove a lane's container and volume with lane clean.",
+      "category": "infra",
+      "languages": ["typescript"],
+      "frameworks": ["hono", "docker-compose", "postgres", "redis"],
+      "features": [
+        "infra.per_lane",
+        "DEVLANES_COMPOSE_LANE_PROJECT",
+        "devlanes lane clean",
+        "devlanes debug freeze"
+      ],
+      "requires": ["node", "docker"],
+      "status": "ready"
+    },
+    {
+      "slug": "infra-multi-database",
+      "title": "Many datastores",
+      "description": "Set up and tear down Postgres, Redis, ClickHouse, RabbitMQ, an S3 store and Mailpit, each namespaced per lane or run per lane.",
+      "category": "infra",
+      "languages": ["typescript"],
+      "frameworks": [
+        "hono",
+        "docker-compose",
+        "postgres",
+        "redis",
+        "clickhouse",
+        "rabbitmq",
+        "rustfs",
+        "mailpit"
+      ],
+      "features": [
+        "infra.setup",
+        "infra.teardown",
+        "infra.per_lane",
+        "infra.hosts",
+        "infra.hidden",
+        "lanes.vars"
+      ],
+      "requires": ["node", "docker"],
+      "status": "ready"
+    },
+    {
+      "slug": "infra-plain-containers",
+      "title": "Plain containers",
+      "description": "Run containers without Compose, such as a mock OIDC provider per lane, and route a server you start yourself with infra.external.",
+      "category": "infra",
+      "languages": ["typescript"],
+      "frameworks": ["hono", "docker"],
+      "features": [
+        "infra.containers",
+        "infra.hosts",
+        "infra.external",
+        "devlanes.local.yaml",
+        "devlanes exec"
+      ],
+      "requires": ["node", "docker"],
+      "status": "ready"
+    },
+    {
+      "slug": "workflows-profiles-tags",
+      "title": "Profiles and tags",
+      "description": "Organise many services with tags, colours, templates and profiles, including a test profile and one that attaches to lane 0's APIs.",
+      "category": "workflows",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": [
+        "tags",
+        "templates",
+        "extends",
+        "profiles",
+        "autostart",
+        "keep_awake",
+        "lanes.main.services"
+      ],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "workflows-queue-workers",
+      "title": "Queue workers",
+      "description": "Run port-less worker replicas that finish their job on stop, keep their lane awake and share a queue namespaced per lane.",
+      "category": "workflows",
+      "languages": ["typescript"],
+      "frameworks": ["hono", "docker-compose", "redis"],
+      "features": ["replicas", "replica.index", "ready.log", "keep_awake", "stop.signal", "pty"],
+      "requires": ["node", "docker"],
+      "status": "ready"
+    },
+    {
+      "slug": "workflows-pnpm-monorepo",
+      "title": "pnpm monorepo",
+      "description": "Run a pnpm and turbo workspace with a service per package, build steps at lane creation and a subdirectory project with its own lanes.",
+      "category": "workflows",
+      "languages": ["typescript"],
+      "frameworks": ["pnpm", "turbo", "react", "vite", "hono"],
+      "features": [
+        "run_script",
+        "templates",
+        "tasks.when: lane.create",
+        "projects.<name>.services",
+        "devlanes -p"
+      ],
+      "requires": ["node", "pnpm"],
+      "status": "ready"
+    },
+    {
+      "slug": "workflows-dev-and-prod",
+      "title": "Dev and prod",
+      "description": "Switch a lane between dev servers and a production build with a profile, run a second project file beside it, and keep personal changes in devlanes.local.yaml.",
+      "category": "workflows",
+      "languages": ["typescript"],
+      "frameworks": ["react", "vite", "hono"],
+      "features": [
+        "profiles",
+        "run_scripts",
+        "extends",
+        "devlanes --file",
+        "devlanes.local.yaml",
+        "devlanes debug config"
+      ],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "workflows-dotenv",
+      "title": "Env files",
+      "description": "Feed values from a gitignored .env into named variables, share it with new worktrees, and derive every URL from one domain root.",
+      "category": "workflows",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": ["env.<NAME>", "project.primary_path", "global_env", "devlanes reload"],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "workflows-mprocs-migration",
+      "title": "Migrating from mprocs",
+      "description": "Replace mprocs, Caddy and a hand-made port-slot script with devlanes, item by item.",
+      "category": "workflows",
+      "languages": ["typescript", "shell"],
+      "frameworks": ["hono", "mprocs", "caddy"],
+      "features": ["profiles", "tasks", "hosts", "self.port"],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "workflows-ci-with",
+      "title": "Tests in CI",
+      "description": "Start a lane, run tests against its HTTPS URLs and stop it again with devlanes with, locally and in GitHub Actions.",
+      "category": "workflows",
+      "languages": ["typescript"],
+      "frameworks": ["hono", "node:test", "github-actions"],
+      "features": [
+        "devlanes with",
+        "DEVLANES_PUBLIC_URL_<SERVICE>",
+        "profiles.run_scripts",
+        "devlanes exec",
+        "devlanes wait"
+      ],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "workflows-tool-versions",
+      "title": "Tool versions",
+      "description": "Pin each lane's tool versions and variables with mise and direnv files in the worktree root.",
+      "category": "workflows",
+      "languages": ["typescript"],
+      "frameworks": ["mise", "direnv"],
+      "features": ["mise", "direnv"],
+      "requires": ["node", "mise", "direnv"],
+      "status": "planned"
+    },
+    {
+      "slug": "showcase-tui-tour",
+      "title": "TUI tour",
+      "description": "Walk through the devlanes TUI key by key on the stack from the devlanes.run demo: infra, tasks, profiles, a failing service, the monitor and freezing.",
+      "category": "showcase",
+      "languages": ["typescript"],
+      "frameworks": ["hono", "react", "vite", "docker-compose", "postgres", "redis", "mailpit"],
+      "features": [
+        "devlanes",
+        "infra.per_lane",
+        "tasks",
+        "profiles",
+        "devlanes exec",
+        "devlanes debug freeze"
+      ],
+      "requires": ["node", "docker"],
+      "status": "ready"
+    },
+    {
+      "slug": "showcase-many-services",
+      "title": "Many services",
+      "description": "Start 40 services at once to see the start gate queue them, and read CPU and memory per unit in status and the monitor.",
+      "category": "showcase",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": ["templates", "startup", "devlanes start --all-at-once", "devlanes debug top"],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "showcase-broken",
+      "title": "Broken on purpose",
+      "description": "Trigger each failure devlanes reports, from crashes and wrong ports to every proxy error page, and read what each one tells you.",
+      "category": "showcase",
+      "languages": ["typescript"],
+      "frameworks": ["hono"],
+      "features": [
+        "devlanes debug why",
+        "devlanes debug errors",
+        "devlanes config check",
+        "proxy error pages"
+      ],
+      "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "remote-docker-box",
+      "title": "Remote box in Docker",
+      "description": "Run lanes on a box in a container and use them from your machine: pairing, mirrored hostnames, hidden services and synced folders.",
+      "category": "remote",
+      "languages": ["shell"],
+      "frameworks": ["docker"],
+      "features": [
+        "remote.boxes.<name>.command",
+        "devlanes daemon pair",
+        "devlanes remote connect",
+        "hidden",
+        "sync"
+      ],
+      "requires": ["docker"],
+      "status": "ready"
+    },
+    {
+      "slug": "remote-ssh-box",
+      "title": "Remote box over SSH",
+      "description": "Prepare a Linux server as a devlanes box and connect to it over SSH, Tailscale or Cloudflare Tunnel.",
+      "category": "remote",
+      "languages": ["shell"],
+      "frameworks": ["ssh", "tailscale", "cloudflared"],
+      "features": ["devlanes remote connect", "devlanes daemon pair", "ports.range"],
+      "requires": ["a linux box"],
+      "status": "ready"
+    }
+  ]
+}
