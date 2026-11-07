@@ -1,9 +1,9 @@
 const $ = (id) => document.getElementById(id);
-const log = $('log');
+const log = $("log");
 
 function setState(el, text, ok) {
   el.textContent = text;
-  el.className = ok ? 'dl-ok' : 'dl-bad';
+  el.className = ok ? "dl-ok" : "dl-bad";
 }
 
 function print(line) {
@@ -12,18 +12,18 @@ function print(line) {
 
 // Server-Sent Events. A frozen lane sends no ticks, so the age keeps growing until the lane thaws.
 let lastTick = 0;
-const events = new EventSource('/events');
-events.onopen = () => setState($('sse-state'), 'open', true);
-events.onerror = () => setState($('sse-state'), 'reconnecting', false);
+const events = new EventSource("/events");
+events.onopen = () => setState($("sse-state"), "open", true);
+events.onerror = () => setState($("sse-state"), "reconnecting", false);
 events.onmessage = (event) => {
   const { lane, tick, time } = JSON.parse(event.data);
   lastTick = Date.now();
-  $('sse-tick').textContent = `#${tick} from lane ${lane} at ${time.slice(11, 19)}`;
+  $("sse-tick").textContent = `#${tick} from lane ${lane} at ${time.slice(11, 19)}`;
 };
 setInterval(() => {
   if (!lastTick) return;
   const age = Math.round((Date.now() - lastTick) / 1000);
-  setState($('sse-age'), age < 3 ? 'just now' : `${age}s ago, no tick since`, age < 3);
+  setState($("sse-age"), age < 3 ? "just now" : `${age}s ago, no tick since`, age < 3);
 }, 500);
 
 // Two WebSockets: one to the ws port's own hostname, one to /ws on this page's hostname.
@@ -42,23 +42,23 @@ function connect(name) {
   };
   socket.onmessage = (event) => {
     const msg = JSON.parse(event.data);
-    if (msg.type === 'hello') return;
+    if (msg.type === "hello") return;
     const sent = pending.get(msg.id);
     pending.delete(msg.id);
-    const trip = sent ? ` (round trip ${Date.now() - sent} ms)` : '';
+    const trip = sent ? ` (round trip ${Date.now() - sent} ms)` : "";
     print(`lane ${msg.lane} via ${msg.via}, port ${msg.port_name}: ${msg.text}${trip}`);
   };
 }
-connect('ws');
-connect('default');
+connect("ws");
+connect("default");
 
-$('chat').addEventListener('submit', (event) => {
+$("chat").addEventListener("submit", (event) => {
   event.preventDefault();
-  const text = $('text').value.trim();
-  const socket = sockets[$('via').value];
+  const text = $("text").value.trim();
+  const socket = sockets[$("via").value];
   if (!text || socket.readyState !== WebSocket.OPEN) return;
   const id = crypto.randomUUID();
   pending.set(id, Date.now());
   socket.send(JSON.stringify({ id, text }));
-  $('text').value = '';
+  $("text").value = "";
 });

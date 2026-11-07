@@ -33,23 +33,23 @@ Open https://mprocs-migration.localhost. Each Git worktree of this repository is
 
 ## Before and after
 
-| mprocs setup (`before/`) | `devlanes.yaml` |
-| --- | --- |
-| `procs.api`, `web`, `worker`, `sms-stub` running `npm run <script>` | `services` with `run_script: { file: package.json, name: <script> }` |
-| `API_PORT` exported by `slot.sh` as `4000 + 100 * slot` | `API_PORT: ${{ self.port }}`, for an app that reads its own variable instead of `PORT` |
-| `PORT=${WEB_PORT:-3000}` in web's `shell` | nothing: devlanes sets `PORT` on every service |
-| `PORT=4010` in the stub's `shell` | `env: { PORT: 4010 }`, which only one lane at a time can run |
-| `API_URL`, `API_PUBLIC_URL`, `SMS_PUBLIC_URL` exported by `slot.sh` | `${{ services.api.url }}`, `${{ services.api.public_url }}`, `${{ services.sms_stub.public_url }}` |
-| `Caddyfile` blocks, one set per slot, and Caddy in `docker-compose.yml` | `hosts` on each service, served over HTTPS by the devlanes proxy |
-| `docker-up` and `docker-down` panes | dropped, since they only ran Caddy. A stack with a database moves its Compose file to `infra.compose` and lists `caddy` in `infra.exclude` |
-| `scripts/slot.sh` and its list of worktrees | lanes: every worktree gets its own port block and `mprocs-migration<N>.localhost` |
-| `NODE_OPTIONS: --use-system-ca` for Caddy's local CA | deleted: devlanes sets `NODE_EXTRA_CA_CERTS` on Node services, and `web` calls the api over `http://127.0.0.1` |
-| `.data/acme.json` in the worktree | `DATA_FILE: ${{ lane.data_path }}/acme.json` |
-| `mprocs.essentials.yaml`, a copy with `autostart: false` | `profiles.default: [+essential]` |
-| a third copy for backend work, never written | `profiles.backend: [+api, +worker, +stub]` |
-| `migrate` pane, `autostart: false` | task with `when: lane.start` |
-| `seed` pane, `autostart: false` | task with `when: lane.create` and `after: services`; `devlanes run seed` for more |
-| `btop` pane | `devlanes debug top` |
+| mprocs setup (`before/`)                                                | `devlanes.yaml`                                                                                                                            |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `procs.api`, `web`, `worker`, `sms-stub` running `npm run <script>`     | `services` with `run_script: { file: package.json, name: <script> }`                                                                       |
+| `API_PORT` exported by `slot.sh` as `4000 + 100 * slot`                 | `API_PORT: ${{ self.port }}`, for an app that reads its own variable instead of `PORT`                                                     |
+| `PORT=${WEB_PORT:-3000}` in web's `shell`                               | nothing: devlanes sets `PORT` on every service                                                                                             |
+| `PORT=4010` in the stub's `shell`                                       | `env: { PORT: 4010 }`, which only one lane at a time can run                                                                               |
+| `API_URL`, `API_PUBLIC_URL`, `SMS_PUBLIC_URL` exported by `slot.sh`     | `${{ services.api.url }}`, `${{ services.api.public_url }}`, `${{ services.sms_stub.public_url }}`                                         |
+| `Caddyfile` blocks, one set per slot, and Caddy in `docker-compose.yml` | `hosts` on each service, served over HTTPS by the devlanes proxy                                                                           |
+| `docker-up` and `docker-down` panes                                     | dropped, since they only ran Caddy. A stack with a database moves its Compose file to `infra.compose` and lists `caddy` in `infra.exclude` |
+| `scripts/slot.sh` and its list of worktrees                             | lanes: every worktree gets its own port block and `mprocs-migration<N>.localhost`                                                          |
+| `NODE_OPTIONS: --use-system-ca` for Caddy's local CA                    | deleted: devlanes sets `NODE_EXTRA_CA_CERTS` on Node services, and `web` calls the api over `http://127.0.0.1`                             |
+| `.data/acme.json` in the worktree                                       | `DATA_FILE: ${{ lane.data_path }}/acme.json`                                                                                               |
+| `mprocs.essentials.yaml`, a copy with `autostart: false`                | `profiles.default: [+essential]`                                                                                                           |
+| a third copy for backend work, never written                            | `profiles.backend: [+api, +worker, +stub]`                                                                                                 |
+| `migrate` pane, `autostart: false`                                      | task with `when: lane.start`                                                                                                               |
+| `seed` pane, `autostart: false`                                         | task with `when: lane.create` and `after: services`; `devlanes run seed` for more                                                          |
+| `btop` pane                                                             | `devlanes debug top`                                                                                                                       |
 
 ### Not carried over
 
@@ -69,6 +69,7 @@ On Windows, add `--ssl-revoke-best-effort` to the `curl` commands.
   ```
 
   `devlanes run seed` queues three more, and they go out within two seconds.
+
 - Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/workflows-mprocs-migration && devlanes start`. This step was not run for this README. `devlanes lane new --name mprocs-migration-review --start` gives a second lane in the same folder without a worktree, and that one was run. https://mprocs-migration1.localhost shows `This is lane 1 of mprocs-migration.` with its own api, data file and messages, with no slot list or Caddy block to edit.
 - Start the stub in the second lane: `devlanes start sms-stub` in the worktree, or `devlanes start mprocs-migration-review:sms-stub --no-ui` for the `lane new` lane. Lane 0 holds port 4010, so it fails:
 
@@ -80,6 +81,7 @@ On Windows, add `--ssl-revoke-best-effort` to the `curl` commands.
   ```
 
   Lane 1's `SMS_URL` is `http://127.0.0.1:4010` too, so its worker sends into lane 0's stub. After `devlanes run seed` in lane 1 (`devlanes --lane mprocs-migration-review run seed` from this folder), `curl -fsS https://sms.mprocs-migration.localhost/messages` lists them with `"from_lane": 1`.
+
 - Switch profiles: `devlanes stop`, then `devlanes start --profile backend` starts `api`, `worker` and `sms-stub` without `web`. `devlanes start --profile default --profile backend` starts all four, which is what `mprocs.yaml` started.
 - Run `devlanes debug top` for CPU and memory per lane and service, the job the `btop` pane did.
 - Remove the lanes with `devlanes lane clean mprocs-migration-review --yes` and `devlanes lane clean 0 --yes`. Each lane's data file goes with its data folder.

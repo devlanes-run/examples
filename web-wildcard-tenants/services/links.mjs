@@ -13,7 +13,10 @@ serve((req, res, path) => {
     return res.end();
   }
 
-  const rows = Object.entries(CODES).map(([name, c]) => [`/${name}`, `<a href="/${esc(name)}">${esc(target(c))}</a>`]);
+  const rows = Object.entries(CODES).map(([name, c]) => [
+    `/${name}`,
+    `<a href="/${esc(name)}">${esc(target(c))}</a>`,
+  ]);
   const known = path === "/";
   if (!known) rows.unshift(["requested", `<span class="dl-bad">no short code ${esc(path)}</span>`]);
   send(

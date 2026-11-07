@@ -62,6 +62,7 @@ On Windows, add `--ssl-revoke-best-effort` to the `curl` commands.
   ```
 
   Right after, `devlanes debug why slow-start` prints `starting; waiting for its readiness check (devlanes wait ready-checks@0:slow-start)`, and `devlanes wait slow-start` returns `ready ready-checks@0:slow-start` once the server listens.
+
 - Break a check: change http-check's `path: /healthz` to `path: /missing` in `devlanes.yaml` and run `devlanes reload --no-ui`. After the 15 s timeout it exits 1:
 
   ```text
@@ -73,6 +74,7 @@ On Windows, add `--ssl-revoke-best-effort` to the `curl` commands.
   ```
 
   The process keeps running, but https://http-check.ready-checks.localhost now gets the proxy's `DL203 Service failed` page, and `devlanes debug why http-check` prints the same reason. Put `/healthz` back and `devlanes reload --no-ui` brings it back to ready.
+
 - Drop the Host rewrite: delete `host_header: upstream` from legacy-host and save. The proxy applies the route change by itself (`devlanes reload` reports `nothing to reload`), and `curl https://legacy-host.ready-checks.localhost/` answers `invalid host legacy-host.ready-checks.localhost: this app answers only on 127.0.0.1:<port>`. Put the line back.
 - Clean up: `devlanes lane clean review --yes` and `devlanes lane clean 0 --yes` stop both lanes and delete their data and logs.
 

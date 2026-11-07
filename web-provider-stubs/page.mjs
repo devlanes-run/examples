@@ -61,13 +61,16 @@ export function page(info, { lede, body }) {
   <main class="dl-main">
     <h1 class="dl-title">This is lane ${escape(info.lane)} of <span class="nowrap">${escape(info.project)}.</span></h1>
     <p class="dl-lede">${lede}</p>
-    ${card(`${info.project}@${info.lane}:${info.service}`, rows([
-      ["lane", `${escape(info.lane)} <span class="dl-key">${escape(info.lane_name)}</span>`],
-      ["branch", escape(info.branch)],
-      ["service", escape(info.service)],
-      ["port", escape(info.port)],
-      ["url", url],
-    ]))}
+    ${card(
+      `${info.project}@${info.lane}:${info.service}`,
+      rows([
+        ["lane", `${escape(info.lane)} <span class="dl-key">${escape(info.lane_name)}</span>`],
+        ["branch", escape(info.branch)],
+        ["service", escape(info.service)],
+        ["port", escape(info.port)],
+        ["url", url],
+      ]),
+    )}
     ${body}
   </main>
   <footer class="dl-footer">node:http, no dependencies</footer>
@@ -112,6 +115,7 @@ export async function readBody(req) {
   const text = Buffer.concat(chunks).toString("utf8");
   const type = req.headers["content-type"] ?? "";
   if (type.startsWith("application/json")) return text ? JSON.parse(text) : {};
-  if (type.startsWith("application/x-www-form-urlencoded")) return Object.fromEntries(new URLSearchParams(text));
+  if (type.startsWith("application/x-www-form-urlencoded"))
+    return Object.fromEntries(new URLSearchParams(text));
   return {};
 }

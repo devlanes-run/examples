@@ -75,6 +75,7 @@ The page's `fetch` to the API is cross-origin, so the browser reads the answer o
   ```
 
   With `Origin: https://frontend-api.localhost` the same request also gets `access-control-allow-origin: https://frontend-api.localhost` and `access-control-allow-credentials: true`.
+
 - Edit a heading in `web/src/App.jsx` and save. The page updates without reloading, and the browser console logs `[vite] hot updated: /src/App.jsx`.
 - Remove both lanes with `devlanes lane clean review --yes` and `devlanes lane clean 0 --yes`.
 

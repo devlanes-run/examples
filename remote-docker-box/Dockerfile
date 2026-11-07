@@ -2,8 +2,8 @@
 FROM node:24.22.2-bookworm-slim
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl git \
- && rm -rf /var/lib/apt/lists/*
+  && apt-get install -y --no-install-recommends ca-certificates curl git \
+  && rm -rf /var/lib/apt/lists/*
 
 USER node
 WORKDIR /home/node
@@ -25,8 +25,8 @@ RUN mkdir examples
 COPY --chown=node:node basics-hello-node examples/basics-hello-node
 # devlanes runs a lane per Git worktree, so the copy becomes a repository on main.
 RUN git -C examples init -q -b main \
- && git -C examples add -A \
- && git -C examples -c user.name=acme -c user.email=acme@example.invalid commit -q -m "Add basics-hello-node"
+  && git -C examples add -A \
+  && git -C examples -c user.name=acme -c user.email=acme@example.invalid commit -q -m "Add basics-hello-node"
 
 COPY --chown=node:node remote-docker-box/box/config.yaml .devlanes/config.yaml
 COPY --chown=node:node remote-docker-box/box/overlay.yaml examples/basics-hello-node/devlanes.local.yaml

@@ -25,7 +25,11 @@ function Card({ title, lane, children }) {
   return (
     <section className="dl-card" style={{ "--dl-lane": color }}>
       <div className="dl-bar">
-        <span className="dl-dots"><i /><i /><i /></span>
+        <span className="dl-dots">
+          <i />
+          <i />
+          <i />
+        </span>
         <span>{title}</span>
         <span />
       </div>
@@ -56,7 +60,11 @@ function Counter({ lane }) {
       <Card title="KV binding COUNTER" lane={lane.lane}>
         <dl className="dl-rows">
           <dt>count</dt>
-          {error ? <dd className="dl-bad">{error}</dd> : <dd className="dl-ok">{count ?? "..."}</dd>}
+          {error ? (
+            <dd className="dl-bad">{error}</dd>
+          ) : (
+            <dd className="dl-ok">{count ?? "..."}</dd>
+          )}
           <dt>persisted to</dt>
           <dd>{lane.state_path}</dd>
         </dl>
@@ -95,18 +103,21 @@ export default function App() {
         {info && (
           <>
             <h1 className="dl-title">
-              This is lane {info.lane} of <span style={{ whiteSpace: "nowrap" }}>{info.project}.</span>
+              This is lane {info.lane} of{" "}
+              <span style={{ whiteSpace: "nowrap" }}>{info.project}.</span>
             </h1>
             <p className="dl-lede">
-              Served by <code>{info.service}</code> from the <code>{info.branch}</code> worktree. Vite
-              serves this page, and a Worker running in workerd inside the same Vite answers{" "}
+              Served by <code>{info.service}</code> from the <code>{info.branch}</code> worktree.
+              Vite serves this page, and a Worker running in workerd inside the same Vite answers{" "}
               <code>/api/*</code>.
             </p>
 
             <Card title="GET /api/lane" lane={info.lane}>
               <dl className="dl-rows">
                 <dt>lane</dt>
-                <dd>{info.lane} ({info.lane_name})</dd>
+                <dd>
+                  {info.lane} ({info.lane_name})
+                </dd>
                 <dt>branch</dt>
                 <dd>{info.branch}</dd>
                 <dt>service</dt>
@@ -121,11 +132,23 @@ export default function App() {
             <h2 className="dl-h2">Items from the Worker</h2>
             <Card title="GET /api/items" lane={info.lane}>
               <dl className="dl-rows">
-                {items.status === "loading" && <><dt>result</dt><dd>...</dd></>}
-                {items.status === "error" && <><dt>result</dt><dd className="dl-bad">{items.error}</dd></>}
+                {items.status === "loading" && (
+                  <>
+                    <dt>result</dt>
+                    <dd>...</dd>
+                  </>
+                )}
+                {items.status === "error" && (
+                  <>
+                    <dt>result</dt>
+                    <dd className="dl-bad">{items.error}</dd>
+                  </>
+                )}
                 {items.status === "ok" &&
                   items.data.items.map((item) => [
-                    <dt key={`k${item.id}`} className="dl-key">{item.sku}</dt>,
+                    <dt key={`k${item.id}`} className="dl-key">
+                      {item.sku}
+                    </dt>,
                     <dd key={`v${item.id}`}>
                       {item.name}, ${(item.price_cents / 100).toFixed(2)}
                     </dd>,
@@ -142,7 +165,9 @@ export default function App() {
                 <dt>port</dt>
                 <dd>{info.inspector_port}</dd>
                 <dt>targets</dt>
-                <dd><a href={inspectUrl}>{inspectUrl}</a></dd>
+                <dd>
+                  <a href={inspectUrl}>{inspectUrl}</a>
+                </dd>
               </dl>
             </Card>
           </>

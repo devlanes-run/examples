@@ -1,4 +1,16 @@
-import { LANE_DOMAIN, SITES_DOMAIN, TENANTS, card, cookies, esc, hostname, page, portSuffix, send, serve } from "../lib/shared.mjs";
+import {
+  LANE_DOMAIN,
+  SITES_DOMAIN,
+  TENANTS,
+  card,
+  cookies,
+  esc,
+  hostname,
+  page,
+  portSuffix,
+  send,
+  serve,
+} from "../lib/shared.mjs";
 
 serve((req, res, path) => {
   const host = hostname(req);
@@ -27,8 +39,15 @@ serve((req, res, path) => {
           ["items", tenant.items.map(esc).join(", ")],
         ]),
       ]
-    : [card("unknown tenant", [["tenant", `<span class="dl-bad">no tenant named ${esc(name)}</span>`]])];
-  cards.push(card("cookies", cookieRows), card("back", [["app", `<a href="${esc(app)}">${esc(app)}</a>`]]));
+    : [
+        card("unknown tenant", [
+          ["tenant", `<span class="dl-bad">no tenant named ${esc(name)}</span>`],
+        ]),
+      ];
+  cards.push(
+    card("cookies", cookieRows),
+    card("back", [["app", `<a href="${esc(app)}">${esc(app)}</a>`]]),
+  );
 
   send(
     res,

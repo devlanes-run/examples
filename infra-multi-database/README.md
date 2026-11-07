@@ -30,14 +30,14 @@ The first start pulls the images, about 2.5 GB in `docker image ls`. Open https:
 
 ## Shared or per lane
 
-| Store | Container | Lane 0 | Lane 1 | Reason |
-| --- | --- | --- | --- | --- |
-| Postgres | shared | database `app_main` | `app_lane1` | A database keeps tables, migrations and connections apart, and one server is enough for every branch. Use a per-lane Postgres when branches need different versions or destructive migrations ([infra-postgres-per-lane](../infra-postgres-per-lane)). |
-| Redis | shared | index `0` | `1` | An index costs nothing and `FLUSHDB` clears one lane. Redis has 16 by default, so lanes 16 and up would need `databases` raised. |
-| ClickHouse | shared | database `app_main` | `app_lane1` | The server takes a few hundred MB of memory, too much to run once per lane. |
-| RabbitMQ | shared | vhost `app_main` | `app_lane1` | A vhost has its own queues, exchanges and permissions. |
-| S3 (RustFS) | shared | bucket `app-main` | `app-lane1` | One bucket per lane, with a dash because bucket names allow no underscore. |
-| Mailpit | per lane | Compose project `multi-database-lane0` | `multi-database-lane1` | Mailpit has nothing to namespace: every message lands in one inbox. A container per lane gives each lane its own inbox, and `lane clean` removes it. |
+| Store       | Container | Lane 0                                 | Lane 1                 | Reason                                                                                                                                                                                                                                                 |
+| ----------- | --------- | -------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Postgres    | shared    | database `app_main`                    | `app_lane1`            | A database keeps tables, migrations and connections apart, and one server is enough for every branch. Use a per-lane Postgres when branches need different versions or destructive migrations ([infra-postgres-per-lane](../infra-postgres-per-lane)). |
+| Redis       | shared    | index `0`                              | `1`                    | An index costs nothing and `FLUSHDB` clears one lane. Redis has 16 by default, so lanes 16 and up would need `databases` raised.                                                                                                                       |
+| ClickHouse  | shared    | database `app_main`                    | `app_lane1`            | The server takes a few hundred MB of memory, too much to run once per lane.                                                                                                                                                                            |
+| RabbitMQ    | shared    | vhost `app_main`                       | `app_lane1`            | A vhost has its own queues, exchanges and permissions.                                                                                                                                                                                                 |
+| S3 (RustFS) | shared    | bucket `app-main`                      | `app-lane1`            | One bucket per lane, with a dash because bucket names allow no underscore.                                                                                                                                                                             |
+| Mailpit     | per lane  | Compose project `multi-database-lane0` | `multi-database-lane1` | Mailpit has nothing to namespace: every message lands in one inbox. A container per lane gives each lane its own inbox, and `lane clean` removes it.                                                                                                   |
 
 MinIO no longer publishes images (its Docker Hub repositories were removed in September 2026), so the S3 store is [RustFS](https://github.com/rustfs/rustfs), which speaks the same S3 API and has a web console. The `rc` service in `docker-compose.yml` is its command line, kept out of `docker compose up` by a Compose profile.
 
@@ -57,12 +57,12 @@ Every entry can run again without harm, as `devlanes run infra.setup.postgres` s
 
 The consoles, all on the lane's domain:
 
-| Hostname | Container port | Login |
-| --- | --- | --- |
-| https://rustfs.multi-database.localhost/rustfs/console/ | 9001 | `rustfsadmin` / `rustfsadmin` |
-| https://rabbitmq.multi-database.localhost | 15672 | `app` / `app` |
-| https://clickhouse.multi-database.localhost/play | 8123 | `app` / `app` |
-| https://mail.multi-database.localhost | 8025 | none |
+| Hostname                                                | Container port | Login                         |
+| ------------------------------------------------------- | -------------- | ----------------------------- |
+| https://rustfs.multi-database.localhost/rustfs/console/ | 9001           | `rustfsadmin` / `rustfsadmin` |
+| https://rabbitmq.multi-database.localhost               | 15672          | `app` / `app`                 |
+| https://clickhouse.multi-database.localhost/play        | 8123           | `app` / `app`                 |
+| https://mail.multi-database.localhost                   | 8025           | none                          |
 
 The shared consoles show every lane's databases, vhosts and buckets; Mailpit shows only the lane's own mail. Postgres and Redis have no console and are in `infra.hidden`, so a machine connected with `devlanes remote connect` does not mirror their raw ports; remove a name there to reach a box's database from your own client. On this machine, open a shell in them with the command on their card:
 
@@ -107,6 +107,7 @@ postgres#3 2026-11-06 20:46:20.658 UTC [1] LOG:  database system is ready to acc
   ```
 
   The ports of the shared stores match lane 0's; only the SMTP port belongs to the lane's own Mailpit. Press **Write and read** on the Mailpit card of lane 1: the mail shows up at https://mail.multi-database1.localhost and not at https://mail.multi-database.localhost.
+
 - Restart RabbitMQ with `docker compose -p multi-database restart rabbitmq`, then run `devlanes start --no-ui`. It prints `✓ setup` instead of `! setup skipped: already done`, because the `rabbitmq` entry sets `container: rabbitmq`, and `devlanes logs setup.rabbitmq` shows `Adding vhost "app_main" ...` again.
 - Clean the second lane: `devlanes lane clean review --yes` prints `cleaned multi-database@1: stopped 1 unit, teardown postgres, redis, clickhouse, rabbitmq, s3`. `app_lane1`, index 1, the vhost and the `app-lane1` bucket with its objects are gone, lane 1's Mailpit container is removed, and lane 0's data is untouched.
 - Remove everything this example created: `devlanes lane clean 0 --yes`, then `devlanes infra down` to stop the shared containers, then `docker compose -p multi-database down -v` to delete them with their volumes.

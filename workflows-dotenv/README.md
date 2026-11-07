@@ -57,6 +57,7 @@ To list the keys, `web` reads the same `.env` that devlanes reads, takes only th
   ```
 
   `devlanes reload` restarts both services. The page and https://api.dotenv.localhost then list `beta-search`.
+
 - Change `ACME_ADMIN_PASSWORD` in `.env`. `devlanes status` shows no change, since no expression reads that key.
 - Set `SENTRY_DSN=https://public@sentry.example.invalid/1` in `.env`. `devlanes status` lists `env SENTRY_DSN` for both services. `devlanes reload web` restarts only `web`, whose page then shows `SENTRY_DSN` as `set` and `Sentry` as `on`, while `api` stays marked until a plain `devlanes reload`.
 - The shell comes before `.env`: `FEATURE_FLAGS=from-shell devlanes restart api`, and https://api.dotenv.localhost lists only `from-shell`. `devlanes restart api` from a shell without the variable goes back to the value in `.env`.
@@ -71,6 +72,7 @@ To list the keys, `web` reads the same `.env` that devlanes reads, takes only th
   ```
 
   `devlanes reload` applies lane 0 and `devlanes reload --lane dotenv-review` lane 1.
+
 - When you are done, `devlanes lane clean dotenv-review --yes` and `devlanes lane clean 0 --yes` stop the lanes and delete their data.
 
 ## Files

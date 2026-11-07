@@ -31,8 +31,7 @@ function laneInfo(req) {
   };
 }
 
-const escape = (s) =>
-  String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escape = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 function page(info) {
   return `<!doctype html>
@@ -80,7 +79,8 @@ createServer((req, res) => {
   if (req.method !== "GET") return send(res, 405, "text/plain", "method not allowed\n");
   if (assets[pathname]) return send(res, 200, ...assets[pathname]);
   if (pathname === "/healthz") return send(res, 200, "text/plain", "ok\n");
-  if (pathname === "/lane") return send(res, 200, "application/json", JSON.stringify(laneInfo(req), null, 2));
+  if (pathname === "/lane")
+    return send(res, 200, "application/json", JSON.stringify(laneInfo(req), null, 2));
   if (pathname === "/") return send(res, 200, "text/html; charset=utf-8", page(laneInfo(req)));
   send(res, 404, "text/plain", "not found\n");
 }).listen(port, "127.0.0.1", () => {

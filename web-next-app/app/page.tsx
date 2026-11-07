@@ -19,7 +19,14 @@ async function probe(variable: string): Promise<Probe> {
   try {
     const res = await fetch(`${target}/`, { cache: "no-store" });
     const ms = performance.now() - started;
-    if (!res.ok) return { variable, target, ms, status: res.status, error: `HTTP ${res.status} ${res.statusText}` };
+    if (!res.ok)
+      return {
+        variable,
+        target,
+        ms,
+        status: res.status,
+        error: `HTTP ${res.status} ${res.statusText}`,
+      };
     return { variable, target, ms, status: res.status, answer: (await res.json()) as ApiAnswer };
   } catch (err) {
     // fetch reports "fetch failed" and puts the TLS or connection error in cause.
@@ -37,7 +44,11 @@ function ProbeCard({ probe, note }: { probe: Probe; note: string }) {
   return (
     <div className="dl-card">
       <div className="dl-bar">
-        <span className="dl-dots"><i></i><i></i><i></i></span>
+        <span className="dl-dots">
+          <i></i>
+          <i></i>
+          <i></i>
+        </span>
         <span>fetch(process.env.{probe.variable})</span>
         <span></span>
       </div>
@@ -57,7 +68,11 @@ function ProbeCard({ probe, note }: { probe: Probe; note: string }) {
               {probe.answer.lane} <span className="dl-key">{probe.answer.lane_name}</span>
             </dd>
             <dt>api saw</dt>
-            <dd>{probe.answer.url ? `X-Forwarded-Host, so ${probe.answer.url}` : "no X-Forwarded-Host, a direct call"}</dd>
+            <dd>
+              {probe.answer.url
+                ? `X-Forwarded-Host, so ${probe.answer.url}`
+                : "no X-Forwarded-Host, a direct call"}
+            </dd>
           </>
         )}
         <dt>why</dt>
@@ -90,12 +105,16 @@ export default async function Home() {
           This is lane {info.lane} of {info.project}.
         </h1>
         <p className="dl-lede">
-          The <code>{info.service}</code> service, a Next.js server component, answered from the worktree on{" "}
-          <code>{info.branch}</code>.
+          The <code>{info.service}</code> service, a Next.js server component, answered from the
+          worktree on <code>{info.branch}</code>.
         </p>
         <div className="dl-card">
           <div className="dl-bar">
-            <span className="dl-dots"><i></i><i></i><i></i></span>
+            <span className="dl-dots">
+              <i></i>
+              <i></i>
+              <i></i>
+            </span>
             <span>
               {info.project}@{info.lane}:{info.service}
             </span>
@@ -113,20 +132,29 @@ export default async function Home() {
             <dt>port</dt>
             <dd>{info.port}</dd>
             <dt>url</dt>
-            <dd>{info.url ? <a href={info.url}>{info.url}</a> : <span className="dl-bad">not through the proxy</span>}</dd>
+            <dd>
+              {info.url ? (
+                <a href={info.url}>{info.url}</a>
+              ) : (
+                <span className="dl-bad">not through the proxy</span>
+              )}
+            </dd>
           </dl>
         </div>
 
         <h2 className="dl-h2">The API, fetched twice on the server</h2>
         <p className="dl-lede">
-          This page fetched the lane's <a href={viaProxy.target}>api</a> service while it rendered: once through the
-          HTTPS proxy and once straight to its port.
+          This page fetched the lane's <a href={viaProxy.target}>api</a> service while it rendered:
+          once through the HTTPS proxy and once straight to its port.
         </p>
         <ProbeCard
           probe={viaProxy}
           note="HTTPS through the proxy. Node trusts the devlanes CA because devlanes set NODE_EXTRA_CA_CERTS for this service."
         />
-        <ProbeCard probe={direct} note="Plain HTTP to 127.0.0.1, the server-to-server address. No proxy, no TLS." />
+        <ProbeCard
+          probe={direct}
+          note="Plain HTTP to 127.0.0.1, the server-to-server address. No proxy, no TLS."
+        />
 
         <div className="dl-card">
           <dl className="dl-rows">
@@ -141,7 +169,9 @@ export default async function Home() {
           </dl>
         </div>
       </main>
-      <footer className="dl-footer">app/page.tsx, a server component; api/server.mjs, node:http</footer>
+      <footer className="dl-footer">
+        app/page.tsx, a server component; api/server.mjs, node:http
+      </footer>
     </div>
   );
 }

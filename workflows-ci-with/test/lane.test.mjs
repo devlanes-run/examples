@@ -18,7 +18,10 @@ test("devlanes with sets the lane's public URLs", () => {
   assert.match(web ?? "", /^https:\/\//, "DEVLANES_PUBLIC_URL_WEB");
 });
 
-for (const [service, url] of [["api", api], ["web", web]]) {
+for (const [service, url] of [
+  ["api", api],
+  ["web", web],
+]) {
   test(`${service} answers /lane for this lane through the proxy`, async () => {
     const { body } = await getJson(`${url}/lane`);
     assert.equal(body.project, process.env.DEVLANES_LANE_PROJECT);

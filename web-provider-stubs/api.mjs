@@ -1,5 +1,16 @@
 import { createServer } from "node:http";
-import { card, escape, laneInfo, link, page, readBody, rows, sendHtml, sendJson, serveCommon } from "./page.mjs";
+import {
+  card,
+  escape,
+  laneInfo,
+  link,
+  page,
+  readBody,
+  rows,
+  sendHtml,
+  sendJson,
+  serveCommon,
+} from "./page.mjs";
 
 const env = process.env;
 
@@ -30,7 +41,12 @@ async function send(kind, message) {
     }
     // Set when the devlanes proxy answered instead of the provider, such as service-idle.
     const devlanesError = res.headers.get("x-devlanes-error");
-    return { provider: target, status: res.status, ...(devlanesError && { devlanes_error: devlanesError }), body };
+    return {
+      provider: target,
+      status: res.status,
+      ...(devlanesError && { devlanes_error: devlanesError }),
+      body,
+    };
   } catch (err) {
     return { provider: target, status: null, error: err.cause?.code ?? err.message };
   }
@@ -50,16 +66,30 @@ function input(name, value, label = name) {
 function resultCard(kind, result) {
   const title = `${providers[kind].label} -> ${result.provider}`;
   if (sent(result)) {
-    return card(title, rows([
-      ["status", `<span class="dl-ok">${result.status} accepted as ${escape(result.body.id)}</span>`],
-      ["inbox", link(providers[kind].url)],
-    ]));
+    return card(
+      title,
+      rows([
+        [
+          "status",
+          `<span class="dl-ok">${result.status} accepted as ${escape(result.body.id)}</span>`,
+        ],
+        ["inbox", link(providers[kind].url)],
+      ]),
+    );
   }
   const status = result.status
     ? `${result.status}${result.devlanes_error ? ` <span class="dl-key">x-devlanes-error: ${escape(result.devlanes_error)}</span>` : ""}`
     : escape(result.error);
-  const body = result.body === undefined ? "" : typeof result.body === "string" ? result.body : JSON.stringify(result.body, null, 2);
-  return card(title, `${rows([["status", `<span class="dl-bad">${status}</span>`]])}${body ? `<pre>${escape(body)}</pre>` : ""}`);
+  const body =
+    result.body === undefined
+      ? ""
+      : typeof result.body === "string"
+        ? result.body
+        : JSON.stringify(result.body, null, 2);
+  return card(
+    title,
+    `${rows([["status", `<span class="dl-bad">${status}</span>`]])}${body ? `<pre>${escape(body)}</pre>` : ""}`,
+  );
 }
 
 function home(req, last) {
@@ -68,18 +98,27 @@ function home(req, last) {
     lede: `The <code>${escape(info.service)}</code> service answered from the worktree on <code>${escape(info.branch)}</code>. It sends SMS and email through the provider URLs devlanes gave this lane.`,
     body: `${last ? `<h2 class="dl-h2">Last send</h2>${resultCard(last.kind, last.result)}` : ""}
     <h2 class="dl-h2">Providers</h2>
-    ${card("provider client", rows([
-      ["SMS_API_URL", link(providers.sms.url)],
-      ["EMAIL_API_URL", link(providers.email.url)],
-    ]))}
+    ${card(
+      "provider client",
+      rows([
+        ["SMS_API_URL", link(providers.sms.url)],
+        ["EMAIL_API_URL", link(providers.email.url)],
+      ]),
+    )}
     <h2 class="dl-h2">Send</h2>
     <div class="dl-grid">
-      ${card("POST /send/sms", `<form class="dl-form" method="post" action="/send/sms">
+      ${card(
+        "POST /send/sms",
+        `<form class="dl-form" method="post" action="/send/sms">
         ${input("to", examples.sms.to)}${input("body", examples.sms.body)}
-        <button class="dl-button">Send SMS</button></form>`)}
-      ${card("POST /send/email", `<form class="dl-form" method="post" action="/send/email">
+        <button class="dl-button">Send SMS</button></form>`,
+      )}
+      ${card(
+        "POST /send/email",
+        `<form class="dl-form" method="post" action="/send/email">
         ${input("to", examples.email.to)}${input("subject", examples.email.subject)}${input("text", examples.email.text)}
-        <button class="dl-button">Send email</button></form>`)}
+        <button class="dl-button">Send email</button></form>`,
+      )}
     </div>`,
   });
 }
@@ -106,7 +145,8 @@ const server = createServer(async (req, res) => {
     const result = await send(kind, message);
     if (mode === "api") {
       // Keep only the heading and first sentence of a proxy error page; the HTML page shows all of it.
-      if (typeof result.body === "string") result.body = result.body.split("\n").slice(0, 3).join("\n");
+      if (typeof result.body === "string")
+        result.body = result.body.split("\n").slice(0, 3).join("\n");
       return sendJson(res, sent(result) ? 201 : 502, result);
     }
     return sendHtml(res, sent(result) ? 200 : 502, home(req, { kind, result }));

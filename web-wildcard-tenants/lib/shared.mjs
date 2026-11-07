@@ -48,7 +48,10 @@ export function cookies(req) {
 }
 
 export const esc = (value) =>
-  String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  String(value).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
 
 export function card(title, rows) {
   const body = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("");
@@ -62,7 +65,12 @@ export function page(req, { lede, cards = [] }) {
     ["branch", esc(info.branch)],
     ["service", esc(info.service)],
     ["port", info.port],
-    ["url", info.url ? `<span class="dl-url">${esc(info.url)}</span>` : `<span class="dl-bad">not through the proxy</span>`],
+    [
+      "url",
+      info.url
+        ? `<span class="dl-url">${esc(info.url)}</span>`
+        : `<span class="dl-bad">not through the proxy</span>`,
+    ],
   ]);
   return `<!doctype html>
 <html lang="en">
@@ -109,7 +117,11 @@ export function serve(handler) {
       return res.end(JSON.stringify(laneInfo(req)) + "\n");
     }
     if (path === "/request") {
-      const body = { service: env.DEVLANES_SERVICE, host: hostname(req), cookie: req.headers.cookie ?? null };
+      const body = {
+        service: env.DEVLANES_SERVICE,
+        host: hostname(req),
+        cookie: req.headers.cookie ?? null,
+      };
       res.writeHead(200, { "content-type": "application/json" });
       return res.end(JSON.stringify(body) + "\n");
     }

@@ -1,10 +1,24 @@
 const escape = (value) =>
-  String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  String(value ?? "").replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
 
-export function renderPage({ project, lane, lane_name, branch, service, port, url, domain, ports }) {
+export function renderPage({
+  project,
+  lane,
+  lane_name,
+  branch,
+  service,
+  port,
+  url,
+  domain,
+  ports,
+}) {
   const e = escape;
   const card = `class="dl-card" style="--dl-lane: var(--dl-lane-${lane % 4})"`;
-  const bar = (title) => `<div class="dl-bar"><span class="dl-dots"><i></i><i></i><i></i></span><span>${title}</span><span></span></div>`;
+  const bar = (title) =>
+    `<div class="dl-bar"><span class="dl-dots"><i></i><i></i><i></i></span><span>${title}</span><span></span></div>`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -34,7 +48,7 @@ export function renderPage({ project, lane, lane_name, branch, service, port, ur
       <p class="dl-lede">The <code>${e(service)}</code> service answers from the worktree of <code>${e(branch)}</code>, with one process listening on three ports, each behind its own hostname.</p>
 
       <div ${card}>
-        ${bar('lane')}
+        ${bar("lane")}
         <dl class="dl-rows">
           <dt>lane</dt><dd>${lane} (${e(lane_name)})</dd>
           <dt>branch</dt><dd>${e(branch)}</dd>
@@ -46,7 +60,7 @@ export function renderPage({ project, lane, lane_name, branch, service, port, ur
 
       <h2 class="dl-h2">Named ports</h2>
       <div ${card}>
-        ${bar('self.ports')}
+        ${bar("self.ports")}
         <dl class="dl-rows">
           <dt>default</dt><dd>${ports.default} at <a href="https://${e(domain)}">${e(domain)}</a>: this page, /events and /ws</dd>
           <dt>ws</dt><dd>${ports.ws} at wss://ws.${e(domain)}: the chat below</dd>
@@ -56,7 +70,7 @@ export function renderPage({ project, lane, lane_name, branch, service, port, ur
 
       <h2 class="dl-h2">Server-Sent Events</h2>
       <div ${card}>
-        ${bar('GET /events')}
+        ${bar("GET /events")}
         <dl class="dl-rows">
           <dt>stream</dt><dd id="sse-state">connecting</dd>
           <dt>last tick</dt><dd id="sse-tick">none yet</dd>
@@ -66,7 +80,7 @@ export function renderPage({ project, lane, lane_name, branch, service, port, ur
 
       <h2 class="dl-h2">WebSocket chat</h2>
       <div ${card}>
-        ${bar('echo, tagged with the lane')}
+        ${bar("echo, tagged with the lane")}
         <dl class="dl-rows">
           <dt>ws port</dt><dd id="state-ws">connecting</dd>
           <dt>main port</dt><dd id="state-default">connecting</dd>

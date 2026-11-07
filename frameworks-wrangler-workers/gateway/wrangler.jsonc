@@ -8,6 +8,6 @@
   // devlanes keeps per lane.
   "services": [{ "binding": "CATALOG", "service": "catalog" }],
   "dev": {
-    "ip": "127.0.0.1"
-  }
+    "ip": "127.0.0.1",
+  },
 }

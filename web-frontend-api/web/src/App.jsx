@@ -28,7 +28,11 @@ function Card({ title, children }) {
   return (
     <section className="dl-card" style={{ "--dl-lane": `var(--dl-lane-${lane % 4})` }}>
       <div className="dl-bar">
-        <span className="dl-dots"><i /><i /><i /></span>
+        <span className="dl-dots">
+          <i />
+          <i />
+          <i />
+        </span>
         <span>{title}</span>
         <span />
       </div>
@@ -84,15 +88,17 @@ export default function App() {
           This is lane {lane} of <span style={{ whiteSpace: "nowrap" }}>{env.VITE_PROJECT}.</span>
         </h1>
         <p className="dl-lede">
-          Served by <code>{env.VITE_SERVICE}</code> from the <code>{env.VITE_LANE_LABEL}</code> worktree.
-          The browser calls <code>api</code> at {apiUrl} with CORS, and through <code>/proxied</code> on
-          this host without it.
+          Served by <code>{env.VITE_SERVICE}</code> from the <code>{env.VITE_LANE_LABEL}</code>{" "}
+          worktree. The browser calls <code>api</code> at {apiUrl} with CORS, and through{" "}
+          <code>/proxied</code> on this host without it.
         </p>
 
         <Card title="lane">
           <dl className="dl-rows">
             <dt>lane</dt>
-            <dd>{lane} ({env.VITE_LANE_NAME})</dd>
+            <dd>
+              {lane} ({env.VITE_LANE_NAME})
+            </dd>
             <dt>branch</dt>
             <dd>{env.VITE_LANE_LABEL}</dd>
             <dt>service</dt>
@@ -113,7 +119,9 @@ export default function App() {
             <Outcome state={items} ok={(data) => `200 from lane ${data.lane}`} />
             {items.status === "ok" &&
               items.data.items.map((item) => [
-                <dt key={`k${item.id}`} className="dl-key">{item.sku}</dt>,
+                <dt key={`k${item.id}`} className="dl-key">
+                  {item.sku}
+                </dt>,
                 <dd key={`v${item.id}`}>
                   {item.name}, ${(item.price_cents / 100).toFixed(2)}
                 </dd>,
@@ -136,19 +144,29 @@ export default function App() {
         <Card title="session cookie">
           <dl className="dl-rows">
             <dt>last action</dt>
-            {action ? <dd className={action.ok ? "dl-ok" : "dl-bad"}>{action.text}</dd> : <dd>none yet</dd>}
+            {action ? (
+              <dd className={action.ok ? "dl-ok" : "dl-bad"}>{action.text}</dd>
+            ) : (
+              <dd>none yet</dd>
+            )}
             <dt>document.cookie</dt>
             <dd>{cookie || "(empty)"}</dd>
             <dt>GET /api/me</dt>
             <Outcome
               state={me}
-              ok={(data) => (data.signed_in ? `signed in as ${data.user} on lane ${data.lane}` : "not signed in")}
+              ok={(data) =>
+                data.signed_in ? `signed in as ${data.user} on lane ${data.lane}` : "not signed in"
+              }
             />
           </dl>
         </Card>
         <p>
-          <button className="dl-button" type="button" onClick={() => session("POST")}>Sign in</button>{" "}
-          <button className="dl-button" type="button" onClick={() => session("DELETE")}>Sign out</button>
+          <button className="dl-button" type="button" onClick={() => session("POST")}>
+            Sign in
+          </button>{" "}
+          <button className="dl-button" type="button" onClick={() => session("DELETE")}>
+            Sign out
+          </button>
         </p>
       </main>
 

@@ -57,8 +57,7 @@ async function state() {
   };
 }
 
-const escape = (value) =>
-  String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 function page(info, data) {
   const url = info.url
@@ -161,7 +160,9 @@ async function handle(req, res) {
     return send(res, 200, "application/json", JSON.stringify(body, null, 2) + "\n");
   }
   if (req.method === "POST" && path === "/notes") {
-    await pool.query("INSERT INTO notes (body) VALUES ($1)", [`added in lane ${env.DEVLANES_LANE}`]);
+    await pool.query("INSERT INTO notes (body) VALUES ($1)", [
+      `added in lane ${env.DEVLANES_LANE}`,
+    ]);
     res.writeHead(303, { location: "/" });
     return res.end();
   }
@@ -170,7 +171,8 @@ async function handle(req, res) {
     res.writeHead(303, { location: "/" });
     return res.end();
   }
-  if (path === "/") return send(res, 200, "text/html; charset=utf-8", page(laneInfo(req), await state()));
+  if (path === "/")
+    return send(res, 200, "text/html; charset=utf-8", page(laneInfo(req), await state()));
   send(res, 404, "text/plain; charset=utf-8", "not found\n");
 }
 

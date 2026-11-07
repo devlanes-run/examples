@@ -66,7 +66,7 @@ Back on the laptop, give it a port range that does not overlap the box's `25000-
 
 ```sh
 devlanes config set ports.range 20000-24999
-devlanes daemon restart                         # only if the daemon was already running
+devlanes daemon restart # only if the daemon was already running
 devlanes remote connect acme-box --code R0SZ-27CY
 devlanes remote ls
 ```

@@ -5,7 +5,11 @@ const lane = process.env.DEVLANES_LANE;
 const orders = [
   { customer: "wile@acme.example.invalid", item: "Anvil", total_cents: 4999 },
   { customer: "road@acme.example.invalid", item: "Rocket skates", total_cents: 12900 },
-  { customer: `lane${lane}@acme.example.invalid`, item: `Giant magnet for lane ${lane}`, total_cents: 2450 },
+  {
+    customer: `lane${lane}@acme.example.invalid`,
+    item: `Giant magnet for lane ${lane}`,
+    total_cents: 2450,
+  },
 ];
 
 for (const order of orders) {

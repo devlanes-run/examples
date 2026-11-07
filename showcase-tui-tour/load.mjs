@@ -12,7 +12,9 @@ setInterval(async () => {
     const res = await fetch(url);
     const body = await res.json();
     const ms = Math.round(performance.now() - started);
-    console.log(`${clock()} ${res.status} ${body.orders.length} orders from lane ${body.lane} in ${ms}ms`);
+    console.log(
+      `${clock()} ${res.status} ${body.orders.length} orders from lane ${body.lane} in ${ms}ms`,
+    );
   } catch (err) {
     console.log(`${clock()} ${err.cause?.code ?? err.message}`);
   }

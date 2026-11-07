@@ -34,7 +34,8 @@ const isSecret = (key) => /TOKEN|SECRET|PASSWORD|DSN|KEY/.test(key);
 function envState(key) {
   if (!(key in env)) return `<span class="dl-key">not in this process</span>`;
   if (env[key] === "") return "empty";
-  if (isSecret(key)) return `<span class="dl-ok">set</span> <span class="dl-key">value hidden</span>`;
+  if (isSecret(key))
+    return `<span class="dl-ok">set</span> <span class="dl-key">value hidden</span>`;
   return `<span class="dl-ok">${escape(env[key])}</span>`;
 }
 
@@ -52,8 +53,7 @@ async function fetchOrders() {
   }
 }
 
-const escape = (value) =>
-  String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 const link = (url) => `<a href="${escape(url)}">${escape(url)}</a>`;
 
@@ -75,11 +75,15 @@ function cookie(req, name) {
 function page(info, file, orders) {
   const url = info.url ? link(info.url) : `<span class="dl-bad">not through the proxy</span>`;
   const fileRows = file
-    ? [["file", `${escape(file.path)} <span class="dl-key">from ${escape(file.from)}</span>`], ...dotenvKeys(file.path).map((key) => [key, envState(key)])]
+    ? [
+        ["file", `${escape(file.path)} <span class="dl-key">from ${escape(file.from)}</span>`],
+        ...dotenvKeys(file.path).map((key) => [key, envState(key)]),
+      ]
     : [["file", `<span class="dl-bad">no .env; copy .env.example to .env</span>`]];
-  const ordersRow = orders.status === 200
-    ? `<span class="dl-ok">200, ${escape(orders.count)} orders</span>`
-    : `<span class="dl-bad">${escape(orders.status ?? orders.error)}</span>`;
+  const ordersRow =
+    orders.status === 200
+      ? `<span class="dl-ok">200, ${escape(orders.count)} orders</span>`
+      : `<span class="dl-bad">${escape(orders.status ?? orders.error)}</span>`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -121,7 +125,12 @@ function page(info, file, orders) {
     ${card("checks", [
       ["GET api/orders", `${ordersRow} <span class="dl-key">from web, with ACME_API_TOKEN</span>`],
       ["GET api/session", `<span id="session">waiting for the browser</span>`],
-      ["Sentry", env.SENTRY_DSN ? `<span class="dl-ok">on</span>` : `off <span class="dl-key">SENTRY_DSN is empty</span>`],
+      [
+        "Sentry",
+        env.SENTRY_DSN
+          ? `<span class="dl-ok">on</span>`
+          : `off <span class="dl-key">SENTRY_DSN is empty</span>`,
+      ],
     ])}
   </main>
   <footer class="dl-footer">web.mjs, node:http, no dependencies</footer>
@@ -154,7 +163,8 @@ const server = createServer(async (req, res) => {
     const headers = { "content-type": "text/html; charset=utf-8" };
     if (!cookie(req, "acme_session")) {
       const session = randomBytes(4).toString("hex");
-      headers["set-cookie"] = `acme_session=${session}; Domain=${urls.cookieDomain}; Path=/; Secure; HttpOnly; SameSite=Lax`;
+      headers["set-cookie"] =
+        `acme_session=${session}; Domain=${urls.cookieDomain}; Path=/; Secure; HttpOnly; SameSite=Lax`;
     }
     res.writeHead(200, headers);
     return res.end(page(laneInfo(req), dotenvFile(), await fetchOrders()));

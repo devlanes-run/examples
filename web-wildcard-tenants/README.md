@@ -20,12 +20,12 @@ Open https://app.wildcard-tenants.localhost. The page shows lane 0 of `wildcard-
 
 devlanes computes the lane var `sites_domain` from `domain('wildcard-sites')`: `wildcard-sites.localhost` in lane 0, `wildcard-sites1.localhost` in lane 1. It then starts the four services from the scripts in `package.json`, each ready once `/healthz` answers, and the proxy routes:
 
-| Hostname | Service | Route |
-| --- | --- | --- |
-| `app.wildcard-tenants.localhost` | `app` | exact |
-| `go.wildcard-tenants.localhost` | `links` | exact |
-| `*.wildcard-sites.localhost` | `sites` | wildcard |
-| `*.wildcard-tenants.localhost` | `gateway` | wildcard with `fallback: true` |
+| Hostname                         | Service   | Route                          |
+| -------------------------------- | --------- | ------------------------------ |
+| `app.wildcard-tenants.localhost` | `app`     | exact                          |
+| `go.wildcard-tenants.localhost`  | `links`   | exact                          |
+| `*.wildcard-sites.localhost`     | `sites`   | wildcard                       |
+| `*.wildcard-tenants.localhost`   | `gateway` | wildcard with `fallback: true` |
 
 `app` sets `session=...; Domain=wildcard-tenants.localhost`, so the browser sends the cookie to every name under the lane domain, `go.` and the gateway's subdomains included. Tenant pages sit under `wildcard-sites.localhost`, which is another site, and never get it. `sites` reads the tenant from the `Host` header, `gateway` names the subdomain it got, and `links` redirects `/hello` and `/sale` to alice's and bob's pages. Every service also answers `/healthz`, `/lane` and `/request`, which returns the service, the hostname it got and the `Cookie` header.
 

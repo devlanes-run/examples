@@ -4,7 +4,9 @@
 const clock = () => new Date().toTimeString().slice(0, 8);
 
 const batches = Array.from({ length: 12 }, (_, i) =>
-  i === 9 ? { id: i + 1 } : { id: i + 1, totals: { orders: 40 + i * 3, cents: 129_900 + i * 7_150 } },
+  i === 9
+    ? { id: i + 1 }
+    : { id: i + 1, totals: { orders: 40 + i * 3, cents: 129_900 + i * 7_150 } },
 );
 
 function summarize(batch) {

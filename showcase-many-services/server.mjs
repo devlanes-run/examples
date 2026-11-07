@@ -10,7 +10,9 @@ const repo = "https://github.com/devlanes-run/examples/tree/main/showcase-many-s
 
 // "1000-6000" -> a random whole number in that range.
 function pick(range) {
-  const [min, max = min] = String(range ?? "0").split("-").map(Number);
+  const [min, max = min] = String(range ?? "0")
+    .split("-")
+    .map(Number);
   return Math.round(min + Math.random() * (max - min));
 }
 
@@ -52,15 +54,15 @@ function stats() {
   };
 }
 
-const escape = (value) =>
-  String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 function send(res, status, type, body) {
   res.writeHead(status, { "content-type": type });
   res.end(body);
 }
 
-const json = (res, data) => send(res, 200, "application/json", JSON.stringify(data, null, 2) + "\n");
+const json = (res, data) =>
+  send(res, 200, "application/json", JSON.stringify(data, null, 2) + "\n");
 const html = (res, body) => send(res, 200, "text/html; charset=utf-8", body);
 
 const assets = {
@@ -183,12 +185,15 @@ function handle(req, res) {
   if (path === "/healthz") return send(res, 200, "text/plain; charset=utf-8", "ok");
   if (path === "/lane") return json(res, laneInfo(req));
   if (path === "/stats") return json(res, stats());
-  if (assets[path]) return send(res, 200, assets[path], readFileSync(new URL(`.${path}`, import.meta.url)));
+  if (assets[path])
+    return send(res, 200, assets[path], readFileSync(new URL(`.${path}`, import.meta.url)));
   if (path === "/api/orders" && kind === "api") return json(res, orders);
   if (path !== "/") return send(res, 404, "text/plain; charset=utf-8", "not found\n");
   if (env.PAGE === "index") return index(req, res);
   if (kind === "web") {
-    const link = env.LANE_DOMAIN ? `<p class="dl-lede"><a href="https://${escape(env.LANE_DOMAIN)}">Every service of this lane</a></p>` : "";
+    const link = env.LANE_DOMAIN
+      ? `<p class="dl-lede"><a href="https://${escape(env.LANE_DOMAIN)}">Every service of this lane</a></p>`
+      : "";
     return html(res, page(laneInfo(req), statsCard(stats()) + link));
   }
   const extra = kind === "api" ? { orders } : {};
@@ -212,7 +217,9 @@ function listen() {
     });
   }).listen(port, host, () => {
     readyAfterMs = Math.round(performance.now() - started);
-    console.log(`${service} ready after ${(readyAfterMs / 1000).toFixed(1)} s on http://${host}:${port}`);
+    console.log(
+      `${service} ready after ${(readyAfterMs / 1000).toFixed(1)} s on http://${host}:${port}`,
+    );
     setTimeout(burst, pick(env.BURST_EVERY_MS));
   });
 }

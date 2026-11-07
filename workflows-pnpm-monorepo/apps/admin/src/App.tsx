@@ -33,9 +33,9 @@ export default function App() {
       lane={env}
       lede={
         <>
-          Served by <code>{env.service}</code> from the <code>{env.branch}</code> worktree. The back office, a
-          second Vite app in <code>apps/admin</code> that renders with the same <code>@acme/ui</code> components
-          as <a href={env.webUrl}>web</a>.
+          Served by <code>{env.service}</code> from the <code>{env.branch}</code> worktree. The back
+          office, a second Vite app in <code>apps/admin</code> that renders with the same{" "}
+          <code>@acme/ui</code> components as <a href={env.webUrl}>web</a>.
         </>
       }
     >
@@ -51,7 +51,9 @@ export default function App() {
             </>
           ) : (
             accounts.map((account) => [
-              <dt key={`k${account.id}`} className="dl-key">{account.name}</dt>,
+              <dt key={`k${account.id}`} className="dl-key">
+                {account.name}
+              </dt>,
               <dd key={`v${account.id}`}>
                 {account.plan}, {account.seats} seats
               </dd>,

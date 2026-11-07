@@ -157,6 +157,7 @@ In devlanes 0.11.3, `exec` units do not get `NODE_EXTRA_CA_CERTS`, so plain `nod
   ```
 
   The assertion reads `'dev' !== 'start'`. Run `devlanes stop` first.
+
 - Run the tests against a second lane. With a worktree: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/workflows-ci-with && devlanes with --profile e2e -- npm test` (not run for this example; the worktree is a lane of its own). Without one, in this folder:
 
   ```sh
@@ -166,6 +167,7 @@ In devlanes 0.11.3, `exec` units do not get `NODE_EXTRA_CA_CERTS`, so plain `nod
   ```
 
   The same tests pass against https://api.ci-with1.localhost and https://ci-with1.localhost, and the run ends with `devlanes with · ci-with@1 · exit 0`.
+
 - Remove the lanes with `devlanes lane clean ci-with-review --yes` and `devlanes lane clean 0 --yes`.
 
 ## Files

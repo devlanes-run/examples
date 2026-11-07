@@ -1,7 +1,12 @@
 // One entry per datastore: this lane's namespace in it, a health check, and a
 // write-then-read of mock data. Connection details come only from the URLs in
 // global_env, so the code never knows which lane it runs in.
-import { HeadBucketCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  HeadBucketCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { createClient as createClickHouse } from "@clickhouse/client";
 import amqp from "amqplib";
 import nodemailer from "nodemailer";
@@ -63,14 +68,23 @@ export const stores = [
     envVar: "DATABASE_URL",
     connect: `docker compose -p multi-database exec postgres psql -U postgres ${new URL(env.DATABASE_URL).pathname.slice(1)}`,
     async health() {
-      const { rows } = await pgPool.query("SELECT current_database() AS db, current_setting('server_version') AS v");
+      const { rows } = await pgPool.query(
+        "SELECT current_database() AS db, current_setting('server_version') AS v",
+      );
       return `PostgreSQL ${rows[0].v}, connected to ${rows[0].db}`;
     },
     async tryIt() {
-      await pgPool.query("CREATE TABLE IF NOT EXISTS notes (id serial PRIMARY KEY, body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now())");
-      const ins = await pgPool.query("INSERT INTO notes (body) VALUES ($1) RETURNING id", [`note from ${lane} at ${now()}`]);
+      await pgPool.query(
+        "CREATE TABLE IF NOT EXISTS notes (id serial PRIMARY KEY, body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now())",
+      );
+      const ins = await pgPool.query("INSERT INTO notes (body) VALUES ($1) RETURNING id", [
+        `note from ${lane} at ${now()}`,
+      ]);
       const { rows } = await pgPool.query("SELECT count(*)::int AS n FROM notes");
-      return [`INSERT INTO notes -> id ${ins.rows[0].id}`, `SELECT count(*) FROM notes -> ${rows[0].n}`];
+      return [
+        `INSERT INTO notes -> id ${ins.rows[0].id}`,
+        `SELECT count(*) FROM notes -> ${rows[0].n}`,
+      ];
     },
   },
   {
@@ -102,16 +116,34 @@ export const stores = [
     envVar: "CLICKHOUSE_URL",
     console: `https://clickhouse.${domain}/play`,
     async health() {
-      const rows = await (await clickhouse.query({ query: "SELECT version() AS v, currentDatabase() AS db", format: "JSONEachRow" })).json();
+      const rows = await (
+        await clickhouse.query({
+          query: "SELECT version() AS v, currentDatabase() AS db",
+          format: "JSONEachRow",
+        })
+      ).json();
       return `ClickHouse ${rows[0].v}, connected to ${rows[0].db}`;
     },
     async tryIt() {
       await clickhouse.command({
-        query: "CREATE TABLE IF NOT EXISTS events (at DateTime64(3) DEFAULT now64(3), lane String, kind String) ENGINE = MergeTree ORDER BY at",
+        query:
+          "CREATE TABLE IF NOT EXISTS events (at DateTime64(3) DEFAULT now64(3), lane String, kind String) ENGINE = MergeTree ORDER BY at",
       });
-      await clickhouse.insert({ table: "events", values: [{ lane, kind: "click" }], format: "JSONEachRow" });
-      const rows = await (await clickhouse.query({ query: "SELECT count() AS n, toString(max(at)) AS last FROM events", format: "JSONEachRow" })).json();
-      return ["INSERT INTO events -> 1 row", `SELECT count() FROM events -> ${rows[0].n}, newest ${rows[0].last}`];
+      await clickhouse.insert({
+        table: "events",
+        values: [{ lane, kind: "click" }],
+        format: "JSONEachRow",
+      });
+      const rows = await (
+        await clickhouse.query({
+          query: "SELECT count() AS n, toString(max(at)) AS last FROM events",
+          format: "JSONEachRow",
+        })
+      ).json();
+      return [
+        "INSERT INTO events -> 1 row",
+        `SELECT count() FROM events -> ${rows[0].n}, newest ${rows[0].last}`,
+      ];
     },
   },
   {
@@ -137,7 +169,10 @@ export const stores = [
         await ch.waitForConfirms();
         const msg = await ch.get("events", { noAck: true });
         await ch.close();
-        return [`publish events <- ${body}`, `get events -> ${msg ? msg.content.toString() : "(empty)"}`];
+        return [
+          `publish events <- ${body}`,
+          `get events -> ${msg ? msg.content.toString() : "(empty)"}`,
+        ];
       });
     },
   },
@@ -155,7 +190,14 @@ export const stores = [
     },
     async tryIt() {
       const key = `notes/${now().replace(/[:.]/g, "-")}.txt`;
-      await s3.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: `note from ${lane}\n`, ContentType: "text/plain" }));
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          Body: `note from ${lane}\n`,
+          ContentType: "text/plain",
+        }),
+      );
       const list = await s3.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: "notes/" }));
       return [`PUT ${key}`, `LIST notes/ -> ${count(list.KeyCount, "object")}`];
     },
@@ -180,13 +222,18 @@ export const stores = [
         text: `Sent by the multi-database example at ${now()}.`,
       });
       const list = await mailpit("/api/v1/messages?limit=1");
-      return [`SMTP ${sent.response}`, `GET /api/v1/messages -> ${count(list.total, "message")}, newest "${list.messages[0]?.Subject}"`];
+      return [
+        `SMTP ${sent.response}`,
+        `GET /api/v1/messages -> ${count(list.total, "message")}, newest "${list.messages[0]?.Subject}"`,
+      ];
     },
   },
 ];
 
 function timeout(ms) {
-  return new Promise((_, reject) => setTimeout(() => reject(new Error(`no answer in ${ms} ms`)), ms));
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(`no answer in ${ms} ms`)), ms),
+  );
 }
 
 export async function checkAll() {

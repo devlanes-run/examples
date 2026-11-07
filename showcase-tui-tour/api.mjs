@@ -107,7 +107,11 @@ async function route(req, res) {
     case "GET /":
       return send(res, 200, { ...laneInfo(req), database, orders: await listOrders() });
     case "GET /api/orders":
-      return send(res, 200, { lane: Number(env.DEVLANES_LANE), database, orders: await listOrders() });
+      return send(res, 200, {
+        lane: Number(env.DEVLANES_LANE),
+        database,
+        orders: await listOrders(),
+      });
     case "POST /api/orders":
       return send(res, 201, await addOrder(await readJson(req)));
     case "GET /api/mail":

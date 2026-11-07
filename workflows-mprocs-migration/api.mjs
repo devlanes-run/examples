@@ -20,7 +20,11 @@ const server = createServer(async (req, res) => {
 
   const data = load();
   if (route === "GET /") {
-    return sendJson(res, 200, { ...laneInfo(req, port), data_file: dataFile, messages: data.messages });
+    return sendJson(res, 200, {
+      ...laneInfo(req, port),
+      data_file: dataFile,
+      messages: data.messages,
+    });
   }
   if (route === "GET /api/messages") {
     const status = searchParams.get("status");
@@ -32,7 +36,12 @@ const server = createServer(async (req, res) => {
     if (typeof input?.to !== "string" || typeof input?.body !== "string") {
       return sendJson(res, 400, { error: "send JSON with to and body" });
     }
-    const message = { id: `msg_${data.next_id++}`, to: input.to, body: input.body, status: "queued" };
+    const message = {
+      id: `msg_${data.next_id++}`,
+      to: input.to,
+      body: input.body,
+      status: "queued",
+    };
     data.messages.push(message);
     save(data);
     return sendJson(res, 201, message);

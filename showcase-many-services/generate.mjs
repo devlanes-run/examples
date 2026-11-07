@@ -37,7 +37,9 @@ const service = (s) => {
     ...services.map((t) => `      URL_${envName(t.name)}: \${{ services.${key(t.name)}.url }}`),
     ...services
       .filter((t) => t.host)
-      .map((t) => `      PUBLIC_URL_${envName(t.name)}: \${{ services.${key(t.name)}.public_url }}`),
+      .map(
+        (t) => `      PUBLIC_URL_${envName(t.name)}: \${{ services.${key(t.name)}.public_url }}`,
+      ),
   );
   return lines.join("\n");
 };

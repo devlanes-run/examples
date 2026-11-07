@@ -50,8 +50,7 @@ function laneInfo(req) {
   };
 }
 
-const escape = (value) =>
-  String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 function send(res, status, type, body) {
   res.writeHead(status, { "content-type": type });
@@ -68,10 +67,10 @@ const assets = {
 
 // Shared routes: health, lane JSON and the page assets.
 function common(req, res, path) {
-  if (path === "/healthz") return send(res, 200, "text/plain; charset=utf-8", "ok"), true;
-  if (path === "/lane") return json(res, 200, laneInfo(req)), true;
+  if (path === "/healthz") return (send(res, 200, "text/plain; charset=utf-8", "ok"), true);
+  if (path === "/lane") return (json(res, 200, laneInfo(req)), true);
   if (assets[path]) {
-    return send(res, 200, assets[path], readFileSync(new URL(`.${path}`, import.meta.url))), true;
+    return (send(res, 200, assets[path], readFileSync(new URL(`.${path}`, import.meta.url))), true);
   }
   return false;
 }
@@ -123,13 +122,19 @@ function api() {
       return res.end();
     }
     if (path === "/" && req.method === "GET") {
-      return json(res, 200, { ...laneInfo(req), data_file: file, records: kind, items: load(file, seeds[kind]) });
+      return json(res, 200, {
+        ...laneInfo(req),
+        data_file: file,
+        records: kind,
+        items: load(file, seeds[kind]),
+      });
     }
     if (path === `/api/${kind}` && req.method === "GET") {
       return json(res, 200, load(file, seeds[kind]));
     }
     if (path === `/api/${kind}` && req.method === "POST") {
-      if (crossSite(req)) return send(res, 403, "text/plain; charset=utf-8", "origin not allowed\n");
+      if (crossSite(req))
+        return send(res, 403, "text/plain; charset=utf-8", "origin not allowed\n");
       const body = await readBody(req);
       const items = load(file, seeds[kind]);
       const id = Math.max(0, ...items.map((item) => item.id)) + 1;
@@ -235,7 +240,8 @@ ${cards.join("\n")}`;
       return send(res, 200, "text/html; charset=utf-8", layout(laneInfo(req), body));
     }
     if (path === "/add" && req.method === "POST") {
-      if (crossSite(req)) return send(res, 403, "text/plain; charset=utf-8", "origin not allowed\n");
+      if (crossSite(req))
+        return send(res, 403, "text/plain; charset=utf-8", "origin not allowed\n");
       const query = new URL(req.url, "http://localhost").searchParams;
       const name = query.get("api");
       const records = query.get("records") ?? "";
@@ -243,7 +249,8 @@ ${cards.join("\n")}`;
         return send(res, 400, "text/plain; charset=utf-8", "unknown api\n");
       }
       const answer = await fetch(`${target(name).url}/api/${records}`, { method: "POST" });
-      if (!answer.ok) return send(res, 502, "text/plain; charset=utf-8", `${name} answered ${answer.status}\n`);
+      if (!answer.ok)
+        return send(res, 502, "text/plain; charset=utf-8", `${name} answered ${answer.status}\n`);
       res.writeHead(303, { location: "/" });
       return res.end();
     }
@@ -254,7 +261,8 @@ ${cards.join("\n")}`;
 function docs() {
   const components = ["Button", "PriceTag", "CartDrawer", "InvoiceTable", "SignInForm"];
   serve((req, res, path) => {
-    if (path !== "/" || req.method !== "GET") return send(res, 404, "text/plain; charset=utf-8", "not found\n");
+    if (path !== "/" || req.method !== "GET")
+      return send(res, 404, "text/plain; charset=utf-8", "not found\n");
     const body = `
     <h2 class="dl-h2">Components</h2>
     <p class="dl-lede">A stand-in for Storybook. It has <code>autostart: false</code>, so no profile starts it unless it names <code>docs</code> or <code>+docs</code>.</p>
@@ -286,7 +294,8 @@ function worker() {
       }
       save(file, log);
     } catch (error) {
-      if (!down) console.log(`accounts-api unreachable at ${source}: ${error.cause?.code ?? error.name}`);
+      if (!down)
+        console.log(`accounts-api unreachable at ${source}: ${error.cause?.code ?? error.name}`);
       down = true;
     }
   }

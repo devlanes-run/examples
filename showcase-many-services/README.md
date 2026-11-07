@@ -78,6 +78,7 @@ In the TUI, api services are cyan, web green, workers magenta and jobs yellow (`
   ```
 
   To change them, edit `~/.devlanes/config.yaml` or use `devlanes config set startup.max 8`, `devlanes config set startup.initial 2` (ramp up from 2 slots), `devlanes config set startup.mode fixed`, `devlanes config set startup.target_cpu 50%` or `devlanes config set startup.slot_timeout 10s`, and `devlanes config unset startup.max` to go back. They apply to every project on the machine, so these commands were not run for this README.
+
 - `devlanes logs worker-01 --tail 4` shows the bursts of a worker:
 
   ```text
@@ -97,6 +98,7 @@ In the TUI, api services are cyan, web green, workers magenta and jobs yellow (`
   ```
 
   Both lanes' 80 services go through the same gate, and the index on https://many-services1.localhost says `This is lane 1 of many-services.`
+
 - `devlanes lane clean many-services-review --yes` and `devlanes lane clean 0 --yes` stop both lanes and free their ports.
 
 On Windows, `devlanes stop` reports each service as `exit=-1073741510`, Windows' exit status for a process ended by Ctrl-C.

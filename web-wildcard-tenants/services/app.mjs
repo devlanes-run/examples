@@ -1,5 +1,16 @@
 import { randomBytes } from "node:crypto";
-import { LANE_DOMAIN, SITES_DOMAIN, TENANTS, card, cookies, esc, page, portSuffix, send, serve } from "../lib/shared.mjs";
+import {
+  LANE_DOMAIN,
+  SITES_DOMAIN,
+  TENANTS,
+  card,
+  cookies,
+  esc,
+  page,
+  portSuffix,
+  send,
+  serve,
+} from "../lib/shared.mjs";
 
 serve((req, res, path) => {
   if (path !== "/") return send(res, 404, "not found\n", { "content-type": "text/plain" });
@@ -11,7 +22,8 @@ serve((req, res, path) => {
     session = randomBytes(6).toString("hex");
     // Domain= makes the cookie reach every name under the lane domain (go., the gateway's
     // subdomains), and no name under the tenant sites' domain.
-    headers["set-cookie"] = `session=${session}; Domain=${LANE_DOMAIN}; Path=/; Max-Age=86400; Secure; HttpOnly; SameSite=Lax`;
+    headers["set-cookie"] =
+      `session=${session}; Domain=${LANE_DOMAIN}; Path=/; Max-Age=86400; Secure; HttpOnly; SameSite=Lax`;
   }
 
   const tenantRows = Object.entries(TENANTS).map(([name, t]) => {
@@ -34,7 +46,10 @@ serve((req, res, path) => {
         ]),
         card("tenants", tenantRows),
         card("other hostnames", [
-          ["short links", `<a href="${esc(go)}/hello">${esc(go)}/hello</a>, <a href="${esc(go)}/sale">${esc(go)}/sale</a>`],
+          [
+            "short links",
+            `<a href="${esc(go)}/hello">${esc(go)}/hello</a>, <a href="${esc(go)}/sale">${esc(go)}/sale</a>`,
+          ],
           ["no service", `<a href="${esc(unknown)}">${esc(unknown)}</a> (the gateway answers)`],
         ]),
       ],

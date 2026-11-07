@@ -11,7 +11,11 @@ let job = null;
 function stop(signal) {
   if (stopping) return;
   stopping = true;
-  console.log(job ? `${name} got ${signal}, finishing job ${job.id} first` : `${name} got ${signal}, no job in flight`);
+  console.log(
+    job
+      ? `${name} got ${signal}, finishing job ${job.id} first`
+      : `${name} got ${signal}, no job in flight`,
+  );
 }
 process.on("SIGINT", () => stop("SIGINT"));
 
@@ -32,7 +36,13 @@ while (!stopping) {
   console.log(`${name} started job ${job.id}`);
   const started = Date.now();
   await sleep(job.ms);
-  const finished = { ...job, worker: name, pid: process.pid, took_ms: Date.now() - started, finished_at: Date.now() };
+  const finished = {
+    ...job,
+    worker: name,
+    pid: process.pid,
+    took_ms: Date.now() - started,
+    finished_at: Date.now(),
+  };
   await redis
     .multi()
     .lPush(keys.done, JSON.stringify(finished))

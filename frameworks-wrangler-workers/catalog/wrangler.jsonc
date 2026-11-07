@@ -6,6 +6,6 @@
   // Local only: wrangler dev keeps this namespace under --persist-to.
   "kv_namespaces": [{ "binding": "VIEWS", "id": "catalog-views" }],
   "dev": {
-    "ip": "127.0.0.1"
-  }
+    "ip": "127.0.0.1",
+  },
 }

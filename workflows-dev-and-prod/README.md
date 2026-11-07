@@ -17,7 +17,7 @@ devlanes start
 Open https://dev-and-prod.localhost. Each Git worktree of this repository is a lane with its own ports and hostnames, and the primary worktree is lane 0. The page shows lane 0 of `dev-and-prod` and two cards, one for `web` and one for `api`, with the npm script each one runs, `NODE_ENV`, the profile and the project file. The page reads them from the servers at load time, so they always describe the process that answered.
 
 ```sh
-curl -fsS https://dev-and-prod.localhost/mode   # on Windows, add --ssl-revoke-best-effort
+curl -fsS https://dev-and-prod.localhost/mode # on Windows, add --ssl-revoke-best-effort
 ```
 
 ```json
@@ -155,6 +155,7 @@ The page's `api` card shows `LOG_LEVEL debug`, `devlanes logs api` shows a `debu
   ```
 
   The new worktree has no `node_modules` and no `devlanes.local.yaml`, so `install` runs there, and the lane uses the primary worktree's `devlanes.local.yaml` if you made one. To get a second lane without a worktree, run `devlanes lane new --name dev-and-prod-review --start` in this folder: https://dev-and-prod1.localhost shows `This is lane 1 of dev-and-prod.` with its API at https://api.dev-and-prod1.localhost.
+
 - Run lane 1 in prod while lane 0 keeps its dev servers: `devlanes stop --lane dev-and-prod-review`, then `devlanes start --lane dev-and-prod-review --profile prod --no-ui`. https://dev-and-prod1.localhost shows `vite preview` with a build output folder of its own, and https://dev-and-prod.localhost still shows `vite dev server`.
 - Remove the lanes with `devlanes lane clean dev-and-prod-review --yes`, `devlanes lane clean 0 --yes` and `devlanes -p dev-and-prod-release lane clean 0 --yes`.
 

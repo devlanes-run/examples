@@ -25,7 +25,16 @@ function laneInfo(req) {
 }
 
 function storeInfo(s, h) {
-  return { store: s.key, container: s.scope, kind: s.kind, namespace: s.namespace, env: s.envVar, console: s.console ?? null, ok: h.ok, health: h.health };
+  return {
+    store: s.key,
+    container: s.scope,
+    kind: s.kind,
+    namespace: s.namespace,
+    env: s.envVar,
+    console: s.console ?? null,
+    ok: h.ok,
+    health: h.health,
+  };
 }
 
 function send(res, status, type, body) {
@@ -33,7 +42,8 @@ function send(res, status, type, body) {
   res.end(body);
 }
 
-const json = (res, status, value) => send(res, status, "application/json", `${JSON.stringify(value, null, 2)}\n`);
+const json = (res, status, value) =>
+  send(res, status, "application/json", `${JSON.stringify(value, null, 2)}\n`);
 
 const esc = (v) => String(v).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -129,23 +139,30 @@ for (const button of document.querySelectorAll("[data-store]")) {
 const server = createServer(async (req, res) => {
   const { pathname } = new URL(req.url, "http://localhost");
   try {
-    if (req.method === "GET" && pathname === "/healthz") return send(res, 200, "text/plain", "ok\n");
+    if (req.method === "GET" && pathname === "/healthz")
+      return send(res, 200, "text/plain", "ok\n");
     if (req.method === "GET" && pathname === "/lane") return json(res, 200, laneInfo(req));
     if (req.method === "GET" && assets[pathname]) return send(res, 200, ...assets[pathname]);
     if (req.method === "GET" && pathname === "/api/stores") {
       const health = await checkAll();
-      return json(res, 200, stores.map((s, i) => storeInfo(s, health[i])));
+      return json(
+        res,
+        200,
+        stores.map((s, i) => storeInfo(s, health[i])),
+      );
     }
     if (req.method === "GET" && pathname === "/") {
       const info = laneInfo(req);
       const health = await checkAll();
-      if ((req.headers.accept ?? "").includes("text/html")) return send(res, 200, "text/html; charset=utf-8", page(info, health));
+      if ((req.headers.accept ?? "").includes("text/html"))
+        return send(res, 200, "text/html; charset=utf-8", page(info, health));
       return json(res, 200, { ...info, stores: stores.map((s, i) => storeInfo(s, health[i])) });
     }
     const tryMatch = pathname.match(/^\/api\/stores\/([a-z0-9]+)\/try$/);
     if (req.method === "POST" && tryMatch) {
       const origin = req.headers.origin;
-      if (origin && !origins.has(origin)) return json(res, 403, { ok: false, error: `origin ${origin} is not in DEVLANES_ORIGINS` });
+      if (origin && !origins.has(origin))
+        return json(res, 403, { ok: false, error: `origin ${origin} is not in DEVLANES_ORIGINS` });
       const store = stores.find((s) => s.key === tryMatch[1]);
       if (!store) return json(res, 404, { ok: false, error: "no such store" });
       try {

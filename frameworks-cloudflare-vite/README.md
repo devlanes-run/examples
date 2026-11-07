@@ -70,6 +70,7 @@ The inspect hostname also sets `host_header: upstream`. Miniflare's inspector cl
   ```
 
   https://cloudflare-vite1.localhost shows `This is lane 1 of cloudflare-vite.`, with its own inspector port and a counter that starts at 0.
+
 - Click Count one more on lane 1, or post to it, and read lane 0's counter (on Windows, add `--ssl-revoke-best-effort` to `curl`):
 
   ```sh
@@ -83,6 +84,7 @@ The inspect hostname also sets `host_header: upstream`. Miniflare's inspector cl
   ```
 
   Both lanes run from one folder, and each keeps its count in its own data folder. `devlanes stop` and `devlanes start` keep the count.
+
 - List each lane's inspector targets:
 
   ```sh
@@ -94,6 +96,7 @@ The inspect hostname also sets `host_header: upstream`. Miniflare's inspector cl
   ```
 
   Lane 0's list at https://inspect.cloudflare-vite.localhost/json names port 20471. The URLs carry `127.0.0.1` because the inspector builds them from the `Host` header, which `host_header: upstream` replaces.
+
 - Rename an item in `worker/index.js` and save. `devlanes logs web` prints `[vite] hot updated: virtual:cloudflare/worker-entry`, `/api/items` returns the new name, and the counter keeps its value.
 - Remove both lanes with `devlanes lane clean cloudflare-vite-review --yes` and `devlanes lane clean 0 --yes`. Cleaning a lane deletes its data folder, counter included.
 

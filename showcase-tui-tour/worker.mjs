@@ -35,7 +35,9 @@ for (;;) {
     const done = { ...job, sent_at: new Date().toISOString(), took_ms: took, smtp: info.response };
     await redis.lPush("mail:done", JSON.stringify(done));
     await redis.lTrim("mail:done", 0, 19);
-    console.log(`${clock()} INFO job done queue=mail:queue id=${job.id} to=${job.to} took=${took}ms`);
+    console.log(
+      `${clock()} INFO job done queue=mail:queue id=${job.id} to=${job.to} took=${took}ms`,
+    );
   } catch (err) {
     console.error(`${clock()} ERROR job failed queue=mail:queue id=${job.id}: ${err.message}`);
   }

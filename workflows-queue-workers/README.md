@@ -18,7 +18,7 @@ devlanes start
 Open https://queue-workers.localhost. The page shows lane 0 of `queue-workers`, this lane's queue, the two workers and a table of finished jobs that refreshes every second. "Enqueue jobs" adds jobs of 2 seconds each. The same routes answer `curl`:
 
 ```sh
-curl -fsS -X POST "https://queue-workers.localhost/api/jobs?count=6"   # add --ssl-revoke-best-effort on Windows
+curl -fsS -X POST "https://queue-workers.localhost/api/jobs?count=6" # add --ssl-revoke-best-effort on Windows
 curl -fsS https://queue-workers.localhost/api/jobs
 ```
 

@@ -29,7 +29,8 @@ function escape(value) {
 async function readJson(responsePromise) {
   try {
     const response = await responsePromise;
-    if (!response.ok) return { error: `catalog answered ${response.status}: ${await response.text()}` };
+    if (!response.ok)
+      return { error: `catalog answered ${response.status}: ${await response.text()}` };
     return await response.json();
   } catch (error) {
     return { error: String(error) };
@@ -77,7 +78,10 @@ function page(info, catalog, byHostname, env) {
     : rows([
         ["catalog lane", sameLane(catalog.lane, lane)],
         ["views", `<span class="dl-key">${catalog.views}</span> in this lane's KV`],
-        ...catalog.items.map((item) => [item.sku, `${escape(item.name)}, $${(item.price_cents / 100).toFixed(2)}`]),
+        ...catalog.items.map((item) => [
+          item.sku,
+          `${escape(item.name)}, $${(item.price_cents / 100).toFixed(2)}`,
+        ]),
       ]);
   const hostnameCard = byHostname.error
     ? rows([["error", `<span class="dl-bad">${escape(byHostname.error)}</span>`]])
@@ -105,20 +109,31 @@ function page(info, catalog, byHostname, env) {
     <main class="dl-main">
       <h1 class="dl-title">This is lane ${lane} of ${escape(info.project)}.</h1>
       <p class="dl-lede">The <code>${escape(info.service)}</code> worker answered from the worktree of <code>${escape(info.branch)}</code>, and called the <code>catalog</code> worker through a service binding.</p>
-      ${card(`${info.service} worker`, lane, rows([
-        ["lane", `${lane} (${escape(info.lane_name)})`],
-        ["branch", escape(info.branch)],
-        ["service", escape(info.service)],
-        ["port", escape(info.port)],
-        ["url", `<span class="dl-url">${escape(info.url)}</span>`],
-      ]))}
-      ${card("service binding: env.CATALOG.fetch(\"/api/items\")", lane, catalogCard)}
+      ${card(
+        `${info.service} worker`,
+        lane,
+        rows([
+          ["lane", `${lane} (${escape(info.lane_name)})`],
+          ["branch", escape(info.branch)],
+          ["service", escape(info.service)],
+          ["port", escape(info.port)],
+          ["url", `<span class="dl-url">${escape(info.url)}</span>`],
+        ]),
+      )}
+      ${card('service binding: env.CATALOG.fetch("/api/items")', lane, catalogCard)}
       ${card(`by hostname: fetch("${env.CATALOG_URL}/lane")`, lane, hostnameCard)}
-      ${card("links", lane, rows([
-        ["catalog", link(env.CATALOG_URL)],
-        ["as JSON", `${link(`${env.PUBLIC_BASE_URL}/api/catalog`)}<br>${link(`${env.PUBLIC_BASE_URL}/api/catalog-by-hostname`)}`],
-        ["inspectors", `${link(inspect("gateway"))}<br>${link(inspect("catalog"))}`],
-      ]))}
+      ${card(
+        "links",
+        lane,
+        rows([
+          ["catalog", link(env.CATALOG_URL)],
+          [
+            "as JSON",
+            `${link(`${env.PUBLIC_BASE_URL}/api/catalog`)}<br>${link(`${env.PUBLIC_BASE_URL}/api/catalog-by-hostname`)}`,
+          ],
+          ["inspectors", `${link(inspect("gateway"))}<br>${link(inspect("catalog"))}`],
+        ]),
+      )}
     </main>
     <footer class="dl-footer">${escape(info.project)} lane ${lane}</footer>
   </div>
@@ -139,9 +154,15 @@ export default {
       case "GET /api/catalog":
         return json({ gateway_lane: Number(env.DEVLANES_LANE), catalog: await fetchCatalog(env) });
       case "GET /api/catalog-by-hostname":
-        return json({ gateway_lane: Number(env.DEVLANES_LANE), catalog: await fetchCatalogByHostname(env) });
+        return json({
+          gateway_lane: Number(env.DEVLANES_LANE),
+          catalog: await fetchCatalogByHostname(env),
+        });
       case "GET /": {
-        const [catalog, byHostname] = await Promise.all([fetchCatalog(env), fetchCatalogByHostname(env)]);
+        const [catalog, byHostname] = await Promise.all([
+          fetchCatalog(env),
+          fetchCatalogByHostname(env),
+        ]);
         const html = page(laneInfo(request, env), catalog, byHostname, env);
         return new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } });
       }

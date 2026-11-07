@@ -42,8 +42,9 @@ export default function App() {
       lane={env}
       lede={
         <>
-          Served by <code>{env.service}</code> from the <code>{env.branch}</code> worktree. A Vite app in{" "}
-          <code>apps/web</code> built on the workspace packages <code>@acme/ui</code> and <code>@acme/config</code>.
+          Served by <code>{env.service}</code> from the <code>{env.branch}</code> worktree. A Vite
+          app in <code>apps/web</code> built on the workspace packages <code>@acme/ui</code> and{" "}
+          <code>@acme/config</code>.
         </>
       }
     >
@@ -60,7 +61,9 @@ export default function App() {
           {accounts.status === "ok" && <dd className="dl-ok">200 from lane {accounts.lane}</dd>}
           {accounts.status === "ok" &&
             accounts.accounts.map((account) => [
-              <dt key={`k${account.id}`} className="dl-key">{account.plan}</dt>,
+              <dt key={`k${account.id}`} className="dl-key">
+                {account.plan}
+              </dt>,
               <dd key={`v${account.id}`}>{account.name}</dd>,
             ])}
         </dl>
@@ -70,12 +73,18 @@ export default function App() {
       <Card title="links" lane={env.lane}>
         <dl className="dl-rows">
           <dt>admin</dt>
-          <dd><a href={env.adminUrl}>{env.adminUrl}</a></dd>
+          <dd>
+            <a href={env.adminUrl}>{env.adminUrl}</a>
+          </dd>
           <dt>api</dt>
-          <dd><a href={env.apiUrl}>{env.apiUrl}</a></dd>
+          <dd>
+            <a href={env.apiUrl}>{env.apiUrl}</a>
+          </dd>
           <dt>billing</dt>
           {env.billingUrl ? (
-            <dd><a href={env.billingUrl}>{env.billingUrl}</a> (project pnpm-billing)</dd>
+            <dd>
+              <a href={env.billingUrl}>{env.billingUrl}</a> (project pnpm-billing)
+            </dd>
           ) : (
             <dd className="dl-bad">
               no lane of pnpm-billing runs; start one in apps/billing, then devlanes restart web

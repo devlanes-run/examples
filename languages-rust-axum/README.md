@@ -39,6 +39,7 @@ The lane card reads `DEVLANES_LANE`, `DEVLANES_LANE_NAME`, `LANE_LABEL`, `DEVLAN
   ```
 
   The first call after a start includes the TLS handshake; later calls reuse the connection.
+
 - Point `SSL_CERT_FILE` at a file with no certificates: create an empty `empty.pem` and run `devlanes restart web --env SSL_CERT_FILE=empty.pem`. The page now shows `request failed` and `invalid peer certificate: UnknownIssuer`, even though `devlanes setup` put the CA in the system store, because native roots read only that file. The restarted unit keeps the `--env` value, so undo it with `devlanes stop web` and `devlanes start web`, then delete `empty.pem`.
 - Start a second lane in this folder: `devlanes lane new --name review --start`. https://rust-axum1.localhost says `This is lane 1 of rust-axum.` and its api call goes to `https://api.rust-axum1.localhost`. The lane shares this folder and its `target/`, so it starts without compiling (`Finished ... in 0.15s`). On Windows a running `.exe` cannot be replaced, so while the review lane runs `api`, `devlanes restart api` in lane 0 fails with `failed to remove file ...\target\debug\api.exe` and `Access is denied. (os error 5)`; run `devlanes stop review:api` first. A second worktree (see the [repository README](../README.md#a-second-lane)) has its own `target/`, so its first start compiles everything again. `devlanes lane clean review --yes` removes the extra lane.
 

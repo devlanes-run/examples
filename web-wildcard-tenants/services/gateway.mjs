@@ -1,4 +1,14 @@
-import { LANE_DOMAIN, card, cookies, esc, hostname, page, portSuffix, send, serve } from "../lib/shared.mjs";
+import {
+  LANE_DOMAIN,
+  card,
+  cookies,
+  esc,
+  hostname,
+  page,
+  portSuffix,
+  send,
+  serve,
+} from "../lib/shared.mjs";
 
 serve((req, res, path) => {
   const host = hostname(req);

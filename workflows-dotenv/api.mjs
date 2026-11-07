@@ -4,7 +4,10 @@ import { urls } from "./urls.mjs";
 
 const env = process.env;
 const origins = (env.DEVLANES_ORIGINS ?? "").split(",");
-const flags = (env.FEATURE_FLAGS ?? "").split(",").map((flag) => flag.trim()).filter(Boolean);
+const flags = (env.FEATURE_FLAGS ?? "")
+  .split(",")
+  .map((flag) => flag.trim())
+  .filter(Boolean);
 
 const orders = [
   { id: "ord_1001", customer: "ada@example.invalid", total: 42.5 },
@@ -25,7 +28,11 @@ function cookie(req, name) {
 function cors(req) {
   const origin = req.headers.origin;
   if (!origin || !origins.includes(origin)) return {};
-  return { "access-control-allow-origin": origin, "access-control-allow-credentials": "true", vary: "Origin" };
+  return {
+    "access-control-allow-origin": origin,
+    "access-control-allow-credentials": "true",
+    vary: "Origin",
+  };
 }
 
 const server = createServer((req, res) => {

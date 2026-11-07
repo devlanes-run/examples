@@ -27,7 +27,10 @@ function messageRows(result) {
   if (!result.messages.length) return `<dt>none</dt><dd>run <code>devlanes run seed</code></dd>`;
   return result.messages
     .map((m) => {
-      const status = m.status === "sent" ? `<span class="dl-ok">sent</span>` : `<span class="dl-bad">queued</span>`;
+      const status =
+        m.status === "sent"
+          ? `<span class="dl-ok">sent</span>`
+          : `<span class="dl-bad">queued</span>`;
       return `<dt>${escape(m.id)}</dt><dd>${status} ${escape(m.to)}: ${escape(m.body)}</dd>`;
     })
     .join("\n        ");
@@ -35,7 +38,10 @@ function messageRows(result) {
 
 function page(info, result) {
   const lane = info.lane ?? "?";
-  const title = info.lane === null ? "Running outside devlanes." : `This is lane ${escape(lane)} of <span style="white-space: nowrap">${escape(info.project)}.</span>`;
+  const title =
+    info.lane === null
+      ? "Running outside devlanes."
+      : `This is lane ${escape(lane)} of <span style="white-space: nowrap">${escape(info.project)}.</span>`;
   const url = info.url ? link(info.url) : `<span class="dl-bad">not through a proxy</span>`;
   const queued = result.messages?.filter((m) => m.status === "queued").length ?? 0;
   return `<!doctype html>

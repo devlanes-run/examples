@@ -51,8 +51,7 @@ async function whoami() {
 const sidOf = (req) => /(?:^|;\s*)sid=([0-9a-f]+)/.exec(req.headers.cookie ?? "")?.[1];
 const sessionOf = (req) => sessions.get(sidOf(req));
 
-const escape = (s) =>
-  String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escape = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 function card(title, body) {
   return `<div class="dl-card">
@@ -102,13 +101,16 @@ function page(info, { session, provider, shared }) {
   <main class="dl-main">
     <h1 class="dl-title">This is lane ${info.lane} of ${escape(info.project)}.</h1>
     <p class="dl-lede">The ${escape(info.service)} service of the <code>${escape(info.branch)}</code> worktree. It logs in against this lane's own OIDC provider container and reads from a whoami container that every lane shares.</p>
-    ${card("GET /lane", rows([
-      ["lane", `${info.lane} (${escape(info.lane_name)})`],
-      ["branch", escape(info.branch)],
-      ["service", escape(info.service)],
-      ["port", info.port],
-      ["url", `<a href="${escape(info.url)}">${escape(info.url)}</a>`],
-    ]))}
+    ${card(
+      "GET /lane",
+      rows([
+        ["lane", `${info.lane} (${escape(info.lane_name)})`],
+        ["branch", escape(info.branch)],
+        ["service", escape(info.service)],
+        ["port", info.port],
+        ["url", `<a href="${escape(info.url)}">${escape(info.url)}</a>`],
+      ]),
+    )}
     <h2 class="dl-h2">Login</h2>
     ${login}
     <h2 class="dl-h2">OIDC provider, this lane only</h2>
@@ -184,7 +186,9 @@ createServer(async (req, res) => {
 
     if (url.pathname === "/logout") {
       sessions.delete(sidOf(req));
-      return redirect(res, "/", { "set-cookie": "sid=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax" });
+      return redirect(res, "/", {
+        "set-cookie": "sid=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax",
+      });
     }
 
     if (url.pathname === "/") {
@@ -193,13 +197,25 @@ createServer(async (req, res) => {
         discover().then(
           (cfg) => {
             const meta = cfg.serverMetadata();
-            return { issuer: meta.issuer, authorize: meta.authorization_endpoint, token: meta.token_endpoint };
+            return {
+              issuer: meta.issuer,
+              authorize: meta.authorization_endpoint,
+              token: meta.token_endpoint,
+            };
           },
           (err) => ({ error: err.message }),
         ),
-        whoami().then((w) => ({ hostname: w.hostname }), (err) => ({ error: err.message })),
+        whoami().then(
+          (w) => ({ hostname: w.hostname }),
+          (err) => ({ error: err.message }),
+        ),
       ]);
-      return send(res, 200, "text/html; charset=utf-8", page(info, { session: sessionOf(req), provider, shared }));
+      return send(
+        res,
+        200,
+        "text/html; charset=utf-8",
+        page(info, { session: sessionOf(req), provider, shared }),
+      );
     }
     send(res, 404, "text/plain", "not found\n");
   } catch (err) {

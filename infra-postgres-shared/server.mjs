@@ -49,8 +49,7 @@ async function readBody(req) {
   return data;
 }
 
-const escape = (s) =>
-  String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escape = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 function page(info, notes, error) {
   const items = notes.length
@@ -98,9 +97,7 @@ function page(info, notes, error) {
     </form>
     <div class="dl-card">
       <div class="dl-bar"><span class="dl-dots"><i></i><i></i><i></i></span><span>SELECT * FROM notes</span><span></span></div>
-      ${error
-        ? `<pre class="dl-bad">${escape(error)}</pre>`
-        : `<dl class="dl-rows">${items}</dl>`}
+      ${error ? `<pre class="dl-bad">${escape(error)}</pre>` : `<dl class="dl-rows">${items}</dl>`}
     </div>
   </main>
   <footer class="dl-footer"><a href="/api/notes">/api/notes</a> | <a href="/lane">/lane</a> | <a href="/healthz">/healthz</a></footer>
@@ -123,13 +120,15 @@ createServer(async (req, res) => {
     if (req.method === "POST") {
       // CSRF: a browser POST must come from one of this lane's origins.
       const origin = req.headers.origin;
-      if (origin && !origins.includes(origin)) return send(res, 403, "text/plain", "origin not allowed\n");
+      if (origin && !origins.includes(origin))
+        return send(res, 403, "text/plain", "origin not allowed\n");
     }
     if (req.method === "GET" && assets[pathname]) {
       const [type, body] = assets[pathname];
       return send(res, 200, type, body);
     }
-    if (req.method === "GET" && pathname === "/healthz") return send(res, 200, "text/plain", "ok\n");
+    if (req.method === "GET" && pathname === "/healthz")
+      return send(res, 200, "text/plain", "ok\n");
     if (req.method === "GET" && pathname === "/lane") return json(res, 200, laneInfo(req));
     if (req.method === "GET" && pathname === "/api/notes") return json(res, 200, await listNotes());
     if (req.method === "POST" && pathname === "/api/notes") {

@@ -26,7 +26,11 @@ function Card({ title, lane, children }) {
   return (
     <section className="dl-card" style={{ "--dl-lane": `var(--dl-lane-${(lane ?? 0) % 4})` }}>
       <div className="dl-bar">
-        <span className="dl-dots"><i /><i /><i /></span>
+        <span className="dl-dots">
+          <i />
+          <i />
+          <i />
+        </span>
         <span>{title}</span>
         <span />
       </div>
@@ -40,7 +44,9 @@ function Rows({ rows }) {
     <dl className="dl-rows">
       {rows.map(([key, value, className]) => [
         <dt key={`k-${key}`}>{key}</dt>,
-        <dd key={`v-${key}`} className={className}>{value ?? "(unset)"}</dd>,
+        <dd key={`v-${key}`} className={className}>
+          {value ?? "(unset)"}
+        </dd>,
       ])}
     </dl>
   );
@@ -78,7 +84,8 @@ export default function App() {
           <span style={{ whiteSpace: "nowrap" }}>{info ? info.project : "..."}.</span>
         </h1>
         <p className="dl-lede">
-          Served by <code>{info?.service ?? "web"}</code> from the <code>{info?.branch ?? "..."}</code> worktree,{" "}
+          Served by <code>{info?.service ?? "web"}</code> from the{" "}
+          <code>{info?.branch ?? "..."}</code> worktree,{" "}
           {import.meta.env.DEV
             ? "as source files the Vite dev server compiles on request."
             : "as a production bundle that vite preview serves."}
@@ -134,9 +141,7 @@ export default function App() {
                   ["api lane", `${api.data.lane} of ${api.data.project}`, "dl-ok"],
                 ]}
               />
-              <Rows
-                rows={api.data.releases.map((r) => [r.version, `${r.channel}, ${r.date}`])}
-              />
+              <Rows rows={api.data.releases.map((r) => [r.version, `${r.channel}, ${r.date}`])} />
             </>
           ) : (
             <Failed state={api} />

@@ -75,5 +75,7 @@ const server = createServer((req, res) => {
 server.listen(port, host, () => {
   const mode = modeInfo();
   console.log(`api listening on http://${host}:${port}`);
-  console.log(`script=${mode.script} NODE_ENV=${mode.node_env} profile=${mode.profile} file=${mode.project_file} LOG_LEVEL=${logLevel}`);
+  console.log(
+    `script=${mode.script} NODE_ENV=${mode.node_env} profile=${mode.profile} file=${mode.project_file} LOG_LEVEL=${logLevel}`,
+  );
 });

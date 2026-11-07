@@ -77,6 +77,7 @@ Each step happens in the TUI that `devlanes start` opened; run the `devlanes` co
    ```
 
    `everything` names `flaky`, since `*` skips services with `autostart: false`. Esc closes the picker.
+
 6. Restart. Select `worker` and press `r`. The row shows `· worker` and the pane title `worker  stopped`, then `● worker` again with a new `worker ready:` line. On Windows the old output ends with `^CTerminate batch job (Y/N)? Y`, from the batch file npm runs through.
 7. Infra. `i` selects the infra section: `containers` holds this lane's `mailpit`, `shared` holds `postgres` and `redis`, and `▸ setup  2 done` is folded. Selecting a container shows its Docker logs, with its host ports in the title and `docker logs` on the right of the border. `l` on `setup` unfolds `database` and `redis`. On `database` the pane reads `database  setup.database · done · 4m ago` above the `CREATE DATABASE` its first run printed, and `s` runs it again: the title turns to `done · just now`.
 8. Monitor. `M` shows CPU and memory graphs for the machine and a table of every unit of every lane on it, `tui-tour` included. `M` again returns.
@@ -91,6 +92,7 @@ Each step happens in the TUI that `devlanes start` opened; run the `devlanes` co
     ```
 
     The last output ends with `TypeError: Cannot read properties of undefined (reading 'orders')` and its stack trace. devlanes never restarts it. From anywhere in the list, `n` jumps to the next problem, here `flaky`. The lane now counts `flaky` among the services it runs, so a later plain `devlanes start` starts it again too.
+
 11. An ad-hoc unit. In the second terminal:
 
     ```sh
@@ -104,6 +106,7 @@ Each step happens in the TUI that `devlanes start` opened; run the `devlanes` co
     ```
 
     An `▾ ad-hoc  1 running` group appears at the end of the services with `◉ load` in it, and `api`'s output fills with `GET /api/orders 200 1ms` once a second. `devlanes stop load` stops it and leaves the row as `· load`. The `load` script runs Node with `--use-system-ca`, because devlanes 0.11.3 does not give exec units `NODE_EXTRA_CA_CERTS`.
+
 12. A second lane. A worktree is a lane:
 
     ```sh
@@ -113,6 +116,7 @@ Each step happens in the TUI that `devlanes start` opened; run the `devlanes` co
     ```
 
     This step was not run while writing this README. What follows comes from the other way to get a second lane, `devlanes lane new --name tui-tour-review --start --no-ui` in the same folder, which prints `created tui-tour@1 named tui-tour-review (main)` after the same `ok` lines as above. The TUI grows a lane bar, `lanes  1 main  2 tui-tour-review` with `1-9 or [ ] switch lanes` on the right, and the lane's pane lists both lanes under `lanes in tui-tour`. `]` or `2` switches to lane 1, whose `api` says `connected to postgres (tui_tour_lane1)` and `connected to redis (db 1)`. Its page is https://tui-tour1.localhost and its inbox https://mail.tui-tour1.localhost. `[` or `1` goes back.
+
 13. Freeze and thaw. With `load` stopped (while it runs, freeze answers `error: lane tui-tour@0 is starting, stopping or running a task; retry when it is done`):
 
     ```sh
@@ -125,6 +129,7 @@ Each step happens in the TUI that `devlanes start` opened; run the `devlanes` co
     ```
 
     The list title becomes `@0 frozen · 7/7 up`, every running service shows `❄` instead of its dot, `api`'s pane title reads `api  ❄ frozen`, and the lane's pane adds `idle  frozen since 23:43 UTC, last activity a stop at 23:43 UTC`. `worker` has no `keep_awake`, so it does not hold the lane awake. `devlanes debug thaw` prints `thawed tui-tour@0` and the dots come back.
+
 14. Quit. `q` closes the TUI and prints where things stand:
 
     ```text

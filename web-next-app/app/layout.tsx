@@ -12,9 +12,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;900&family=JetBrains+Mono:wght@400;700&display=swap"
         />
       </head>
-      <body style={{ "--dl-lane": `var(--dl-lane-${lane % 4})` } as CSSProperties}>
-        {children}
-      </body>
+      <body style={{ "--dl-lane": `var(--dl-lane-${lane % 4})` } as CSSProperties}>{children}</body>
     </html>
   );
 }

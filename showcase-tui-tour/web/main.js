@@ -6,13 +6,15 @@ const api = env.VITE_API_URL;
 const $ = (id) => document.getElementById(id);
 
 const escape = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-const rows = (pairs) => pairs.map(([k, v, cls = ""]) => `<dt>${escape(k)}</dt><dd class="${cls}">${v}</dd>`).join("");
+const rows = (pairs) =>
+  pairs.map(([k, v, cls = ""]) => `<dt>${escape(k)}</dt><dd class="${cls}">${v}</dd>`).join("");
 const link = (url) => `<a href="${escape(url)}">${escape(url)}</a>`;
 
 document.body.style.setProperty("--dl-lane", `var(--dl-lane-${lane % 4})`);
 document.title = `${env.VITE_PROJECT} lane ${lane}`;
 $("title").textContent = `This is lane ${lane} of ${env.VITE_PROJECT}.`;
-$("lede").innerHTML = `The <code>${escape(env.VITE_SERVICE)}</code> service (Vite) of the <code>${escape(env.VITE_LANE_LABEL)}</code> worktree. The orders below come from <code>api</code> in the same lane.`;
+$("lede").innerHTML =
+  `The <code>${escape(env.VITE_SERVICE)}</code> service (Vite) of the <code>${escape(env.VITE_LANE_LABEL)}</code> worktree. The orders below come from <code>api</code> in the same lane.`;
 $("lane").innerHTML = rows([
   ["lane", `${lane} (${escape(env.VITE_LANE_NAME)})`],
   ["branch", escape(env.VITE_LANE_LABEL)],
@@ -24,7 +26,8 @@ $("lane").innerHTML = rows([
 ]);
 $("inbox").href = env.VITE_MAIL_URL;
 $("inbox").textContent = env.VITE_MAIL_URL.replace("https://", "");
-$("footer").innerHTML = `<a href="${api}/api/orders">${escape(api)}/api/orders</a> | <a href="${api}/lane">/lane</a>`;
+$("footer").innerHTML =
+  `<a href="${api}/api/orders">${escape(api)}/api/orders</a> | <a href="${api}/lane">/lane</a>`;
 
 async function getJson(url, init) {
   const res = await fetch(url, init);
@@ -38,7 +41,10 @@ async function loadOrders() {
     $("orders-title").textContent = `GET /api/orders · ${data.database}`;
     $("orders").innerHTML = rows([
       ["answered by", `lane ${data.lane}`, "dl-ok"],
-      ...data.orders.map((o) => [`#${o.id}`, `${escape(o.item)}, $${(o.total_cents / 100).toFixed(2)} <span class="dl-key">${escape(o.customer)}</span>`]),
+      ...data.orders.map((o) => [
+        `#${o.id}`,
+        `${escape(o.item)}, $${(o.total_cents / 100).toFixed(2)} <span class="dl-key">${escape(o.customer)}</span>`,
+      ]),
     ]);
   } catch (err) {
     $("orders").innerHTML = rows([["error", `${escape(err.message)} (is api running?)`, "dl-bad"]]);

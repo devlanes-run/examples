@@ -11,7 +11,8 @@ const env = serverEnv(process.env);
 const monorepoWebUrl = process.env.MONOREPO_WEB_URL ?? "";
 
 // The page look comes from the shared @acme/ui package, as in the Vite apps.
-const asset = (name: string) => readFileSync(fileURLToPath(import.meta.resolve(`@acme/ui/${name}`)));
+const asset = (name: string) =>
+  readFileSync(fileURLToPath(import.meta.resolve(`@acme/ui/${name}`)));
 const css = asset("devlanes.css");
 const logo = asset("logo.svg");
 const repo = "https://github.com/devlanes-run/examples/tree/main/workflows-pnpm-monorepo";
@@ -23,14 +24,20 @@ const invoices = [
 ];
 
 const escape = (value: unknown) =>
-  String(value).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+  String(value).replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c,
+  );
 
 function page(lane: ReturnType<typeof laneJson>) {
   const monorepo = monorepoWebUrl
     ? `<a href="${escape(monorepoWebUrl)}">${escape(monorepoWebUrl)}</a> (project pnpm-monorepo)`
     : `<span class="dl-bad">no lane of pnpm-monorepo runs; start one at the example's root, then devlanes restart web here</span>`;
   const rows = invoices
-    .map((i) => `<dt class="dl-key">${i.id}</dt><dd>${escape(i.account)}, $${(i.total_cents / 100).toFixed(2)}, <span class="${i.status === "overdue" ? "dl-bad" : "dl-ok"}">${i.status}</span></dd>`)
+    .map(
+      (i) =>
+        `<dt class="dl-key">${i.id}</dt><dd>${escape(i.account)}, $${(i.total_cents / 100).toFixed(2)}, <span class="${i.status === "overdue" ? "dl-bad" : "dl-ok"}">${i.status}</span></dd>`,
+    )
     .join("");
   return `<!doctype html>
 <html lang="en">
@@ -86,7 +93,11 @@ function send(res: ServerResponse, status: number, type: string, body: string | 
 const server = createServer((req, res) => {
   const { pathname } = new URL(req.url ?? "/", "http://localhost");
   const forwardedHost = req.headers["x-forwarded-host"];
-  const lane = laneJson(env, Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost, req.headers.host);
+  const lane = laneJson(
+    env,
+    Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost,
+    req.headers.host,
+  );
 
   switch (`${req.method} ${pathname}`) {
     case "GET /healthz":
@@ -94,7 +105,12 @@ const server = createServer((req, res) => {
     case "GET /lane":
       return send(res, 200, "application/json", JSON.stringify(lane, null, 2));
     case "GET /api/invoices":
-      return send(res, 200, "application/json", JSON.stringify({ lane: env.lane, invoices }, null, 2));
+      return send(
+        res,
+        200,
+        "application/json",
+        JSON.stringify({ lane: env.lane, invoices }, null, 2),
+      );
     case "GET /devlanes.css":
       return send(res, 200, "text/css", css);
     case "GET /logo.svg":
@@ -102,7 +118,12 @@ const server = createServer((req, res) => {
     case "GET /":
       return send(res, 200, "text/html", page(lane));
     default:
-      return send(res, 404, "application/json", JSON.stringify({ error: `no route for ${req.method} ${pathname}` }));
+      return send(
+        res,
+        404,
+        "application/json",
+        JSON.stringify({ error: `no route for ${req.method} ${pathname}` }),
+      );
   }
 });
 

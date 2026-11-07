@@ -16,7 +16,9 @@ const accounts = [
 
 function send(res: ServerResponse, status: number, body: unknown) {
   const isText = typeof body === "string";
-  res.writeHead(status, { "content-type": `${isText ? "text/plain" : "application/json"}; charset=utf-8` });
+  res.writeHead(status, {
+    "content-type": `${isText ? "text/plain" : "application/json"}; charset=utf-8`,
+  });
   res.end(isText ? body : JSON.stringify(body, null, 2));
 }
 
@@ -29,7 +31,11 @@ const server = createServer((req, res) => {
   }
 
   const forwardedHost = req.headers["x-forwarded-host"];
-  const lane = laneJson(env, Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost, req.headers.host);
+  const lane = laneJson(
+    env,
+    Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost,
+    req.headers.host,
+  );
 
   switch (`${req.method} ${pathname}`) {
     case "GET /healthz":

@@ -21,11 +21,11 @@ Open https://realtime-ws.localhost. The page shows lane 0 of `realtime-ws`, a ti
 1. The `install` task (`when: lane.create`) runs `npm install` the first time a lane starts, since a new worktree has no `node_modules`.
 2. The `realtime` service runs `node server.mjs` through `run_script`. Its `env` mentions `self.ports.ws` and `self.ports.admin`, so devlanes gives it two more ports next to `PORT`, with the same offsets in every lane. `server.mjs` opens the main port last, so the `http` ready check on `/healthz` passes once all three ports listen.
 
-| Hostname | Port | Serves |
-| --- | --- | --- |
-| `realtime-ws.localhost` | main (`PORT`) | the page, SSE on `/events`, a WebSocket on `/ws`, `/lane`, `/healthz` |
-| `ws.realtime-ws.localhost` | `ws` (`WS_PORT`) | the chat's WebSocket, on any path |
-| `admin.realtime-ws.localhost` | `admin` (`ADMIN_PORT`) | connections, ticks and recent messages as JSON |
+| Hostname                      | Port                   | Serves                                                                |
+| ----------------------------- | ---------------------- | --------------------------------------------------------------------- |
+| `realtime-ws.localhost`       | main (`PORT`)          | the page, SSE on `/events`, a WebSocket on `/ws`, `/lane`, `/healthz` |
+| `ws.realtime-ws.localhost`    | `ws` (`WS_PORT`)       | the chat's WebSocket, on any path                                     |
+| `admin.realtime-ws.localhost` | `admin` (`ADMIN_PORT`) | connections, ticks and recent messages as JSON                        |
 
 WebSockets and SSE need no key in `devlanes.yaml`. The proxy bridges upgrades on any hostname and path and streams `/events` without buffering. The page opens both `wss://ws.realtime-ws.localhost` and `wss://realtime-ws.localhost/ws` to show that the main port takes upgrades too. Since the page and the ws hostname are different origins, the server accepts a browser's socket only when its `Origin` is in `DEVLANES_ORIGINS`.
 

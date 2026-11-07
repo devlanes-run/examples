@@ -35,7 +35,11 @@ async function queueState() {
   return {
     prefix,
     waiting,
-    workers: Object.fromEntries(Object.entries(workers).sort().map(([name, raw]) => [name, JSON.parse(raw)])),
+    workers: Object.fromEntries(
+      Object.entries(workers)
+        .sort()
+        .map(([name, raw]) => [name, JSON.parse(raw)]),
+    ),
     finished: done.map((raw) => JSON.parse(raw)),
   };
 }
@@ -50,8 +54,7 @@ async function enqueue(count) {
   return ids;
 }
 
-const escape = (value) =>
-  String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 function page(info, state) {
   const url = info.url
@@ -191,7 +194,8 @@ function send(res, status, type, body) {
   res.end(body);
 }
 
-const json = (res, status, body) => send(res, status, "application/json", JSON.stringify(body, null, 2) + "\n");
+const json = (res, status, body) =>
+  send(res, status, "application/json", JSON.stringify(body, null, 2) + "\n");
 
 async function handle(req, res) {
   const url = new URL(req.url, "http://localhost");
@@ -210,7 +214,8 @@ async function handle(req, res) {
     return json(res, 200, { queue: keys.waiting, enqueued: await enqueue(count) });
   }
   if (path === "/api/jobs") return json(res, 200, { ...laneInfo(req), ...(await queueState()) });
-  if (path === "/") return send(res, 200, "text/html; charset=utf-8", page(laneInfo(req), await queueState()));
+  if (path === "/")
+    return send(res, 200, "text/html; charset=utf-8", page(laneInfo(req), await queueState()));
   send(res, 404, "text/plain; charset=utf-8", "not found\n");
 }
 

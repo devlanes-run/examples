@@ -58,14 +58,17 @@ function page(info) {
   <main class="dl-main">
     <h1 class="dl-title">This is lane ${escape(info.lane)} of ${escape(info.project)}.</h1>
     <p class="dl-lede">The <code>web</code> service of the worktree on <code>${escape(info.branch)}</code>, running <code>npm run ${escape(env.npm_lifecycle_event)}</code>. <code>npm test</code> checks this page's lane and the API's CORS answer for it.</p>
-    ${card(`${info.project}@${info.lane}:${info.service}`, rows([
-      ["lane", `${escape(info.lane)} <span class="dl-key">${escape(info.lane_name)}</span>`],
-      ["branch", escape(info.branch)],
-      ["service", escape(info.service)],
-      ["port", escape(info.port)],
-      ["url", url],
-      ["NODE_ENV", escape(env.NODE_ENV ?? "(unset)")],
-    ]))}
+    ${card(
+      `${info.project}@${info.lane}:${info.service}`,
+      rows([
+        ["lane", `${escape(info.lane)} <span class="dl-key">${escape(info.lane_name)}</span>`],
+        ["branch", escape(info.branch)],
+        ["service", escape(info.service)],
+        ["port", escape(info.port)],
+        ["url", url],
+        ["NODE_ENV", escape(env.NODE_ENV ?? "(unset)")],
+      ]),
+    )}
     ${card(`fetch ${apiUrl}/`, `<pre id="api">loading...</pre>`)}
   </main>
   <footer class="dl-footer">node:http, no dependencies</footer>
@@ -91,14 +94,20 @@ function send(res, status, type, body) {
 
 const server = createServer((req, res) => {
   const { pathname } = new URL(req.url, "http://localhost");
-  if (req.method !== "GET") return send(res, 405, "text/plain; charset=utf-8", "method not allowed");
+  if (req.method !== "GET")
+    return send(res, 405, "text/plain; charset=utf-8", "method not allowed");
   if (pathname === "/healthz") return send(res, 200, "text/plain; charset=utf-8", "ok");
   if (pathname === "/lane") {
     return send(res, 200, "application/json", JSON.stringify(laneInfo(req), null, 2) + "\n");
   }
   if (pathname === "/") return send(res, 200, "text/html; charset=utf-8", page(laneInfo(req)));
   if (assets[pathname]) {
-    return send(res, 200, assets[pathname], readFileSync(new URL(`./public${pathname}`, import.meta.url)));
+    return send(
+      res,
+      200,
+      assets[pathname],
+      readFileSync(new URL(`./public${pathname}`, import.meta.url)),
+    );
   }
   send(res, 404, "text/plain; charset=utf-8", "not found");
 });
