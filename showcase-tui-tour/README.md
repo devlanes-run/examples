@@ -1,11 +1,11 @@
 # A tour of the TUI
 
-The stack from the devlanes.run TUI demo, run for real so you can walk through the TUI on it: an npm workspace with `api` (Hono), `web` (Vite and React) and `worker` in TypeScript, a shared Postgres and Redis with a database and a Redis index per lane (`infra.setup`, `infra.teardown`), Mailpit per lane (`infra.per_lane`, `infra.hosts`), `migrate` on `lane.start` and `seed` with `after: services`, three `profiles`, a `flaky` service with `autostart: false` that crashes, and an ad-hoc unit from `devlanes exec`.
+The stack from the devlanes.run TUI demo, run for real: an npm workspace with `api` (Hono), `web` (Vite and React) and `worker` in TypeScript, on a shared Postgres and Redis with a Mailpit per lane. Walk through the TUI on it key by key.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22.12 or later (tested with Node 24 and npm 11)
+- Node 22.12 or later
 - Docker with Compose v2 (2.24.4 or newer, for `infra.per_lane`)
 
 ## Run it
@@ -15,11 +15,11 @@ cd showcase-tui-tour
 devlanes start
 ```
 
-`devlanes start` opens the TUI on lane 0 and runs the start inside it. Open https://example-tui-tour.localhost. The page shows lane 0 of `example-tui-tour`, the orders `api` reads from the lane's database, and a form that sends a mail: `api` puts it on the lane's Redis queue, `worker` sends it over SMTP, and it lands in the lane's own Mailpit at https://mail.example-tui-tour.localhost.
+`devlanes start` opens the TUI on lane 0 and runs the start inside it. Open https://example-tui-tour.localhost to see the orders `api` reads from the lane's database and a form that sends a mail. `api` puts the mail on the lane's Redis queue, `worker` sends it over SMTP, and it lands in the lane's own Mailpit at https://mail.example-tui-tour.localhost.
 
 ## During a start
 
-devlanes calls each worktree of the repository a lane; a fresh clone on `main` is lane 0. The first start of lane 0, with `devlanes start --no-ui --output plain`:
+`devlanes start --no-ui --output plain` prints the start as text:
 
 ```text
 ok infra
@@ -34,17 +34,15 @@ ok services  3 of 3 ready
   ok  worker  http://127.0.0.1:20443
 ```
 
-1. Infra: the Compose project `example-tui-tour` runs Postgres and Redis for every lane. Mailpit is in `infra.per_lane`, so each lane runs its own in `example-tui-tour-lane0`, `example-tui-tour-lane1` and so on, and `infra.hosts` routes `mail.<lane domain>` to its web port.
+1. Infra: the Compose project `example-tui-tour` runs Postgres and Redis for every lane. Each lane runs its own Mailpit (`infra.per_lane`) in `example-tui-tour-lane0`, `example-tui-tour-lane1` and so on, and `infra.hosts` routes `mail.<lane domain>` to its web port.
 2. Setup: `database` creates `example_tui_tour_main` in the shared Postgres, and `redis` writes `lane:owner` into Redis index 0 (the lane index). `devlanes lane clean` runs the matching `teardown` entries.
 3. Tasks: `install` runs `npm install` at the workspace root until it succeeds once for the lane, and `migrate` (`apps/api/src/scripts/migrate.ts`) creates the `orders` table on every start.
 4. Services: `api` is ready when `/healthz` answers, `web` (`preset: vite`) when `/` does, and `worker`, which has no port to probe, when it prints `worker ready:`. `flaky` has `autostart: false` and stays stopped.
 5. `seed` (`after: services`) posts three orders through the running `api`.
 
-`api.example-tui-tour.localhost` answers `/`, `/lane`, `/api/orders` and `/api/mail` with JSON. The page reads the lane values from the `VITE_*` variables in `devlanes.yaml`.
-
 ## Try next: a tour of the TUI
 
-Each step happens in the TUI that `devlanes start` opened; run the `devlanes` commands from a second terminal in the same folder. `?` lists every key.
+Each step happens in the TUI that `devlanes start` opened. Run the `devlanes` commands from a second terminal in the same folder. `?` lists every key.
 
 1. The start. While the lane starts, the top bar names the current step after `starting example-tui-tour@0:`, the services wait as `… api  queued · waiting for containers`, and the lane's pane lists the phases. On the first start, a few seconds in:
 
@@ -60,7 +58,7 @@ Each step happens in the TUI that `devlanes start` opened; run the `devlanes` co
 
    When it ends the top bar says `example-tui-tour@0 up: 3 of 3 services ready`.
 
-2. The lane's details. The lane is selected first, and the pane shows its `branch`, `worktree`, `profile`, `domain`, `ports`, how many services are up, `tasks 3 done`, `setup 2 of 2 done` and the `infra` ports. `j` and `k` move through the list: `services` shows a table of state, CPU, memory and URL, and `api` shows its live output under the title `api  ready · http://127.0.0.1:20410`, marked `watching · enter types`. `g` goes back to the lane, `t` to the tasks and `i` to the infra.
+2. The lane's details. The lane is selected first. Its pane shows `branch`, `worktree`, `profile`, `domain`, `ports`, how many services are up, `tasks 3 done`, `setup 2 of 2 done` and the `infra` ports. `j` and `k` move through the list. `services` shows a table of state, CPU, memory and URL, and `api` shows its live output under the title `api  ready · http://127.0.0.1:20410`, marked `watching · enter types`. `g` goes back to the lane, `t` to the tasks and `i` to the infra.
 3. Zoom. On `api`, `z` gives the pane the whole screen, and `z` again brings the list back.
 4. Typing. Select `web` and press Enter. The footer turns into `TYPING into web · keys go to the program · esc or ctrl+] returns to the list`. Type `h` and Enter, and Vite prints its `Shortcuts` list. Esc returns to the list.
 5. Profiles. `g`, then `p`, opens the picker:
@@ -115,7 +113,7 @@ Each step happens in the TUI that `devlanes start` opened; run the `devlanes` co
     devlanes start
     ```
 
-    This step was not run while writing this README. What follows comes from the other way to get a second lane, `devlanes lane new --name example-tui-tour-review --start --no-ui` in the same folder, which prints `created example-tui-tour@1 named example-tui-tour-review (main)` after the same `ok` lines as above. The TUI grows a lane bar, `lanes  1 main  2 example-tui-tour-review` with `1-9 or [ ] switch lanes` on the right, and the lane's pane lists both lanes under `lanes in example-tui-tour`. `]` or `2` switches to lane 1, whose `api` says `connected to postgres (example_tui_tour_lane1)` and `connected to redis (db 1)`. Its page is https://example-tui-tour1.localhost and its inbox https://mail.example-tui-tour1.localhost. `[` or `1` goes back.
+    `devlanes lane new --name example-tui-tour-review --start --no-ui` in the same folder gives a second lane too. It prints `created example-tui-tour@1 named example-tui-tour-review (main)` after the same `ok` lines as above. The TUI grows a lane bar, `lanes  1 main  2 example-tui-tour-review` with `1-9 or [ ] switch lanes` on the right, and the lane's pane lists both lanes under `lanes in example-tui-tour`. `]` or `2` switches to lane 1, whose `api` says `connected to postgres (example_tui_tour_lane1)` and `connected to redis (db 1)`. Its page is https://example-tui-tour1.localhost and its inbox https://mail.example-tui-tour1.localhost. `[` or `1` goes back.
 
 13. Freeze and thaw. With `load` stopped (while it runs, freeze answers `error: lane example-tui-tour@0 is starting, stopping or running a task; retry when it is done`):
 
@@ -138,7 +136,7 @@ Each step happens in the TUI that `devlanes start` opened; run the `devlanes` co
     Stop      devlanes stop --lane example-tui-tour@0
     ```
 
-    Everything keeps running in the daemon, and `devlanes start` opens the TUI on the lane again. This run had `tui.on_quit: keep` in `~/.devlanes/config.yaml`; with the default, `ask`, `q` first asks whether to keep the lanes or stop them.
+    Everything keeps running in the daemon, and `devlanes start` opens the TUI on the lane again. This run had `tui.on_quit: keep` in `~/.devlanes/config.yaml`. With the default, `ask`, `q` first asks whether to keep the lanes or stop them.
 
 To remove it all:
 
@@ -148,18 +146,16 @@ devlanes lane clean 0 --yes
 docker compose -p example-tui-tour down -v
 ```
 
-The first prints `cleaned example-tui-tour@1: stopped 3 units, teardown database, redis`: it drops `example_tui_tour_lane1`, flushes Redis index 1 and removes the lane's Mailpit, while lane 0 keeps running. `docker compose -p example-tui-tour down -v` removes the shared Postgres and Redis with their volumes, which `lane clean` leaves in place.
+The first prints `cleaned example-tui-tour@1: stopped 3 units, teardown database, redis`. It drops `example_tui_tour_lane1`, flushes Redis index 1 and removes the lane's Mailpit, while lane 0 keeps running. `docker compose -p example-tui-tour down -v` removes the shared Postgres and Redis with their volumes, which `lane clean` leaves in place.
 
 ## Files
 
-- `devlanes.yaml`: the per-lane names, the Compose infra with setup and teardown, the tasks, four services and three profiles.
-- `docker-compose.yml`: Postgres and Redis (shared) and Mailpit (per lane), each with a healthcheck.
-- `apps/api/`: the Hono API. `src/routes/` has the orders and mail routes, `src/db.ts` and `src/redis.ts` the connections, and `src/middleware.ts` the CORS and CSRF checks from `DEVLANES_ORIGINS`.
-- `apps/api/src/scripts/`: `migrate.ts` and `seed.ts` for the tasks, and `load.ts` for `devlanes exec`.
-- `apps/web/`: the Vite and React page, with its components in `src/components/` and its calls to `api` in `src/api.ts`.
-- `apps/worker/src/index.ts`: takes mail jobs off the Redis queue and sends them to Mailpit.
-- `apps/flaky/src/report.ts`: the report job that crashes about 20 seconds in.
-- `apps/web/brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): the per-lane names, the Compose infra with setup and teardown, the tasks, four services and three profiles.
+- [`docker-compose.yml`](docker-compose.yml): Postgres and Redis (shared) and Mailpit (per lane), each with a healthcheck.
+- [`apps/api/`](apps/api): the Hono API, with the orders and mail routes in `src/routes/`.
+- [`apps/api/src/scripts/`](apps/api/src/scripts): `migrate.ts` and `seed.ts` for the tasks, and `load.ts` for `devlanes exec`.
+- [`apps/worker/src/index.ts`](apps/worker/src/index.ts): takes mail jobs off the Redis queue and sends them to Mailpit.
+- [`apps/flaky/src/report.ts`](apps/flaky/src/report.ts): the report job that crashes about 20 seconds in.
 
 ## Docs
 

@@ -1,13 +1,11 @@
-# Postgres per lane next to a shared Redis
+# Postgres per lane
 
-A TypeScript server built with [Hono](https://hono.dev) that writes rows to its lane's own Postgres container and counts visits in a Redis that every lane shares. Each worktree of the repository is a lane with its own ports and hostname. `infra.per_lane: [postgres]` gives each lane its own container, port and volume; Redis stays shared, with a database index per lane from `lanes.vars`. `infra.setup` creates the table in the lane's Postgres and `infra.teardown` empties the lane's Redis database.
-
-A lane runs its Postgres from its own worktree, so a branch that bumps the image tag in `docker-compose.yml` runs that version without touching the other lanes, and a destructive migration on a branch only breaks that branch's data. `devlanes lane clean` deletes the container with its data. A shared Postgres with a database per lane, as in [infra-postgres-shared](../infra-postgres-shared), costs less but runs one version for everyone.
+A TypeScript server built with [Hono](https://hono.dev) that writes rows to its lane's own Postgres container and counts visits in a Redis that every lane shares. A branch that bumps the image tag in `docker-compose.yml` runs that version without touching the other lanes, and a destructive migration only breaks that branch's data; a shared Postgres, as in [infra-postgres-shared](../infra-postgres-shared), costs less but runs one version for everyone.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22 or later (tested with Node 24 and npm 11)
+- Node 22 or later
 - Docker with Compose 2.24.4 or newer, which `per_lane` needs for the `!override` and `!reset` tags in its override file. `devlanes doctor` prints both versions.
 
 ## Run it
@@ -17,20 +15,20 @@ cd infra-postgres-per-lane
 devlanes start
 ```
 
-On a terminal, `devlanes start` opens the TUI and follows the start there. `devlanes start --no-ui` prints it as text instead:
+`devlanes start --no-ui` prints the start as text:
 
 ```text
 example-postgres-per-lane@0 (main): 1/1 ready
 ready api http://127.0.0.1:20510 https://example-postgres-per-lane.localhost
 ```
 
-Open https://example-postgres-per-lane.localhost. The page says `This is lane 0 of example-postgres-per-lane.` and shows the lane's Postgres container, port and rows, and the shared Redis with this lane's database index and visit count. "Add a row" inserts into Postgres and "Add a visit" increments the counter in Redis. `GET /api/state` returns the same values as JSON, and `GET /lane` the lane values alone.
+Open https://example-postgres-per-lane.localhost. The page says `This is lane 0 of example-postgres-per-lane.` and shows the lane's Postgres container, port and rows, and the shared Redis with this lane's database index and visit count; "Add a row" inserts into Postgres and "Add a visit" increments the counter in Redis.
 
 ## During a start
 
 1. Infra. Redis starts once in the shared Compose project `example-postgres-per-lane` (`infra.project_name`). Postgres starts in the lane's own project, `example-postgres-per-lane-lane<N>`, with an override file devlanes writes to `compose/` in the lane data folder. The override drops `container_name`, publishes `5432` on a port from the lane's block and adds `dev.devlanes.*` labels. The `pgdata` volume belongs to the lane's project, so each lane gets its own.
 2. `infra.setup.schema` runs once per lane. It feeds `infra/schema.sql` to `psql` through `docker compose -p "$DEVLANES_COMPOSE_LANE_PROJECT" exec -T postgres ...`; plain `docker compose exec` would target the shared project, where Postgres does not run.
-3. The `install` task runs `npm install` on the lane's first start, because a new worktree has no `node_modules`.
+3. The `install` task runs `npm install` on the lane's first start.
 4. The `api` service runs `npm run dev` (`tsx watch src/index.ts`) with `DATABASE_URL` pointing at `${{ infra.postgres.port }}`, which differs per lane, and `REDIS_URL` ending in `/${{ lane.redis_db }}`, the lane index. The ready check waits for `/healthz`.
 
 ```sh
@@ -66,7 +64,7 @@ services:
 
 ## Try next
 
-- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/infra-postgres-per-lane && devlanes start`. The new worktree is lane 1. (This step was not run for the outputs below; `devlanes lane new --name example-postgres-per-lane-review --start --no-ui` in this folder gives the same lane 1 without a second worktree, and is what produced them.) Lane 1 gets its own Postgres container and port, while both lanes use the same Redis:
+- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/infra-postgres-per-lane && devlanes start`. The new worktree is lane 1. In this folder, `devlanes lane new --name example-postgres-per-lane-review --start --no-ui` gives the same lane 1 without a second worktree. Lane 1 gets its own Postgres container and port, while both lanes use the same Redis:
 
   ```text
   NAMES                                        STATUS                    PORTS
@@ -91,8 +89,7 @@ services:
   example-postgres-per-lane-redis-1            Up 46 seconds (healthy)
   ```
 
-  A request thaws it: `curl -fsS https://example-postgres-per-lane1.localhost/healthz` (add `--ssl-revoke-best-effort` on Windows) prints `ok` and the container is no longer paused.
-
+- Thaw lane 1 with a request: `curl -fsS https://example-postgres-per-lane1.localhost/healthz` (add `--ssl-revoke-best-effort` on Windows) prints `ok` and the container is no longer paused.
 - Clean lane 1 with `devlanes lane clean 1 --yes`. Teardown runs `FLUSHDB` on Redis database 1, then the lane's Compose project goes with its container and volume. Redis and lane 0 stay:
 
   ```text
@@ -112,14 +109,11 @@ services:
 
 ## Files
 
-- `devlanes.yaml`: `infra.per_lane`, the Redis index in `lanes.vars`, the setup and teardown entries, the URLs in `global_env`, the `install` task and the `api` service.
-- `docker-compose.yml`: Postgres and Redis with pinned tags, ephemeral loopback ports and healthchecks.
-- `infra/schema.sql`: the `notes` table the setup entry creates.
-- `src/env.ts`: every variable the service reads, parsed once, including the Postgres port and Redis index from the URLs.
-- `src/db.ts` and `src/redis.ts`: the queries behind the page and the buttons.
-- `src/routes/`: the page, `/api/state` and the form handlers.
-- `src/views/`: the page as JSX components (`Layout`, `LaneCard`, `PostgresCard`, `RedisCard`, `HomePage`).
-- `brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): `infra.per_lane`, the Redis index in `lanes.vars`, the setup and teardown entries, the URLs in `global_env`, the `install` task and the `api` service.
+- [`docker-compose.yml`](docker-compose.yml): Postgres and Redis with pinned tags, ephemeral loopback ports and healthchecks.
+- [`infra/schema.sql`](infra/schema.sql): the `notes` table the setup entry creates.
+- [`src/db.ts`](src/db.ts) and [`src/redis.ts`](src/redis.ts): the queries behind the page and the buttons.
+- [`src/routes/`](src/routes): the page, `/api/state` and the form handlers.
 
 ## Docs
 

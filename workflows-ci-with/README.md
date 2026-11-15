@@ -1,11 +1,11 @@
 # Run tests against a lane with devlanes with
 
-A [Hono](https://hono.dev) API and a Hono page that calls it, plus `node:test` tests in TypeScript that call both over HTTPS. `devlanes with --profile e2e -- npm test` starts the lane, runs the tests with `DEVLANES_PUBLIC_URL_API` and `DEVLANES_PUBLIC_URL_WEB` set, stops the lane and exits with the tests' code. The `e2e` profile swaps each service's `dev` script for `start` with `run_scripts` and sets `NODE_ENV: test`, and a task with `profiles: [e2e]` builds the apps first. `github-workflow.yml` runs the same thing in GitHub Actions with [devlanes-run/action](https://github.com/devlanes-run/action).
+A [Hono](https://hono.dev) API and a Hono page that calls it, with `node:test` tests in TypeScript that call both over HTTPS. `devlanes with --profile e2e -- npm test` starts the lane, runs the tests with `DEVLANES_PUBLIC_URL_API` and `DEVLANES_PUBLIC_URL_WEB` set, stops the lane and exits with the tests' code.
 
 ## Requirements
 
 - devlanes 0.11.3 or newer, with `devlanes setup` run once
-- Node 22 or newer with npm (tested with Node 24 and npm 11)
+- Node 22 or newer with npm
 
 ## Run it
 
@@ -42,20 +42,20 @@ api   ready        2s     0.0%      0.0%  54.2 MiB  54.2 MiB
 web   ready        2s     3.1%      3.1%  62.5 MiB  62.6 MiB
 ```
 
-The exit code is 0. devlanes calls each Git worktree of the repository a lane, with its own ports and hostnames, and the primary worktree is lane 0. The table at the end appears when the output is not a terminal, as in CI logs; in GitHub Actions devlanes also adds it to the step summary.
+The exit code is 0. The table at the end appears when the output is not a terminal, as in CI logs. In GitHub Actions devlanes also adds it to the step summary.
 
-To open the page instead, run `devlanes start` and open https://example-ci-with.localhost. It shows lane 0 of `example-ci-with`, the `npm run dev` script and the answer the browser fetched from https://api.example-ci-with.localhost.
+To open the page instead, run `devlanes start` and open https://example-ci-with.localhost. It shows the `npm run dev` script and the answer the browser fetched from https://api.example-ci-with.localhost.
 
 ## During a with run
 
 1. The first start of a lane runs the `install` task (`npm install` at the workspace root), because a new worktree has no `node_modules`.
-2. The `e2e` profile is active, so the `build` task runs too: `npm run build` compiles both apps to `dist/` and bundles the page's browser code with Vite. A plain `devlanes start` skips it.
+2. The `e2e` profile is active, so the `build` task runs too: `npm run build` compiles both apps to `dist/`. A plain `devlanes start` skips it.
 3. devlanes starts the services the profile includes (`"*"`, so both). `run_scripts: { dev: start }` makes `api` and `web` run `npm run start` (`node dist/index.js`) instead of `npm run dev` (`tsx watch src/index.ts`), and the profile's `env` gives both `NODE_ENV=test`.
 4. It waits until both `/healthz` checks pass. If a service fails, `with` prints the failure and exits 1 without running the tests.
-5. It runs `npm test` with the lane's environment: `DEVLANES_PUBLIC_URL_API=https://api.example-ci-with.localhost`, `DEVLANES_PUBLIC_URL_WEB=https://example-ci-with.localhost`, `DEVLANES_LANE` and the other lane variables, and `NODE_EXTRA_CA_CERTS` pointing at the devlanes CA, so `fetch` trusts the proxy's certificates. Services do not get the `DEVLANES_PUBLIC_URL_*` variables; `web` reads the API's address from `API_URL: ${{ services.api.public_url }}`.
+5. It runs `npm test` with the lane's environment: `DEVLANES_PUBLIC_URL_API=https://api.example-ci-with.localhost`, `DEVLANES_PUBLIC_URL_WEB=https://example-ci-with.localhost`, `DEVLANES_LANE` and the other lane variables, and `NODE_EXTRA_CA_CERTS` pointing at the devlanes CA, so `fetch` trusts the proxy's certificates. Services do not get the `DEVLANES_PUBLIC_URL_*` variables. `web` reads the API's address from `API_URL: ${{ services.api.public_url }}`.
 6. It writes each unit's log to `devlanes-logs/`, stops what it started and exits with `npm test`'s code.
 
-The tests in `tests/lane.test.ts` never name a hostname; `tests/env.ts` reads them from the `DEVLANES_PUBLIC_URL_*` variables. They check that each service's `/lane` answers for this lane through the proxy, that the API ran the `start` script with `NODE_ENV=test` (npm puts the script name in `npm_lifecycle_event`), and that the API sends `Access-Control-Allow-Origin` to the page's origin and not to `https://example.invalid`. The API builds that allow-list from `DEVLANES_ORIGINS`.
+The tests in `tests/lane.test.ts` never name a hostname. `tests/env.ts` reads them from the `DEVLANES_PUBLIC_URL_*` variables. The tests check that each service's `/lane` answers for this lane through the proxy, that the API ran the `start` script with `NODE_ENV=test` (npm puts the script name in `npm_lifecycle_event`), and that the API sends `Access-Control-Allow-Origin` to the page's origin and not to `https://example.invalid`. The API builds that allow-list from `DEVLANES_ORIGINS`.
 
 ## A failing run
 
@@ -165,7 +165,8 @@ In devlanes 0.11.3, `exec` units do not get `NODE_EXTRA_CA_CERTS`, so the same c
 
   The assertion reads `'dev' !== 'start'`. Run `devlanes stop` first.
 
-- Run the tests against a second lane. With a worktree: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/workflows-ci-with && devlanes with --profile e2e -- npm test` (not run for this example; the worktree is a lane of its own). Without one, in this folder:
+- Run the tests in a second worktree: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/workflows-ci-with && devlanes with --profile e2e -- npm test`. The worktree is a lane of its own.
+- Without a worktree, run the tests against a second lane in this folder:
 
   ```sh
   devlanes lane new --name example-ci-with-review --start
@@ -179,14 +180,12 @@ In devlanes 0.11.3, `exec` units do not get `NODE_EXTRA_CA_CERTS`, so the same c
 
 ## Files
 
-- `devlanes.yaml`: `api` and `web` with their hostnames and `/healthz` checks, the `install` and `build` tasks, and the `e2e` profile with `run_scripts` and `NODE_ENV`.
-- `tests/lane.test.ts`: the `node:test` tests `npm test` runs through tsx.
-- `tests/smoke.ts`: the `/healthz` check for `devlanes exec`.
-- `github-workflow.yml`: the GitHub Actions workflow on `devlanes-run/action`.
-- `apps/api/src/app.ts`: the API's routes (`/`, `/api/items`, `/lane`, `/healthz`) and CORS from `DEVLANES_ORIGINS`.
-- `apps/web/src/views/`: the page as JSX components; `apps/web/src/client/main.ts` is the browser code that fetches the API.
-- `apps/*/src/env.ts`: every variable each service reads; `apps/*/package.json` has the `dev` and `start` scripts.
-- `apps/web/brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): `api` and `web` with their hostnames and `/healthz` checks, the `install` and `build` tasks, and the `e2e` profile with `run_scripts` and `NODE_ENV`.
+- [`tests/lane.test.ts`](tests/lane.test.ts): the `node:test` tests `npm test` runs through tsx.
+- [`tests/smoke.ts`](tests/smoke.ts): the `/healthz` check for `devlanes exec`.
+- [`github-workflow.yml`](github-workflow.yml): the GitHub Actions workflow on `devlanes-run/action`.
+- [`apps/api/src/app.ts`](apps/api/src/app.ts): the API's routes (`/`, `/api/items`, `/lane`, `/healthz`) and CORS from `DEVLANES_ORIGINS`.
+- `apps/*/package.json`: the `dev` and `start` scripts.
 
 ## Docs
 

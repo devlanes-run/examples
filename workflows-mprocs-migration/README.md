@@ -1,13 +1,12 @@
 # From mprocs to devlanes
 
-A small stack migrated from mprocs to devlanes, with both setups side by side. `before/` holds the mprocs setup: `mprocs.yaml`, a copy of it as a poor man's profile, Caddy routing fixed `*.acme.localhost` names to fixed ports, and a `slot.sh` with a hand-kept list of worktrees and their port offsets. `devlanes.yaml` runs the same apps with `${{ self.port }}`, `hosts`, `profiles`, `tasks` and a literal `PORT` for the one stub that needs it. The files in `before/` are for reading: this example never runs mprocs or Caddy, and you do not need them installed.
-
-The stack is an npm workspace of TypeScript apps on [Hono](https://hono.dev): an `api` that keeps text messages in a JSON file, a `web` page that lists them, a `worker` without a port that sends queued messages through an `sms-stub`, and `db:migrate` and `db:seed` scripts in the api. The apps read the same variables in both setups, with the old fixed ports as their defaults.
+A small stack migrated from mprocs to devlanes, with the mprocs setup in `before/` and the devlanes one in `devlanes.yaml`. The stack is an npm workspace of TypeScript apps on [Hono](https://hono.dev): an `api` that keeps text messages in a JSON file, a `web` page that lists them, a `worker` without a port that sends queued messages through an `sms-stub`, and `db:migrate` and `db:seed` scripts in the api.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22 or later (tested with Node 24 and npm 11)
+- Node 22 or later
+- No mprocs or Caddy: the files in `before/` are for reading, and this example never runs them
 
 ## Run it
 
@@ -16,7 +15,7 @@ cd workflows-mprocs-migration
 devlanes start
 ```
 
-On a terminal, `devlanes start` opens the TUI and follows the start there. `devlanes start --no-ui` prints it as text instead:
+`devlanes start --no-ui` prints the start as text:
 
 ```text
 example-mprocs-migration@0 (main): 3/3 ready
@@ -25,11 +24,11 @@ ready web http://127.0.0.1:20411 https://example-mprocs-migration.localhost
 ready worker http://127.0.0.1:20412
 ```
 
-Open https://example-mprocs-migration.localhost. Each Git worktree of this repository is a lane with its own ports and hostnames, and the primary worktree is lane 0. The page says `This is lane 0 of example-mprocs-migration.`, lists three messages marked `queued`, and shows the hostnames that replaced the Caddy ones.
+Open https://example-mprocs-migration.localhost. The page lists three messages marked `queued` and shows the hostnames that replaced the Caddy ones.
 
 ## During a start
 
-1. The first start of a lane runs the `install` task (`npm install` at the example root, `when: lane.create`), which installs every app of the workspace.
+1. The first start of a lane runs the `install` task (`npm install` at the example root, `when: lane.create`).
 2. `migrate` runs on every start (`when: lane.start`) and creates the data file in the lane's data folder, `DATA_FILE: ${{ lane.data_path }}/acme.json`.
 3. The `default` profile starts the services tagged `essential`: `api` on https://api.example-mprocs-migration.localhost, ready once `/healthz` answers (it answers 503 until the data file exists), `web` on https://example-mprocs-migration.localhost, and `worker`, ready once it prints `worker ready` after its first answer from the api.
 4. `seed` runs once per lane after the services are ready (`when: lane.create`, `after: services`) and queues three messages through the api.
@@ -39,9 +38,9 @@ Open https://example-mprocs-migration.localhost. Each Git worktree of this repos
    worker#7 sms-stub not reachable at http://127.0.0.1:4010: ECONNREFUSED; 3 queued
    ```
 
-`web` fetches the messages from `API_URL`, which is `${{ services.api.url }}` (`http://127.0.0.1:<port>`), and links to the api and the stub with their `public_url`. Each app's `src/env.ts` reads these variables and falls back to the mprocs value when one is unset.
-
 ## Before and after
+
+The apps read the same variables in both setups, with the old fixed ports as their defaults.
 
 | mprocs setup (`before/`)                                                              | `devlanes.yaml`                                                                                                                            |
 | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -78,10 +77,11 @@ On Windows, add `--ssl-revoke-best-effort` to the `curl` commands.
   ready sms-stub http://127.0.0.1:4010 https://sms.example-mprocs-migration.localhost
   ```
 
-  `devlanes run seed` queues three more, and they go out within two seconds.
-
-- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/workflows-mprocs-migration && devlanes start`. This step was not run for this README. `devlanes lane new --name example-mprocs-migration-review --start` gives a second lane in the same folder without a worktree, and that one was run. https://example-mprocs-migration1.localhost shows `This is lane 1 of example-mprocs-migration.` with its own api, data file and messages, with no slot list or Caddy block to edit.
-- Lane 1's `SMS_URL` is `http://127.0.0.1:4010` too, so with lane 0's stub running, lane 1's worker sends its seeded messages there. `curl -fsS https://sms.example-mprocs-migration.localhost/messages` lists them with `"from_lane":1`. Starting the stub in lane 1 (`devlanes start sms-stub` in the worktree, or `devlanes start example-mprocs-migration-review:sms-stub --no-ui` for the `lane new` lane) fails while lane 0 holds the port:
+- `devlanes run seed` queues three more messages, and they go out within two seconds.
+- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/workflows-mprocs-migration && devlanes start`.
+- Without a worktree, `devlanes lane new --name example-mprocs-migration-review --start` gives a second lane in the same folder. https://example-mprocs-migration1.localhost shows `This is lane 1 of example-mprocs-migration.` with its own api, data file and messages, and there is no slot list or Caddy block to edit.
+- Lane 1's `SMS_URL` is `http://127.0.0.1:4010` too, so with lane 0's stub running, lane 1's worker sends its seeded messages there. `curl -fsS https://sms.example-mprocs-migration.localhost/messages` lists them with `"from_lane":1`.
+- Start the stub in lane 1 with `devlanes start sms-stub` in the worktree, or `devlanes start example-mprocs-migration-review:sms-stub --no-ui` for the `lane new` lane. It fails while lane 0 holds the port:
 
   ```text
   example-mprocs-migration@1 (main): not ready, 1 failed
@@ -96,17 +96,12 @@ On Windows, add `--ssl-revoke-best-effort` to the `curl` commands.
 
 ## Files
 
-- `devlanes.yaml`: the services, tasks and profiles, with a comment naming the mprocs, Caddy or `slot.sh` piece each key replaces.
-- `before/mprocs.yaml` and `before/mprocs.essentials.yaml`: the mprocs configs, reference only.
-- `before/Caddyfile` and `before/docker-compose.yml`: Caddy with one block per slot, reference only.
-- `before/scripts/slot.sh`: the per-worktree port offsets and hostnames, reference only.
-- `apps/api/`: messages in `DATA_FILE`, listening on `API_PORT` (default 4000), with `src/scripts/migrate.ts` and `src/scripts/seed.ts`.
-- `apps/web/`: the page, on `PORT` (default 3000), with its components in `src/views/`.
-- `apps/worker/`: sends queued messages to `SMS_URL` (default `http://127.0.0.1:4010`).
-- `apps/sms-stub/`: the fake SMS provider on `PORT` (default 4010), with its inbox at `/messages`.
-- `packages/store/`: the JSON data file and the message types.
-- `packages/shared/`: the lane values for `/lane` and the page, and the api client the web page, worker and seed script use.
-- `apps/web/brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): the services, tasks and profiles, with a comment naming the mprocs, Caddy or `slot.sh` piece each key replaces.
+- [`before/`](before): `mprocs.yaml`, `mprocs.essentials.yaml`, `Caddyfile`, `docker-compose.yml` and `scripts/slot.sh`, for reference only.
+- [`apps/api/`](apps/api): messages in `DATA_FILE`, listening on `API_PORT` (default 4000), with `src/scripts/migrate.ts` and `src/scripts/seed.ts`.
+- [`apps/web/`](apps/web): the page, on `PORT` (default 3000).
+- [`apps/worker/`](apps/worker): sends queued messages to `SMS_URL` (default `http://127.0.0.1:4010`).
+- [`apps/sms-stub/`](apps/sms-stub): the fake SMS provider on `PORT` (default 4010), with its inbox at `/messages`.
 
 ## Docs
 

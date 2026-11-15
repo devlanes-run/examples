@@ -1,11 +1,11 @@
 # Forty services and the start gate
 
-Forty copies of one small [Hono](https://hono.dev) server, split by `templates` into `api`, `web`, `worker` and `job` services, each with its own tag colour. Every service works for a random 1 to 6 seconds before it is ready, then burns a little CPU now and then, so a start fills the machine-wide start gate (`startup.*` in the user config) and the resource monitor (`M` in the TUI) has something to draw. `scripts/generate.ts` writes `devlanes.yaml`.
+Forty copies of one small [Hono](https://hono.dev) server, split by `templates` into `api`, `web`, `worker` and `job` services. Each works for a random 1 to 6 seconds before it is ready, so a start fills the machine-wide start gate and the resource monitor (`M` in the TUI) has something to draw.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22.18 or later, which runs `scripts/generate.ts` without a build step (tested with Node 24 and npm 11)
+- Node 22.18 or later, which runs `scripts/generate.ts` without a build step
 
 ## Run it
 
@@ -14,7 +14,7 @@ cd showcase-many-services
 devlanes start
 ```
 
-Open https://example-many-services.localhost. The index page lists all 40 services of lane 0 (one worktree's ports, hostnames and data) with a link to each, its kind, how long it took to get ready, its CPU bursts and CPU time. It asks every service for `/stats` and reloads every 2 seconds, so during a start you see the count of services that answer go up. `index`, `api-01` and `web-01` have hostnames; the other 37 are port-only, and the index links to their `http://127.0.0.1:<port>`.
+Open https://example-many-services.localhost. The index page links to each of the 40 services of lane 0 (`index`, `api-01` and `web-01` have hostnames, the other 37 link to `http://127.0.0.1:<port>`) with its kind, ready time, CPU bursts and CPU time, and it reloads every 2 seconds so you can watch the count of services that answer go up during a start.
 
 ## During a start
 
@@ -52,7 +52,9 @@ In the TUI, api services are cyan, web green, workers magenta and jobs yellow (`
 
 ## Try next
 
-- Press `M` in the TUI that `devlanes start` opened. The monitor shows every unit on the machine, grouped by lane, with CPU and memory graphs on top. `/` filters (type `example-many-services job` and Enter; every word has to match). `<-` and `->` move the sort through name, lane, kind, state, cpu, mem, peak and uptime, `i` reverses it, `e` switches to one flat list with a `lane` column, and Esc clears the filter. The box under the table graphs the selected lane.
+- Press `M` in the TUI that `devlanes start` opened. The monitor shows every unit on the machine, grouped by lane, with CPU and memory graphs on top and a box under the table that graphs the selected lane.
+- In the monitor, `/` filters: type `example-many-services job` and Enter, and only units that match every word stay. Esc clears the filter.
+- In the monitor, `<-` and `->` move the sort through name, lane, kind, state, cpu, mem, peak and uptime, `i` reverses it, and `e` switches to one flat list with a `lane` column.
 - `devlanes debug top` prints CPU and memory per lane and unit for every lane on the machine:
 
   ```text
@@ -76,7 +78,7 @@ In the TUI, api services are cyan, web green, workers magenta and jobs yellow (`
   reserve_memory: null
   ```
 
-  To change them, edit `~/.devlanes/config.yaml` or use `devlanes config set startup.max 8`, `devlanes config set startup.initial 2` (ramp up from 2 slots), `devlanes config set startup.mode fixed`, `devlanes config set startup.target_cpu 50%` or `devlanes config set startup.slot_timeout 10s`, and `devlanes config unset startup.max` to go back. They apply to every project on the machine, so these commands were not run for this README.
+  To change them, edit `~/.devlanes/config.yaml` or use `devlanes config set startup.max 8`, `devlanes config set startup.initial 2` (ramp up from 2 slots), `devlanes config set startup.mode fixed`, `devlanes config set startup.target_cpu 50%` or `devlanes config set startup.slot_timeout 10s`, and `devlanes config unset startup.max` to go back. They apply to every project on the machine.
 
 - `devlanes logs worker-01 --tail 4` shows the bursts of a worker:
 
@@ -88,7 +90,7 @@ In the TUI, api services are cyan, web green, workers magenta and jobs yellow (`
   ```
 
 - `node scripts/generate.ts 12` rewrites `devlanes.yaml` with 12 services (`devlanes config check` accepts it) and `node scripts/generate.ts` brings back 40. Run `devlanes stop` and `devlanes start` afterwards.
-- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/showcase-many-services && devlanes start`. Its index is at https://example-many-services1.localhost. This step was not run for this README. In the same folder, `devlanes lane new --name example-many-services-review --start --no-ui` gives lane 1 without a worktree:
+- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/showcase-many-services && devlanes start`. Its index is at https://example-many-services1.localhost. In the same folder, `devlanes lane new --name example-many-services-review --start --no-ui` gives lane 1 without a worktree:
 
   ```text
   ✓ install
@@ -107,13 +109,11 @@ On Windows, `devlanes stop` reports each service as `exit=-1073741510`, Windows'
 
 ## Files
 
-- `devlanes.yaml`: the `install` task, the tags, the `node`, `api`, `web`, `worker` and `job` templates and 40 services. Generated; do not edit it by hand.
-- `scripts/generate.ts`: writes `devlanes.yaml` from `scripts/base.yaml` (everything but the services); `node scripts/generate.ts [count]`.
-- `src/index.ts`: boots, listens and starts the CPU bursts for the kind `KIND` names.
-- `src/kinds/`: what each kind adds (`api`, `web`, `worker`, `job`).
-- `src/load.ts`: the boot and the CPU bursts.
-- `src/views/`: the index page listing every service and the page of a `web` service.
-- `brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): the `install` task, the tags, the `node`, `api`, `web`, `worker` and `job` templates and 40 services. Generated; do not edit it by hand.
+- [`scripts/generate.ts`](scripts/generate.ts): writes [`devlanes.yaml`](devlanes.yaml) from [`scripts/base.yaml`](scripts/base.yaml) (everything but the services); `node scripts/generate.ts [count]`.
+- [`src/index.ts`](src/index.ts): boots, listens and starts the CPU bursts for the kind `KIND` names.
+- [`src/kinds/`](src/kinds): what each kind adds (`api`, `web`, `worker`, `job`).
+- [`src/load.ts`](src/load.ts): the boot and the CPU bursts.
 
 ## Docs
 

@@ -1,14 +1,12 @@
 # Many datastores with a namespace per lane
 
-A TypeScript server over Postgres, Redis, ClickHouse, RabbitMQ and an S3 store, all shared by every lane, where each lane gets its own database, Redis index, ClickHouse database, vhost and bucket. The names come from `lanes.vars`, `infra.setup` creates them, `infra.teardown` removes them, `infra.per_lane` gives each lane its own Mailpit, and `infra.hosts` puts the web consoles on HTTPS hostnames.
-
-Every command against a container runs inside it (`docker compose exec -T` or `docker compose run --rm`), so the host needs no `psql`, `redis-cli`, `clickhouse-client` or S3 CLI.
+A TypeScript server over Postgres, Redis, ClickHouse, RabbitMQ and an S3 store that every lane shares, with its own database, Redis index, ClickHouse database, vhost and bucket in each lane. Each lane also gets its own Mailpit, and the web consoles are on HTTPS hostnames.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
 - Docker with Compose 2.24.4 or newer
-- Node 22 or later (tested with Node 24 and npm 11)
+- Node 22 or later
 
 ## Run it
 
@@ -17,21 +15,14 @@ cd infra-multi-database
 devlanes start
 ```
 
-On a terminal, `devlanes start` opens the TUI and follows the start there. `devlanes start --no-ui` prints it as text instead:
+`devlanes start --no-ui` prints the start as text:
 
 ```text
 example-multi-database@0 (main): 1/1 ready
 ready api http://127.0.0.1:20430 https://example-multi-database.localhost
 ```
 
-The first start pulls the images, about 2.5 GB in `docker image ls`. Open https://example-multi-database.localhost. The page says `This is lane 0 of example-multi-database.` and shows one card per store with this lane's namespace, a health line and a `Write and read` button. The button inserts a row, runs `INCR`, inserts into a ClickHouse table, publishes and consumes a message, uploads and lists an object, or sends a mail and reads the inbox back, and the card prints what came back:
-
-```text
-INSERT INTO notes -> id 1
-SELECT count(*) FROM notes -> 1
-```
-
-https://example-multi-database.localhost/api/stores returns the namespaces and health lines as JSON, and `/lane` the lane values.
+The first start pulls the images, about 2.5 GB in `docker image ls`. Open https://example-multi-database.localhost. The page says `This is lane 0 of example-multi-database.` and shows one card per store with this lane's namespace, a health line and a `Write and read` button that writes to the store and prints what it read back.
 
 ## Shared or per lane
 
@@ -48,10 +39,8 @@ MinIO no longer publishes images (its Docker Hub repositories were removed in Se
 
 ## During a start
 
-devlanes calls each worktree of the repository a lane. A fresh clone on `main` is lane 0, named `main`.
-
 1. The shared containers start in the Compose project `example-multi-database` (`infra.project_name`), then this lane's Mailpit in `example-multi-database-lane0`. devlanes waits for every healthcheck.
-2. The `infra.setup` entries run at the same time, once per lane, and are recorded as done:
+2. The `infra.setup` entries run at the same time, once per lane, and are recorded as done. Each runs inside its container (`docker compose exec -T` or `docker compose run --rm`), so the host needs no `psql`, `redis-cli`, `clickhouse-client` or S3 CLI:
    - `postgres` pipes `SELECT 'CREATE DATABASE ...' WHERE NOT EXISTS (...) \gexec` into `psql`;
    - `redis` sets `lane:owner` in the lane's index, which the Redis card shows;
    - `clickhouse` runs `CREATE DATABASE IF NOT EXISTS`;
@@ -60,9 +49,11 @@ devlanes calls each worktree of the repository a lane. A fresh clone on `main` i
 3. The `install` task (`when: lane.create`) runs `npm install` on the lane's first start.
 4. `api` starts with `npm run dev` (`tsx watch src/index.ts`) and the URLs from `global_env` (`DATABASE_URL`, `REDIS_URL`, `CLICKHOUSE_URL`, `AMQP_URL`, `S3_URL`, `SMTP_URL`), and is ready once `/healthz` answers.
 
-Every entry can run again without harm, as `devlanes run infra.setup.postgres` shows. Each module in `src/stores/` reads its namespace back from the end of its URL, so the store code never builds a lane name itself.
+Every entry can run again without harm, as `devlanes run infra.setup.postgres` shows.
 
-The consoles, all on the lane's domain:
+## Consoles
+
+All on the lane's domain:
 
 | Hostname                                                        | Container port | Login                         |
 | --------------------------------------------------------------- | -------------- | ----------------------------- |
@@ -71,7 +62,7 @@ The consoles, all on the lane's domain:
 | https://clickhouse.example-multi-database.localhost/play        | 8123           | `app` / `app`                 |
 | https://mail.example-multi-database.localhost                   | 8025           | none                          |
 
-The shared consoles show every lane's databases, vhosts and buckets; Mailpit shows only the lane's own mail. Postgres and Redis have no console and are in `infra.hidden`, so a machine connected with `devlanes remote connect` does not mirror their raw ports; remove a name there to reach a box's database from your own client. On this machine, open a shell in them with the command on their card, or run a query:
+The shared consoles show every lane's databases, vhosts and buckets; Mailpit shows only the lane's own mail. Postgres and Redis have no console and are in `infra.hidden`, so a machine connected with `devlanes remote connect` does not mirror their raw ports; remove a name there to reach a box's database from your own client. Run a query in them like this:
 
 ```sh
 docker compose -p example-multi-database exec -T postgres psql -U postgres app_main -c 'SELECT count(*) FROM notes'
@@ -92,17 +83,9 @@ infra for example-multi-database@0
     services: mailpit
 ```
 
-`devlanes infra logs postgres --tail 3` prints a container's Docker logs:
-
-```text
-postgres#1 2026-11-07 01:08:59.077 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-postgres#2 2026-11-07 01:08:59.081 UTC [66] LOG:  database system was shut down at 2026-11-07 01:08:58 UTC
-postgres#3 2026-11-07 01:08:59.084 UTC [1] LOG:  database system is ready to accept connections
-```
-
 ## Try next
 
-- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/infra-multi-database && devlanes start`. This step was not run for this README. In this folder, `devlanes lane new --name example-multi-database-review --start` gives lane 1 without a worktree, and is what the output below comes from. https://example-multi-database1.localhost shows `This is lane 1 of example-multi-database.` using the same containers with its own namespaces, and `devlanes env show api --lane example-multi-database-review` lists its URLs (excerpt):
+- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/infra-multi-database && devlanes start`. In this folder, `devlanes lane new --name example-multi-database-review --start` gives lane 1 without a worktree, and is what the output below comes from. https://example-multi-database1.localhost shows `This is lane 1 of example-multi-database.` using the same containers with its own namespaces, and `devlanes env show api --lane example-multi-database-review` lists its URLs (excerpt):
 
   ```text
   AMQP_URL=amqp://app:app@127.0.0.1:55408/app_lane1
@@ -113,21 +96,19 @@ postgres#3 2026-11-07 01:08:59.084 UTC [1] LOG:  database system is ready to acc
   SMTP_URL=smtp://127.0.0.1:20591
   ```
 
-  The ports of the shared stores match lane 0's; only the SMTP port belongs to the lane's own Mailpit. Press `Write and read` on the Mailpit card of lane 1: the mail shows up at https://mail.example-multi-database1.localhost and not at https://mail.example-multi-database.localhost.
+  The ports of the shared stores match lane 0's; only the SMTP port belongs to the lane's own Mailpit.
 
+- Press `Write and read` on the Mailpit card of lane 1. The mail shows up at https://mail.example-multi-database1.localhost and not at https://mail.example-multi-database.localhost.
 - Restart RabbitMQ with `docker compose -p example-multi-database restart rabbitmq`, then run `devlanes restart`. Docker gives the restarted container a new host port, which the lane restart reads back. Because the `rabbitmq` entry sets `container: rabbitmq`, the restart also runs it again, and `devlanes logs setup.rabbitmq` shows another `Adding vhost "app_main" ...` line; the other entries stay done. A plain `devlanes start` runs the entry again too, but in devlanes 0.11.3 it leaves `api` and the console route on the old port, so the RabbitMQ card shows `connect ECONNREFUSED` until the restart.
-- Clean the second lane: `devlanes lane clean example-multi-database-review --yes` (`devlanes lane clean 1 --yes` for the worktree's lane) prints `cleaned example-multi-database@1: stopped 1 unit, teardown postgres, redis, clickhouse, rabbitmq, s3`. `app_lane1`, index 1, the vhost and the `app-lane1` bucket with its objects are gone, lane 1's Mailpit container is removed, and lane 0's data is untouched.
+- Clean the second lane with `devlanes lane clean example-multi-database-review --yes` (`devlanes lane clean 1 --yes` for the worktree's lane). It prints `cleaned example-multi-database@1: stopped 1 unit, teardown postgres, redis, clickhouse, rabbitmq, s3`. `app_lane1`, index 1, the vhost and the `app-lane1` bucket with its objects are gone, lane 1's Mailpit container is removed, and lane 0's data is untouched.
 - Remove everything this example created: `devlanes lane clean 0 --yes`, then `devlanes infra down` to stop the shared containers, then `docker compose -p example-multi-database down -v` to delete them with their volumes. The next `devlanes start` creates everything again.
 
 ## Files
 
-- `devlanes.yaml`: the per-lane names, setup and teardown for each store, console hostnames, the URLs in `global_env`, the `install` task and the `api` service.
-- `docker-compose.yml`: the containers with pinned images, loopback ports and healthchecks, plus the `rc` S3 command line under a profile.
-- `src/stores/`: one module per store with its namespace, health check and write-then-read; `store.ts` is the shape they share.
-- `src/routes/`: the dashboard at `/`, the `POST /stores/<store>/try` action of each card and `GET /api/stores`.
-- `src/views/`: the page as JSX components (`Layout`, `LaneCard`, `StoreCard`, `DashboardPage`).
-- `src/env.ts`: every variable the service reads, parsed once.
-- `brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): the per-lane names, setup and teardown for each store, console hostnames, the URLs in `global_env`, the `install` task and the `api` service.
+- [`docker-compose.yml`](docker-compose.yml): the containers with pinned images, loopback ports and healthchecks, plus the `rc` S3 command line under a profile.
+- [`src/stores/`](src/stores): one module per store with its namespace, health check and write-then-read.
+- [`src/routes/`](src/routes): the dashboard at `/`, the `POST /stores/<store>/try` action of each card and `GET /api/stores`.
 
 ## Docs
 

@@ -1,11 +1,11 @@
 # Services built to fail
 
-One TypeScript server runs every service of this project in a different `MODE`, and all but one are broken on purpose: a crash on boot, a crash on request, a reset connection, a stray 101 answer, a missing program, a wrong port, a ready check that never passes and a proxy loop. Each one, started by name, shows what devlanes prints in `devlanes start`, `devlanes debug why` and the proxy's error pages (DL101 to DL303). A `default` profile keeps a plain `devlanes start` healthy, and `devlanes.broken.yaml` holds a config typo for `devlanes config check`.
+One TypeScript server runs every service of this project in a different `MODE`, and all but one are broken on purpose. Each one, started by name, shows what devlanes prints in `devlanes start`, `devlanes debug why` and the proxy's error pages (DL101 to DL303).
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22 or later (tested with Node 24 and npm 11)
+- Node 22 or later
 
 ## Run it
 
@@ -14,7 +14,7 @@ cd showcase-broken
 devlanes start
 ```
 
-On a terminal, `devlanes start` opens the TUI. With `--no-ui --output plain` it prints:
+`devlanes start --no-ui --output plain` prints the start as text:
 
 ```text
 ok install
@@ -27,13 +27,11 @@ Open https://example-broken.localhost. The page says `This is lane 0 of example-
 
 ## During a start
 
-devlanes calls each worktree of the repository a lane. A fresh clone on `main` is lane 0.
-
 1. The first start of a lane runs the `install` task (`npm install`).
 2. The `default` profile names only `index`, so a plain start runs that one service (`npm run dev`, which is `tsx watch src/index.ts` with `MODE=index`) and waits for `/healthz`.
 3. The other services have hostnames from the start: until one is started, its hostname answers DL201.
 
-Every broken service extends the `broken` template, which runs `npm run serve` (`tsx src/index.ts` without watch, so a crash ends the process) and tags it `broken`, so `+broken` selects them all. `src/index.ts` reads `MODE` and runs the matching module from `src/modes/`.
+Every broken service extends the `broken` template, which runs `npm run serve` (`tsx src/index.ts` without watch, so a crash ends the process) and tags it `broken`, so `+broken` selects them all.
 
 A plain `devlanes start` brings back what the lane ran before, broken services included. `devlanes stop` without names forgets them, and the next plain start runs only `index` again.
 
@@ -57,7 +55,7 @@ failed services  0 of 1 ready
 logs: devlanes logs example-broken@0:crash-on-boot --tail 200
 ```
 
-The unit stays failed. devlanes does not restart it, and `devlanes status` still shows `failed=crash-on-boot` later. `devlanes debug errors` lists it with its crash count, and `devlanes debug why crash-on-boot` gives the reason:
+The unit stays failed: devlanes does not restart it, and `devlanes status` still shows `failed=crash-on-boot` later. `devlanes debug errors` lists it with its crash count, and `devlanes debug why crash-on-boot` gives the reason:
 
 ```text
 failed example-broken@0:crash-on-boot
@@ -297,19 +295,17 @@ The check exits 1 and does not register the file's project: `devlanes lane ls -p
 
 `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/showcase-broken && devlanes start`. The new worktree is lane 1, and https://example-broken1.localhost says `This is lane 1 of example-broken.` with another lane colour. `devlanes start crash-on-boot --no-ui` there fails only lane 1's `crash-on-boot`, whose page names `example-broken@1:crash-on-boot`, while lane 0 keeps running.
 
-That worktree step was not run for this README. To get lane 1 without a worktree, run `devlanes lane new --name example-broken-review --start --no-ui` in this folder and use `devlanes --lane example-broken-review start crash-on-boot --no-ui`; the results above came from that.
+To get lane 1 without a worktree, run `devlanes lane new --name example-broken-review --start --no-ui` in this folder and use `devlanes --lane example-broken-review start crash-on-boot --no-ui`.
 
 When you are done, `devlanes lane clean 0 --yes` removes lane 0. Run it with `1` for the second lane.
 
 ## Files
 
-- `devlanes.yaml`: the healthy `index`, the `broken` template, one service per failure and the `default` profile.
-- `devlanes.broken.yaml`: a project file with a typo, for `config check`.
-- `src/index.ts`: reads `MODE` and runs one module from `src/modes/`.
-- `src/modes/`: one small module per mode. `reset.ts` and `upgrade.ts` write to the raw socket, and `proxy-loop.ts` forwards with `node:https`.
-- `src/failures.ts`: the table the index page lists; `src/views/` renders it.
-- `src/env.ts`: every variable the server reads, parsed once.
-- `brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): the healthy `index`, the `broken` template, one service per failure and the `default` profile.
+- [`devlanes.broken.yaml`](devlanes.broken.yaml): a project file with a typo, for `config check`.
+- [`src/index.ts`](src/index.ts): reads `MODE` and runs one module from [`src/modes/`](src/modes).
+- [`src/modes/`](src/modes): one small module per mode.
+- [`src/failures.ts`](src/failures.ts): the table the index page lists.
 
 ## Docs
 
