@@ -4,7 +4,7 @@
     {
       "slug": "basics-hello-node",
       "title": "Hello Node",
-      "description": "Run one TypeScript server per worktree: devlanes gives it a port, an HTTPS hostname and a ready check.",
+      "description": "Start here: one TypeScript server that gets its port and HTTPS hostname from devlanes.",
       "category": "basics",
       "languages": ["typescript"],
       "frameworks": ["hono"],
@@ -15,7 +15,7 @@
     {
       "slug": "basics-ready-checks",
       "title": "Ready checks",
-      "description": "Pick the right ready check for each service: http, tcp, log and cmd, including apps that answer only on their own hostname.",
+      "description": "Tell devlanes when each service is up, with an http, tcp, log or cmd ready check.",
       "category": "basics",
       "languages": ["typescript"],
       "frameworks": ["hono"],
@@ -38,7 +38,7 @@
     {
       "slug": "web-frontend-api",
       "title": "Frontend and API on one lane domain",
-      "description": "Connect a React frontend to its API per lane: public_url for the browser, url for server-to-server calls, CORS from DEVLANES_ORIGINS and a cookie on the lane domain.",
+      "description": "Point a React frontend at its lane's API, with CORS and a session cookie that work on the lane's domain.",
       "category": "web",
       "languages": ["typescript"],
       "frameworks": ["react", "vite", "hono"],
@@ -54,7 +54,7 @@
     {
       "slug": "web-next-app",
       "title": "Next.js app with an HTTPS sibling API",
-      "description": "Run Next.js per lane with the next preset, and fetch an HTTPS sibling API from a server component without TLS workarounds.",
+      "description": "Run Next.js with the next preset and call an HTTPS API in the same lane from a server component.",
       "category": "web",
       "languages": ["typescript"],
       "frameworks": ["next", "react", "hono"],
@@ -73,7 +73,7 @@
     {
       "slug": "web-realtime-ws",
       "title": "WebSockets and SSE",
-      "description": "Serve WebSockets and server-sent events through the proxy, with extra named ports routed to their own hostnames.",
+      "description": "Serve WebSockets and server-sent events through the proxy, and give a service's second port its own hostname.",
       "category": "web",
       "languages": ["typescript"],
       "frameworks": ["hono", "vite"],
@@ -84,7 +84,7 @@
     {
       "slug": "web-wildcard-tenants",
       "title": "Wildcard tenants",
-      "description": "Serve tenant subdomains on a site with its own cookies, behind a fallback wildcard gateway and an exact short-link host.",
+      "description": "Serve every tenant on its own subdomain with a wildcard host, while exact hostnames and a fallback gateway take the rest.",
       "category": "web",
       "languages": ["typescript"],
       "frameworks": ["hono"],
@@ -101,7 +101,7 @@
     {
       "slug": "web-provider-stubs",
       "title": "Fake SMS and email providers per lane",
-      "description": "Replace third-party SMS and email providers with local fakes per lane, so each lane's messages land in its own inbox.",
+      "description": "Swap SMS and email providers for local fakes, so each lane's messages land in its own inbox.",
       "category": "web",
       "languages": ["typescript"],
       "frameworks": ["hono"],
@@ -112,7 +112,7 @@
     {
       "slug": "languages-python-fastapi",
       "title": "Python and FastAPI",
-      "description": "Run FastAPI under uv behind the HTTPS proxy, with forwarded headers, Jinja pages and HTTPS calls trusted through SSL_CERT_FILE.",
+      "description": "Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.",
       "category": "languages",
       "languages": ["python"],
       "frameworks": ["fastapi", "uvicorn", "jinja", "httpx"],
@@ -130,7 +130,7 @@
     {
       "slug": "languages-rust-axum",
       "title": "Rust and axum",
-      "description": "Run a Cargo workspace of Rust services with run_script on Cargo.toml, a ready timeout for the first build, and reqwest trusting the devlanes CA.",
+      "description": "Run the services of a Cargo workspace, with a ready timeout long enough for the first build.",
       "category": "languages",
       "languages": ["rust"],
       "frameworks": ["axum", "askama", "tokio", "reqwest"],
@@ -157,7 +157,7 @@
     {
       "slug": "frameworks-wrangler-workers",
       "title": "Cloudflare Workers",
-      "description": "Run two Workers per lane with the wrangler preset: a service binding resolved through the lane's own dev registry, KV state in the lane data folder and inspector hostnames.",
+      "description": "Run two Cloudflare Workers with the wrangler preset, joined by a service binding that resolves inside the lane.",
       "category": "frameworks",
       "languages": ["typescript"],
       "frameworks": ["wrangler", "hono"],
@@ -176,7 +176,7 @@
     {
       "slug": "frameworks-cloudflare-vite",
       "title": "Cloudflare Vite plugin per lane",
-      "description": "Run a React app and a Worker in one Vite server per lane, with the inspector port and persisted state taken from devlanes.",
+      "description": "Run a React app and a Worker in one Vite server, with an inspector port and stored state of its own in each lane.",
       "category": "frameworks",
       "languages": ["typescript"],
       "frameworks": ["vite", "react", "cloudflare-vite-plugin", "hono", "wrangler"],
@@ -187,7 +187,7 @@
     {
       "slug": "frameworks-tauri-desktop",
       "title": "Tauri desktop app",
-      "description": "Run a Tauri 2 app per lane with its own identifier per lane and replica, against a Vite frontend devlanes runs.",
+      "description": "Run a Tauri 2 desktop app with a different identifier in each lane, against a Vite frontend devlanes starts.",
       "category": "frameworks",
       "languages": ["typescript", "rust"],
       "frameworks": ["tauri", "vite"],
@@ -198,7 +198,7 @@
     {
       "slug": "infra-postgres-shared",
       "title": "Shared Postgres with a database per lane",
-      "description": "Share one Postgres container between lanes with a database per lane, and run setup, migrations, seeds and resets at the right lane events.",
+      "description": "Share one Postgres container between lanes and give each lane its own database, migrated on every start.",
       "category": "infra",
       "languages": ["typescript"],
       "frameworks": ["hono", "docker-compose", "postgres"],
@@ -219,7 +219,7 @@
     {
       "slug": "infra-postgres-per-lane",
       "title": "Postgres per lane",
-      "description": "Give each lane its own Postgres container next to a shared Redis, and remove a lane's container and volume with lane clean.",
+      "description": "Give each lane its own Postgres container while Redis stays shared, and delete a lane's container together with its data.",
       "category": "infra",
       "languages": ["typescript"],
       "frameworks": ["hono", "docker-compose", "postgres", "redis"],
@@ -238,7 +238,7 @@
     {
       "slug": "infra-multi-database",
       "title": "Many datastores with a namespace per lane",
-      "description": "Share Postgres, Redis, ClickHouse, RabbitMQ and an S3 store across lanes with a namespace per lane that infra.setup creates and lane clean removes, plus a Mailpit per lane.",
+      "description": "Share Postgres, Redis, ClickHouse, RabbitMQ and an S3 store across lanes, with a namespace in each one for every lane.",
       "category": "infra",
       "languages": ["typescript"],
       "frameworks": [
@@ -266,7 +266,7 @@
     {
       "slug": "infra-plain-containers",
       "title": "Plain containers and external ports",
-      "description": "Run containers without Compose, such as a mock OIDC provider per lane, and route a server you start yourself with infra.external.",
+      "description": "Run containers without Compose, such as a mock OIDC provider for each lane, and route a hostname to a server you start yourself.",
       "category": "infra",
       "languages": ["typescript"],
       "frameworks": ["hono", "openid-client", "docker"],
@@ -283,7 +283,7 @@
     {
       "slug": "workflows-profiles-tags",
       "title": "Profiles and tags",
-      "description": "Organise an npm workspace of APIs, web apps and a worker with tags, colours, templates and profiles, including a test profile and one that attaches to lane 0's APIs.",
+      "description": "Group the seven services of an npm workspace with tags and templates, and start a different set of them with each profile.",
       "category": "workflows",
       "languages": ["typescript"],
       "frameworks": ["hono"],
@@ -303,7 +303,7 @@
     {
       "slug": "workflows-queue-workers",
       "title": "Queue workers per lane",
-      "description": "Run port-less worker replicas that finish their job on stop, keep their lane awake and share a queue namespaced per lane.",
+      "description": "Run two replicas of a worker that has no port and finishes the job in hand before it stops.",
       "category": "workflows",
       "languages": ["typescript"],
       "frameworks": ["hono", "vite", "redis", "docker-compose"],
@@ -326,7 +326,7 @@
     {
       "slug": "workflows-pnpm-monorepo",
       "title": "pnpm workspace with turbo and a second project",
-      "description": "Run a pnpm and turbo workspace with a service per package, build steps at lane creation, lane values in turbo's cache key and a subdirectory project with its own lanes.",
+      "description": "Run a pnpm and turbo monorepo with a service for each package, next to a second project in a subdirectory.",
       "category": "workflows",
       "languages": ["typescript"],
       "frameworks": ["pnpm", "turbo", "hono", "react", "vite"],
@@ -346,7 +346,7 @@
     {
       "slug": "workflows-dev-and-prod",
       "title": "Dev servers and production builds from one folder",
-      "description": "Switch a lane between dev servers and a production build with a profile, run a second project file beside it, and keep personal changes in devlanes.local.yaml.",
+      "description": "Switch a lane between dev servers and a production build with a profile, and keep personal settings in devlanes.local.yaml.",
       "category": "workflows",
       "languages": ["typescript"],
       "frameworks": ["react", "vite", "hono"],
@@ -366,7 +366,7 @@
     {
       "slug": "workflows-dotenv",
       "title": "Dotenv and one domain root",
-      "description": "Feed values from a gitignored .env into named variables, share it with new worktrees, and derive every URL and the cookie domain from one domain root.",
+      "description": "Read values from a gitignored .env that every worktree shares, and build each URL from the lane's domain.",
       "category": "workflows",
       "languages": ["typescript"],
       "frameworks": ["hono"],
@@ -383,7 +383,7 @@
     {
       "slug": "workflows-mprocs-migration",
       "title": "From mprocs to devlanes",
-      "description": "Replace mprocs, Caddy and a hand-made port-slot script with devlanes, item by item: per-lane ports and hostnames, profiles instead of copied configs, tasks instead of manual panes.",
+      "description": "Move a project from mprocs, Caddy and a hand-made port script to devlanes, one piece at a time.",
       "category": "workflows",
       "languages": ["typescript", "shell"],
       "frameworks": ["hono", "mprocs", "caddy"],
@@ -405,7 +405,7 @@
     {
       "slug": "workflows-ci-with",
       "title": "Run tests against a lane with devlanes with",
-      "description": "Start a lane, run tests against its HTTPS URLs and stop it again with devlanes with, locally and in GitHub Actions.",
+      "description": "Wrap a test run in devlanes with, which starts a lane, gives the tests its HTTPS URLs and stops it afterwards.",
       "category": "workflows",
       "languages": ["typescript"],
       "frameworks": ["hono", "vite", "node:test", "github-actions"],
@@ -434,7 +434,7 @@
     {
       "slug": "showcase-tui-tour",
       "title": "A tour of the TUI",
-      "description": "Walk through the devlanes TUI key by key on the stack from the devlanes.run demo: infra, tasks, profiles, a failing service, an ad-hoc unit, the monitor and freezing.",
+      "description": "Walk through the TUI key by key, on the same stack as the demo on devlanes.run.",
       "category": "showcase",
       "languages": ["typescript"],
       "frameworks": ["hono", "react", "vite", "docker-compose", "postgres", "redis", "mailpit"],
@@ -458,7 +458,7 @@
     {
       "slug": "showcase-many-services",
       "title": "Forty services and the start gate",
-      "description": "Start 40 services at once to see the start gate queue them, and read CPU and memory per unit in status and the monitor.",
+      "description": "Start 40 services at once and watch the start gate queue them, with CPU and memory shown for each one.",
       "category": "showcase",
       "languages": ["typescript"],
       "frameworks": ["hono"],
@@ -476,7 +476,7 @@
     {
       "slug": "showcase-broken",
       "title": "Services built to fail",
-      "description": "Trigger the failures devlanes reports, from crashes and wrong ports to the proxy's error pages, and read what each one tells you.",
+      "description": "Break services on purpose and read what devlanes and the proxy's error pages say about each failure.",
       "category": "showcase",
       "languages": ["typescript"],
       "frameworks": ["hono"],
@@ -496,7 +496,7 @@
     {
       "slug": "remote-docker-box",
       "title": "Remote box in Docker",
-      "description": "Run lanes on a box in a container and use them from your machine: pairing, mirrored hostnames, hidden services and synced folders.",
+      "description": "Run lanes on a box inside a Docker container and open them from your machine under the same hostnames.",
       "category": "remote",
       "languages": ["shell"],
       "frameworks": ["docker"],

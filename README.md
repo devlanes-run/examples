@@ -56,73 +56,73 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 
 ### Basics
 
-| Example                                    | What it teaches                                                                                                             | Needs      | Status |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
-| [basics-hello-node](basics-hello-node)     | Run one TypeScript server per worktree: devlanes gives it a port, an HTTPS hostname and a ready check.                      | node       | ready  |
-| [basics-ready-checks](basics-ready-checks) | Pick the right ready check for each service: http, tcp, log and cmd, including apps that answer only on their own hostname. | node, curl | ready  |
+| Example                                    | What it teaches                                                                        | Needs      | Status |
+| ------------------------------------------ | -------------------------------------------------------------------------------------- | ---------- | ------ |
+| [basics-hello-node](basics-hello-node)     | Start here: one TypeScript server that gets its port and HTTPS hostname from devlanes. | node       | ready  |
+| [basics-ready-checks](basics-ready-checks) | Tell devlanes when each service is up, with an http, tcp, log or cmd ready check.      | node, curl | ready  |
 
 ### Web
 
-| Example                                      | What it teaches                                                                                                                                                       | Needs | Status |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
-| [web-frontend-api](web-frontend-api)         | Connect a React frontend to its API per lane: public_url for the browser, url for server-to-server calls, CORS from DEVLANES_ORIGINS and a cookie on the lane domain. | node  | ready  |
-| [web-next-app](web-next-app)                 | Run Next.js per lane with the next preset, and fetch an HTTPS sibling API from a server component without TLS workarounds.                                            | node  | ready  |
-| [web-realtime-ws](web-realtime-ws)           | Serve WebSockets and server-sent events through the proxy, with extra named ports routed to their own hostnames.                                                      | node  | ready  |
-| [web-wildcard-tenants](web-wildcard-tenants) | Serve tenant subdomains on a site with its own cookies, behind a fallback wildcard gateway and an exact short-link host.                                              | node  | ready  |
-| [web-provider-stubs](web-provider-stubs)     | Replace third-party SMS and email providers with local fakes per lane, so each lane's messages land in its own inbox.                                                 | node  | ready  |
+| Example                                      | What it teaches                                                                                                           | Needs | Status |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| [web-frontend-api](web-frontend-api)         | Point a React frontend at its lane's API, with CORS and a session cookie that work on the lane's domain.                  | node  | ready  |
+| [web-next-app](web-next-app)                 | Run Next.js with the next preset and call an HTTPS API in the same lane from a server component.                          | node  | ready  |
+| [web-realtime-ws](web-realtime-ws)           | Serve WebSockets and server-sent events through the proxy, and give a service's second port its own hostname.             | node  | ready  |
+| [web-wildcard-tenants](web-wildcard-tenants) | Serve every tenant on its own subdomain with a wildcard host, while exact hostnames and a fallback gateway take the rest. | node  | ready  |
+| [web-provider-stubs](web-provider-stubs)     | Swap SMS and email providers for local fakes, so each lane's messages land in its own inbox.                              | node  | ready  |
 
 ### Languages
 
-| Example                                              | What it teaches                                                                                                                                  | Needs                                 | Status  |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- | ------- |
-| [languages-python-fastapi](languages-python-fastapi) | Run FastAPI under uv behind the HTTPS proxy, with forwarded headers, Jinja pages and HTTPS calls trusted through SSL_CERT_FILE.                  | uv                                    | ready   |
-| [languages-rust-axum](languages-rust-axum)           | Run a Cargo workspace of Rust services with run_script on Cargo.toml, a ready timeout for the first build, and reqwest trusting the devlanes CA. | rust                                  | ready   |
-| languages-polyglot                                   | Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.                                                       | node, bun, deno, uv, rust, just, make | planned |
+| Example                                              | What it teaches                                                                              | Needs                                 | Status  |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------- | ------- |
+| [languages-python-fastapi](languages-python-fastapi) | Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.    | uv                                    | ready   |
+| [languages-rust-axum](languages-rust-axum)           | Run the services of a Cargo workspace, with a ready timeout long enough for the first build. | rust                                  | ready   |
+| languages-polyglot                                   | Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.   | node, bun, deno, uv, rust, just, make | planned |
 
 ### Frameworks
 
-| Example                                                    | What it teaches                                                                                                                                                              | Needs             | Status  |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ------- |
-| [frameworks-wrangler-workers](frameworks-wrangler-workers) | Run two Workers per lane with the wrangler preset: a service binding resolved through the lane's own dev registry, KV state in the lane data folder and inspector hostnames. | node              | ready   |
-| [frameworks-cloudflare-vite](frameworks-cloudflare-vite)   | Run a React app and a Worker in one Vite server per lane, with the inspector port and persisted state taken from devlanes.                                                   | node              | ready   |
-| frameworks-tauri-desktop                                   | Run a Tauri 2 app per lane with its own identifier per lane and replica, against a Vite frontend devlanes runs.                                                              | node, rust, tauri | planned |
+| Example                                                    | What it teaches                                                                                                   | Needs             | Status  |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------- | ------- |
+| [frameworks-wrangler-workers](frameworks-wrangler-workers) | Run two Cloudflare Workers with the wrangler preset, joined by a service binding that resolves inside the lane.   | node              | ready   |
+| [frameworks-cloudflare-vite](frameworks-cloudflare-vite)   | Run a React app and a Worker in one Vite server, with an inspector port and stored state of its own in each lane. | node              | ready   |
+| frameworks-tauri-desktop                                   | Run a Tauri 2 desktop app with a different identifier in each lane, against a Vite frontend devlanes starts.      | node, rust, tauri | planned |
 
 ### Infra
 
-| Example                                            | What it teaches                                                                                                                                                              | Needs        | Status |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------ |
-| [infra-postgres-shared](infra-postgres-shared)     | Share one Postgres container between lanes with a database per lane, and run setup, migrations, seeds and resets at the right lane events.                                   | node, docker | ready  |
-| [infra-postgres-per-lane](infra-postgres-per-lane) | Give each lane its own Postgres container next to a shared Redis, and remove a lane's container and volume with lane clean.                                                  | node, docker | ready  |
-| [infra-multi-database](infra-multi-database)       | Share Postgres, Redis, ClickHouse, RabbitMQ and an S3 store across lanes with a namespace per lane that infra.setup creates and lane clean removes, plus a Mailpit per lane. | node, docker | ready  |
-| [infra-plain-containers](infra-plain-containers)   | Run containers without Compose, such as a mock OIDC provider per lane, and route a server you start yourself with infra.external.                                            | node, docker | ready  |
+| Example                                            | What it teaches                                                                                                                  | Needs        | Status |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------ |
+| [infra-postgres-shared](infra-postgres-shared)     | Share one Postgres container between lanes and give each lane its own database, migrated on every start.                         | node, docker | ready  |
+| [infra-postgres-per-lane](infra-postgres-per-lane) | Give each lane its own Postgres container while Redis stays shared, and delete a lane's container together with its data.        | node, docker | ready  |
+| [infra-multi-database](infra-multi-database)       | Share Postgres, Redis, ClickHouse, RabbitMQ and an S3 store across lanes, with a namespace in each one for every lane.           | node, docker | ready  |
+| [infra-plain-containers](infra-plain-containers)   | Run containers without Compose, such as a mock OIDC provider for each lane, and route a hostname to a server you start yourself. | node, docker | ready  |
 
 ### Workflows
 
-| Example                                                  | What it teaches                                                                                                                                                                      | Needs              | Status  |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------- |
-| [workflows-profiles-tags](workflows-profiles-tags)       | Organise an npm workspace of APIs, web apps and a worker with tags, colours, templates and profiles, including a test profile and one that attaches to lane 0's APIs.                | node               | ready   |
-| [workflows-queue-workers](workflows-queue-workers)       | Run port-less worker replicas that finish their job on stop, keep their lane awake and share a queue namespaced per lane.                                                            | node, docker       | ready   |
-| [workflows-pnpm-monorepo](workflows-pnpm-monorepo)       | Run a pnpm and turbo workspace with a service per package, build steps at lane creation, lane values in turbo's cache key and a subdirectory project with its own lanes.             | node, pnpm         | ready   |
-| [workflows-dev-and-prod](workflows-dev-and-prod)         | Switch a lane between dev servers and a production build with a profile, run a second project file beside it, and keep personal changes in devlanes.local.yaml.                      | node               | ready   |
-| [workflows-dotenv](workflows-dotenv)                     | Feed values from a gitignored .env into named variables, share it with new worktrees, and derive every URL and the cookie domain from one domain root.                               | node               | ready   |
-| [workflows-mprocs-migration](workflows-mprocs-migration) | Replace mprocs, Caddy and a hand-made port-slot script with devlanes, item by item: per-lane ports and hostnames, profiles instead of copied configs, tasks instead of manual panes. | node               | ready   |
-| [workflows-ci-with](workflows-ci-with)                   | Start a lane, run tests against its HTTPS URLs and stop it again with devlanes with, locally and in GitHub Actions.                                                                  | node               | ready   |
-| workflows-tool-versions                                  | Pin each lane's tool versions and variables with mise and direnv files in the worktree root.                                                                                         | node, mise, direnv | planned |
+| Example                                                  | What it teaches                                                                                                             | Needs              | Status  |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------- |
+| [workflows-profiles-tags](workflows-profiles-tags)       | Group the seven services of an npm workspace with tags and templates, and start a different set of them with each profile.  | node               | ready   |
+| [workflows-queue-workers](workflows-queue-workers)       | Run two replicas of a worker that has no port and finishes the job in hand before it stops.                                 | node, docker       | ready   |
+| [workflows-pnpm-monorepo](workflows-pnpm-monorepo)       | Run a pnpm and turbo monorepo with a service for each package, next to a second project in a subdirectory.                  | node, pnpm         | ready   |
+| [workflows-dev-and-prod](workflows-dev-and-prod)         | Switch a lane between dev servers and a production build with a profile, and keep personal settings in devlanes.local.yaml. | node               | ready   |
+| [workflows-dotenv](workflows-dotenv)                     | Read values from a gitignored .env that every worktree shares, and build each URL from the lane's domain.                   | node               | ready   |
+| [workflows-mprocs-migration](workflows-mprocs-migration) | Move a project from mprocs, Caddy and a hand-made port script to devlanes, one piece at a time.                             | node               | ready   |
+| [workflows-ci-with](workflows-ci-with)                   | Wrap a test run in devlanes with, which starts a lane, gives the tests its HTTPS URLs and stops it afterwards.              | node               | ready   |
+| workflows-tool-versions                                  | Pin each lane's tool versions and variables with mise and direnv files in the worktree root.                                | node, mise, direnv | planned |
 
 ### TUI showcase
 
-| Example                                          | What it teaches                                                                                                                                                        | Needs        | Status |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------ |
-| [showcase-tui-tour](showcase-tui-tour)           | Walk through the devlanes TUI key by key on the stack from the devlanes.run demo: infra, tasks, profiles, a failing service, an ad-hoc unit, the monitor and freezing. | node, docker | ready  |
-| [showcase-many-services](showcase-many-services) | Start 40 services at once to see the start gate queue them, and read CPU and memory per unit in status and the monitor.                                                | node         | ready  |
-| [showcase-broken](showcase-broken)               | Trigger the failures devlanes reports, from crashes and wrong ports to the proxy's error pages, and read what each one tells you.                                      | node         | ready  |
+| Example                                          | What it teaches                                                                                        | Needs        | Status |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ------------ | ------ |
+| [showcase-tui-tour](showcase-tui-tour)           | Walk through the TUI key by key, on the same stack as the demo on devlanes.run.                        | node, docker | ready  |
+| [showcase-many-services](showcase-many-services) | Start 40 services at once and watch the start gate queue them, with CPU and memory shown for each one. | node         | ready  |
+| [showcase-broken](showcase-broken)               | Break services on purpose and read what devlanes and the proxy's error pages say about each failure.   | node         | ready  |
 
 ### Remote boxes
 
-| Example                                | What it teaches                                                                                                                    | Needs                  | Status |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------ |
-| [remote-docker-box](remote-docker-box) | Run lanes on a box in a container and use them from your machine: pairing, mirrored hostnames, hidden services and synced folders. | docker                 | ready  |
-| [remote-ssh-box](remote-ssh-box)       | Prepare a Linux server as a devlanes box and connect to it over SSH, Tailscale or Cloudflare Tunnel.                               | a linux box, ssh, node | ready  |
+| Example                                | What it teaches                                                                                        | Needs                  | Status |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------- | ------ |
+| [remote-docker-box](remote-docker-box) | Run lanes on a box inside a Docker container and open them from your machine under the same hostnames. | docker                 | ready  |
+| [remote-ssh-box](remote-ssh-box)       | Prepare a Linux server as a devlanes box and connect to it over SSH, Tailscale or Cloudflare Tunnel.   | a linux box, ssh, node | ready  |
 
 <!-- catalog:end -->
 
