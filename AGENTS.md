@@ -23,7 +23,7 @@ _internal/
 <category>-<name>/        one example
 ```
 
-Categories are `basics`, `web`, `languages`, `frameworks`, `infra`, `workflows`, `showcase` and `remote`.
+Categories are `basics`, `languages`, `web`, `frameworks`, `infra`, `workflows`, `showcase` and `remote`.
 
 ## Adding an example
 
