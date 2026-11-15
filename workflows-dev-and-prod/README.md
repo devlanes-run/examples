@@ -1,11 +1,11 @@
 # Dev servers and production builds from one folder
 
-A Vite + React page and a [Hono](https://hono.dev) API that run three ways from the same checkout: as dev servers, as a production build in the same lane with `devlanes start --profile prod`, and as a second project, `example-dev-and-prod-release`, declared in `devlanes.prod.yaml` with `extends: devlanes.yaml`. It shows `profiles.<name>.run_scripts`, profile `env`, a `build` task with `when: lane.start` and `profiles`, the global `--file` flag, `-p <project>`, build output in `${{ lane.data_path }}`, and per-machine changes in `devlanes.local.yaml`.
+A Vite + React page and a [Hono](https://hono.dev) API that run as dev servers, as a production build in the same lane with `devlanes start --profile prod`, and as a second project, `example-dev-and-prod-release`, declared in `devlanes.prod.yaml` with `extends: devlanes.yaml`. Per-machine changes go in `devlanes.local.yaml`.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22.12 or later (tested with Node 24 and npm 11)
+- Node 22.12 or later
 
 ## Run it
 
@@ -14,7 +14,7 @@ cd workflows-dev-and-prod
 devlanes start
 ```
 
-`devlanes start --no-ui` prints the start as text instead of opening the TUI:
+`devlanes start --no-ui` prints the start as text:
 
 ```text
 example-dev-and-prod@0 (main): 2/2 ready
@@ -22,32 +22,16 @@ ready api http://127.0.0.1:20460 https://api.example-dev-and-prod.localhost
 ready web http://127.0.0.1:20461 https://example-dev-and-prod.localhost
 ```
 
-Open https://example-dev-and-prod.localhost. Each Git worktree of this repository is a lane with its own ports and hostnames, and the primary worktree is lane 0. The page says `This is lane 0 of example-dev-and-prod.` and has a card for `web` and one for `api`, with the npm script each one runs, `NODE_ENV`, the profile and the project file. The page reads them from the servers at load time, so they always describe the process that answered.
-
-```sh
-curl -fsS https://example-dev-and-prod.localhost/mode # on Windows, add --ssl-revoke-best-effort
-```
-
-```json
-{
-  "server": "vite dev server",
-  "script": "dev",
-  "node_env": "development",
-  "profile": "default",
-  "project_file": "devlanes.yaml",
-  "out_dir": null,
-  "api_url": "https://api.example-dev-and-prod.localhost"
-}
-```
+Open https://example-dev-and-prod.localhost. The page has a card for `web` and one for `api`, with the npm script each one runs, `NODE_ENV`, the profile and the project file.
 
 ## During a start
 
-1. `install` runs `npm install --include=dev` at the workspace root on the lane's first start (`when: lane.create`), which installs `apps/api`, `apps/web` and `apps/scratch`.
+1. `install` runs `npm install --include=dev` at the workspace root on the lane's first start (`when: lane.create`).
 2. `build` runs only when the `prod` profile is active (`profiles: [prod]`), so a plain start skips it.
 3. The `default` profile selects every service with `include: ["*"]` and adds `NODE_ENV: development` and `APP_PROFILE: default` to their env.
-4. `api` runs `npm run dev` (`tsx watch src/index.ts`) at https://api.example-dev-and-prod.localhost. `web` runs `npm run dev` (`vite`) at https://example-dev-and-prod.localhost with the flags `preset: vite` adds. Both count as ready once `/healthz` answers; `web` gets `/healthz`, `/lane` and `/mode` from the plugin in `apps/web/plugins/laneRoutes.ts`, which works in `vite` and `vite preview` alike.
+4. `api` runs `npm run dev` (`tsx watch src/index.ts`) at https://api.example-dev-and-prod.localhost. `web` runs `npm run dev` (`vite`) at https://example-dev-and-prod.localhost with the flags `preset: vite` adds. Both are ready once `/healthz` answers. `web` gets `/healthz`, `/lane` and `/mode` from the plugin in `apps/web/plugins/laneRoutes.ts`, which works in `vite` and `vite preview` alike.
 
-The page calls the API cross-origin at the `api_url` from `/mode` (`${{ services.api.public_url }}`), and the API allows only the origins in `DEVLANES_ORIGINS`, so another lane's page gets no answer.
+The page calls the API cross-origin at the `api_url` from `/mode` (`${{ services.api.public_url }}`). The API allows only the origins in `DEVLANES_ORIGINS`, so another lane's page gets no answer.
 
 ## The prod profile
 
@@ -106,13 +90,13 @@ example-dev-and-prod-release
   install  exited  –      –     –
 ```
 
-It runs next to `example-dev-and-prod` in the same worktree with its own ports and hostnames: https://example-dev-and-prod-release.localhost shows `This is lane 0 of example-dev-and-prod-release.`, profile `default` and project file `devlanes.prod.yaml`, while https://example-dev-and-prod.localhost keeps its dev servers. After the first start, `-p example-dev-and-prod-release` finds the project from anywhere, as in `devlanes -p example-dev-and-prod-release logs api --tail 5`.
+It runs next to `example-dev-and-prod` in the same worktree with its own ports and hostnames. https://example-dev-and-prod-release.localhost shows `This is lane 0 of example-dev-and-prod-release.`, profile `default` and project file `devlanes.prod.yaml`, while https://example-dev-and-prod.localhost keeps its dev servers. After the first start, `-p example-dev-and-prod-release` finds the project from anywhere, as in `devlanes -p example-dev-and-prod-release logs api --tail 5`.
 
 Both projects use the files of one folder:
 
-- Build output of the page: `vite build` writes to `WEB_OUT_DIR`, which `devlanes.yaml` sets to `${{ lane.data_path }}/web-dist`. The lane data folder is `~/.devlanes/data/<project>/<lane id>`, so each lane of each project serves its own bundle, and the page's `build output` row shows where. A `dist/` in `apps/web` would be one folder for all of them, and one project's build would replace the bundle the other serves.
-- Build output of the API: `tsc` writes to `apps/api/dist`, next to `node_modules`, where Node finds `hono`. Every lane builds the same files there, since nothing lane-specific goes into them.
-- `node_modules`: every lane of both projects installs into it. `install` uses `npm install` rather than `npm ci`, which would delete it under a running Vite, and `--include=dev` because profile `env` reaches tasks too: with `NODE_ENV=production` npm leaves out devDependencies such as `vite` and `typescript`, and removes them from the shared folder.
+- The page's build output goes to `WEB_OUT_DIR`, which `devlanes.yaml` sets to `${{ lane.data_path }}/web-dist`. The lane data folder is `~/.devlanes/data/<project>/<lane id>`, so each lane of each project serves its own bundle, and the page's `build output` row shows where. A `dist/` in `apps/web` would be one folder for all of them, and one project's build would replace the bundle the other serves.
+- The API's build output goes to `apps/api/dist`, next to `node_modules`, where Node finds `hono`. Every lane builds the same files there, since nothing lane-specific goes into them.
+- Every lane of both projects installs into the same `node_modules`. `install` uses `npm install` rather than `npm ci`, which would delete it under a running Vite. It uses `--include=dev` because profile `env` reaches tasks too: with `NODE_ENV=production` npm leaves out devDependencies such as `vite` and `typescript`, and removes them from the shared folder.
 
 ## Local overrides
 
@@ -150,11 +134,13 @@ ready api http://127.0.0.1:20460 https://api.example-dev-and-prod.localhost
 ready scratch http://127.0.0.1:20462 https://scratch.example-dev-and-prod.localhost
 ```
 
-The page's `api` card shows `LOG_LEVEL debug`, `devlanes logs api` shows a `debug: GET /mode` line per request, and https://scratch.example-dev-and-prod.localhost answers with its lane JSON and the API's `http://127.0.0.1` address from `${{ services.api.url }}`. `web` keeps running, because `autostart: false` only skips a service the lane did not run before. After `devlanes stop` and `devlanes start`, `devlanes status` lists `web` as `stopped` and https://example-dev-and-prod.localhost answers with the proxy's `DL201 Service not running` page; `devlanes start web` starts it by name. Delete `devlanes.local.yaml` and run `devlanes reload` to go back.
+The page's `api` card shows `LOG_LEVEL debug`, `devlanes logs api` shows a `debug: GET /mode` line per request, and https://scratch.example-dev-and-prod.localhost answers with its lane JSON and the API's `http://127.0.0.1` address from `${{ services.api.url }}`.
+
+`web` keeps running, because `autostart: false` only skips a service the lane did not run before. After `devlanes stop` and `devlanes start`, `devlanes status` lists `web` as `stopped` and https://example-dev-and-prod.localhost answers with the proxy's `DL201 Service not running` page. `devlanes start web` starts it by name. Delete `devlanes.local.yaml` and run `devlanes reload` to go back.
 
 ## Try next
 
-- Start a second lane in a new worktree. This is the one step not run while writing this README:
+- Start a second lane in a new worktree:
 
   ```sh
   git worktree add ../examples-checkout -b feat/checkout
@@ -162,21 +148,19 @@ The page's `api` card shows `LOG_LEVEL debug`, `devlanes logs api` shows a `debu
   devlanes start
   ```
 
-  The new worktree has no `node_modules`, so `install` runs there, and the lane uses the primary worktree's `devlanes.local.yaml` if you made one. To get a second lane without a worktree, run `devlanes lane new --name example-dev-and-prod-review --start` in this folder: https://example-dev-and-prod1.localhost shows `This is lane 1 of example-dev-and-prod.` with its API at https://api.example-dev-and-prod1.localhost.
+  The new worktree has no `node_modules`, so `install` runs there, and the lane uses the primary worktree's `devlanes.local.yaml` if you made one.
 
+- To get a second lane without a worktree, run `devlanes lane new --name example-dev-and-prod-review --start` in this folder. https://example-dev-and-prod1.localhost shows `This is lane 1 of example-dev-and-prod.` with its API at https://api.example-dev-and-prod1.localhost.
 - Run lane 1 in prod while lane 0 keeps its dev servers: `devlanes stop --lane example-dev-and-prod-review`, then `devlanes start --lane example-dev-and-prod-review --profile prod --no-ui`. https://example-dev-and-prod1.localhost shows `vite preview` with a build output folder of its own, and https://example-dev-and-prod.localhost still shows `vite dev server`.
 - Remove the lanes with `devlanes lane clean example-dev-and-prod-review --yes`, `devlanes lane clean 0 --yes` and `devlanes -p example-dev-and-prod-release lane clean 0 --yes`.
 
 ## Files
 
-- `devlanes.yaml`: `install` and `build` tasks, `api` and `web`, the `default` and `prod` profiles, `WEB_OUT_DIR` in the lane data folder.
-- `devlanes.prod.yaml`: the `example-dev-and-prod-release` project, building and serving the bundle on a plain start.
-- `devlanes.local.example.yaml`: per-machine overrides to copy to `devlanes.local.yaml`.
-- `apps/api/src/`: the Hono API, with `/`, `/mode`, `/api/releases`, `/lane` and `/healthz`; `mode.ts` reports the script and whether it runs `src` or `dist`.
-- `apps/web/vite.config.ts`: `build.outDir` from `WEB_OUT_DIR`, and the `laneRoutes` plugin from `plugins/`.
-- `apps/web/src/`: the page (`App.tsx`, `components/`, `api.ts` for the calls to `/lane`, `/mode` and the API).
-- `apps/scratch/src/`: the service only `devlanes.local.yaml` declares.
-- `apps/web/brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): `install` and `build` tasks, `api` and `web`, the `default` and `prod` profiles, `WEB_OUT_DIR` in the lane data folder.
+- [`devlanes.prod.yaml`](devlanes.prod.yaml): the `example-dev-and-prod-release` project, building and serving the bundle on a plain start.
+- [`devlanes.local.example.yaml`](devlanes.local.example.yaml): per-machine overrides to copy to `devlanes.local.yaml`.
+- [`apps/api/src/`](apps/api/src): the Hono API, with `/`, `/mode`, `/api/releases`, `/lane` and `/healthz`.
+- [`apps/web/vite.config.ts`](apps/web/vite.config.ts): `build.outDir` from `WEB_OUT_DIR`, and the `laneRoutes` plugin from `plugins/`.
 
 ## Docs
 

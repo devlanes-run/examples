@@ -26,8 +26,8 @@ const END = "<!-- catalog:end -->";
 
 const CATEGORIES: Record<string, string> = {
   basics: "Basics",
-  web: "Web",
   languages: "Languages",
+  web: "Web",
   frameworks: "Frameworks",
   infra: "Infra",
   workflows: "Workflows",

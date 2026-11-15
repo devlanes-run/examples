@@ -1,11 +1,11 @@
 # Frontend and API on one lane domain
 
-A React page served by Vite and a [Hono](https://hono.dev) API, each on its own HTTPS hostname under the lane's domain. It shows `preset: vite`, `hosts` under `${{ lane.domain }}`, a CORS allow-list read from `DEVLANES_ORIGINS`, a session cookie with `Domain=` set to the lane domain, and `services.api.url` next to `services.api.public_url`.
+A React page served by Vite and a [Hono](https://hono.dev) API, each on its own HTTPS hostname under the lane's domain. The page calls the API with CORS and a session cookie set on the lane domain.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22.12 or later (tested with Node 24 and npm 11)
+- Node 22.12 or later
 
 ## Run it
 
@@ -14,7 +14,7 @@ cd web-frontend-api
 devlanes start
 ```
 
-`devlanes start --no-ui` prints the start as text instead of opening the TUI:
+`devlanes start --no-ui` prints the start as text:
 
 ```text
 example-frontend-api@0 (main): 2/2 ready
@@ -26,13 +26,9 @@ Open https://example-frontend-api.localhost. The page says `This is lane 0 of ex
 
 ## During a start
 
-devlanes calls each worktree of the repository a lane. A fresh clone on `main` is lane 0, named `main`.
-
 1. The first start of a lane runs the `install` task: one `npm install` at the example root installs both workspaces, `apps/api` and `apps/web`.
 2. `api` runs `tsx watch src/index.ts` on its `PORT` and counts as ready once `/healthz` answers. It serves https://api.example-frontend-api.localhost.
 3. `web` runs `vite` with the flags `preset: vite` adds (`--port <port> --strictPort --host 127.0.0.1`) and serves https://example-frontend-api.localhost. Vite accepts `.localhost` hostnames without `server.allowedHosts`, and HMR reaches the page through the devlanes proxy without any `server.hmr` settings.
-
-The lane card on the page reads `VITE_LANE`, `VITE_LANE_NAME`, `VITE_LANE_LABEL`, `VITE_SERVICE` and `VITE_PORT`, which `devlanes.yaml` sets on `web`, and takes `url` from `window.location.origin`. The API answers `/lane` with the same values and `/` with them plus the items.
 
 ## url and public_url
 
@@ -62,7 +58,8 @@ The page's `fetch` to the API is cross-origin, so the browser reads the answer o
 ## Try next
 
 - Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/web-frontend-api && devlanes start`. To stay in this folder instead, run `devlanes lane new --name review --start`. https://example-frontend-api1.localhost shows `This is lane 1 of example-frontend-api.` and loads its items from https://api.example-frontend-api1.localhost.
-- Click Sign in on https://example-frontend-api.localhost, then open https://example-frontend-api1.localhost. Lane 1 shows `document.cookie` as `(empty)` and `not signed in`, because `example-frontend-api1.localhost` is not under `example-frontend-api.localhost`. Sign in and Sign out on lane 1 set and clear a cookie of its own, and lane 0 stays signed in.
+- Click Sign in on https://example-frontend-api.localhost, then open https://example-frontend-api1.localhost. Lane 1 shows `document.cookie` as `(empty)` and `not signed in`, because `example-frontend-api1.localhost` is not under `example-frontend-api.localhost`.
+- Sign in and Sign out on lane 1 set and clear a cookie of its own, and lane 0 stays signed in.
 - Point lane 1's page at lane 0's API with https://example-frontend-api1.localhost/?api=https://api.example-frontend-api.localhost. The cross-origin and cookie cards show `Failed to fetch`, and the browser console says:
 
   ```text
@@ -88,15 +85,14 @@ The page's `fetch` to the API is cross-origin, so the browser reads the answer o
   With `Origin: https://example-frontend-api.localhost` the same request also gets `access-control-allow-origin: https://example-frontend-api.localhost`.
 
 - Edit the heading in `apps/web/src/App.tsx` and save. The page updates without reloading, and the browser console logs `[vite] hot updated: /src/App.tsx`.
-- When you are done, `devlanes lane clean 0 --yes` stops lane 0 and deletes its data and logs. Run it with `review` for the lane from `lane new`, or with `1` from the second worktree.
+- `devlanes lane clean 0 --yes` stops lane 0 and deletes its data and logs. Run it with `review` for the lane from `lane new`, or with `1` from the second worktree.
 
 ## Files
 
-- `devlanes.yaml`: the `install` task, `api` with its hostname and `COOKIE_DOMAIN`, `web` with `preset: vite` and both API addresses.
-- `apps/api/src/`: the Hono API. `app.ts` mounts the routes, `cors.ts` builds the allow-list from `DEVLANES_ORIGINS`, `routes/session.ts` sets the cookie, `env.ts` reads every variable.
-- `apps/web/vite.config.ts`: the `/proxied` route to `API_PROXY_TARGET` and `resolve.preserveSymlinks` for the brand link.
-- `apps/web/src/`: the page. `api.ts` makes the calls, `env.ts` reads the `VITE_*` values, `components/` holds `LaneCard`, `ItemsList`, `ProxiedLane` and `SessionPanel`.
-- `apps/web/brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): the `install` task, `api` with its hostname and `COOKIE_DOMAIN`, `web` with `preset: vite` and both API addresses.
+- [`apps/api/src/`](apps/api/src): the Hono API. `app.ts` mounts the routes, `cors.ts` builds the allow-list from `DEVLANES_ORIGINS`, `routes/session.ts` sets the cookie.
+- [`apps/web/vite.config.ts`](apps/web/vite.config.ts): the `/proxied` route to `API_PROXY_TARGET`.
+- [`apps/web/src/`](apps/web/src): the page. `api.ts` makes the calls.
 
 ## Docs
 

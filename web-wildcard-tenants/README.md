@@ -1,11 +1,11 @@
 # Wildcard tenants
 
-A small multi-tenant product as four Hono services in one npm workspace. Tenant pages answer on a wildcard hostname under a `domain()` site of their own (`lanes.vars`), a gateway catches every other subdomain of the lane with `hosts[].fallback: true`, and the exact hostnames `app.` and `go.` win over both.
+A small multi-tenant product as four Hono services in one npm workspace. Each tenant gets a subdomain through a wildcard hostname, a gateway catches every other subdomain of the lane, and the exact hostnames `app.` and `go.` win over both.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22 or later (tested with Node 24 and npm 11)
+- Node 22 or later
 
 ## Run it
 
@@ -14,7 +14,7 @@ cd web-wildcard-tenants
 devlanes start
 ```
 
-On a terminal, `devlanes start` opens the TUI. `devlanes start --no-ui` prints the start as text instead:
+`devlanes start --no-ui` prints the start as text:
 
 ```text
 example-wildcard-tenants@0 (main): 4/4 ready
@@ -28,8 +28,6 @@ Open https://app.example-wildcard-tenants.localhost. The page says `This is lane
 
 ## During a start
 
-devlanes calls each worktree of the repository a lane. A fresh clone on `main` is lane 0.
-
 1. The first start of a lane runs the `install` task (`npm install` at the example root), which installs every workspace under `apps/` and `packages/`.
 2. devlanes computes the lane var `sites_domain` from `domain('example-wildcard-sites')`: `example-wildcard-sites.localhost` in lane 0, `example-wildcard-sites1.localhost` in lane 1.
 3. It starts the four services with `run_script`, each from its own `apps/<service>/package.json`, and waits for `/healthz` on each.
@@ -42,7 +40,9 @@ devlanes calls each worktree of the repository a lane. A fresh clone on `main` i
 | `*.example-wildcard-sites.localhost`     | `sites`   | wildcard                       |
 | `*.example-wildcard-tenants.localhost`   | `gateway` | wildcard with `fallback: true` |
 
-`app` sets `session=...; Domain=example-wildcard-tenants.localhost`, so the browser sends the cookie to every name under the lane domain, `go.` and the gateway's subdomains included. Tenant pages sit under `example-wildcard-sites.localhost`, which is another site, and never get it. `sites` reads the tenant from the `Host` header, `gateway` names the subdomain it got, and `links` redirects `/hello` and `/sale` to alice's and bob's pages. Every service also answers `/healthz`, `/lane` and `/request`, which returns the service, the hostname it got and the `Cookie` header.
+`app` sets `session=...; Domain=example-wildcard-tenants.localhost`, so the browser sends the cookie to every name under the lane domain, `go.` and the gateway's subdomains included. Tenant pages sit under `example-wildcard-sites.localhost`, which is another site, and never get it. `sites` reads the tenant from the `Host` header, `gateway` names the subdomain it got, and `links` redirects `/hello` and `/sale` to alice's and bob's pages. Every service also answers `/request`, which returns the service, the hostname it got and the `Cookie` header.
+
+## Resolving wildcard names
 
 Windows 11, macOS 26 and Linux with systemd-resolved answer every `*.localhost` name with loopback, wildcards included, and Chrome, Edge and Firefox do so on any OS. Older macOS, Windows Server and programs that do their own DNS (workerd, musl or pure-Go binaries, containers) do not. The hosts file cannot hold wildcards, so those programs reach `*.example-wildcard-sites.localhost` only through the resolver strategy described in the HTTPS guide.
 
@@ -90,7 +90,7 @@ On Windows, add `--ssl-revoke-best-effort` to every `curl` command below.
 
 - Check that the system resolver handles wildcard names without hosts-file entries: `node -e "require('node:dns').lookup('alice.example-wildcard-sites.localhost', { all: true }, (err, addrs) => console.log(err ?? addrs))"` prints `[ { address: '::1', family: 6 }, { address: '127.0.0.1', family: 4 } ]` on Windows 11.
 
-- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/web-wildcard-tenants && devlanes start`. The new worktree is lane 1. (This is the one step not run for this README; `devlanes lane new --name example-wildcard-tenants-review --start` in this folder gives the same lane 1 without a worktree.) `devlanes url ls` then lists both lanes' routes, next to those of your other projects:
+- Start a second lane: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/web-wildcard-tenants && devlanes start`. `devlanes lane new --name example-wildcard-tenants-review --start` in this folder gives the same lane 1 without a worktree. `devlanes url ls` then lists both lanes' routes, next to those of your other projects:
 
   ```text
   ready app.example-wildcard-tenants.localhost -> example-wildcard-tenants@0:app port=20540
@@ -105,16 +105,15 @@ On Windows, add `--ssl-revoke-best-effort` to every `curl` command below.
 
   https://app.example-wildcard-tenants1.localhost says `This is lane 1 of example-wildcard-tenants.`, its tenants live under `example-wildcard-sites1.localhost`, and its session cookie never reaches lane 0.
 
-- When you are done, `devlanes lane clean 0 --yes` stops lane 0 and deletes its data and logs. Run it with `1` for the second lane.
+- `devlanes lane clean 0 --yes` stops lane 0 and deletes its data and logs. Run it with `1` for the second lane.
 
 ## Files
 
-- `devlanes.yaml`: the `sites_domain` lane var, the `install` task and the four services with their hostnames.
-- `apps/app/src/session.ts`: sets the session cookie on the lane domain.
-- `apps/sites/src/app.tsx`: reads the tenant from `Host`; `views/TenantPage.tsx` shows which cookies arrived.
-- `apps/gateway/` and `apps/links/`: the catch-all page and the short-link redirects.
-- `packages/shared/`: environment parsing, the lane values, the `/healthz`, `/lane` and `/request` routes, and the `Layout` and `LaneCard` components. The `dev` scripts run it from source through the `development` export condition; `build` compiles it first.
-- `apps/*/brand`: links to `_internal/brand`, the CSS and logo all examples share.
+- [`devlanes.yaml`](devlanes.yaml): the `sites_domain` lane var, the `install` task and the four services with their hostnames.
+- [`apps/app/src/session.ts`](apps/app/src/session.ts): sets the session cookie on the lane domain.
+- [`apps/sites/src/app.tsx`](apps/sites/src/app.tsx): reads the tenant from `Host`; `views/TenantPage.tsx` shows which cookies arrived.
+- [`apps/gateway/`](apps/gateway) and [`apps/links/`](apps/links): the catch-all page and the short-link redirects.
+- [`packages/shared/`](packages/shared): the environment parsing, the lane values and the `/healthz`, `/lane` and `/request` routes the services share.
 
 ## Docs
 

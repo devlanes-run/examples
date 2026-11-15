@@ -36,6 +36,51 @@
       "status": "ready"
     },
     {
+      "slug": "languages-python-fastapi",
+      "title": "Python and FastAPI",
+      "description": "Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.",
+      "category": "languages",
+      "languages": ["python"],
+      "frameworks": ["fastapi", "uvicorn", "jinja", "httpx"],
+      "features": [
+        "run",
+        "run_script (pyproject.toml)",
+        "platform: python",
+        "tasks.when: lane.create",
+        "SSL_CERT_FILE",
+        "DEVLANES_ORIGINS"
+      ],
+      "requires": ["uv"],
+      "status": "ready"
+    },
+    {
+      "slug": "languages-rust-axum",
+      "title": "Rust and axum",
+      "description": "Run the services of a Cargo workspace, with a ready timeout long enough for the first build.",
+      "category": "languages",
+      "languages": ["rust"],
+      "frameworks": ["axum", "askama", "tokio", "reqwest"],
+      "features": [
+        "run_script (Cargo.toml)",
+        "ready.http.timeout",
+        "SSL_CERT_FILE",
+        "devlanes lane new"
+      ],
+      "requires": ["rust"],
+      "status": "ready"
+    },
+    {
+      "slug": "languages-polyglot",
+      "title": "Polyglot lane",
+      "description": "Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.",
+      "category": "languages",
+      "languages": ["typescript", "python", "rust", "deno"],
+      "frameworks": [],
+      "features": ["run_script", "platform"],
+      "requires": ["node", "bun", "deno", "uv", "rust", "just", "make"],
+      "status": "planned"
+    },
+    {
       "slug": "web-frontend-api",
       "title": "Frontend and API on one lane domain",
       "description": "Point a React frontend at its lane's API, with CORS and a session cookie that work on the lane's domain.",
@@ -108,51 +153,6 @@
       "features": ["services.<name>.public_url", "tags", "devlanes stop"],
       "requires": ["node"],
       "status": "ready"
-    },
-    {
-      "slug": "languages-python-fastapi",
-      "title": "Python and FastAPI",
-      "description": "Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.",
-      "category": "languages",
-      "languages": ["python"],
-      "frameworks": ["fastapi", "uvicorn", "jinja", "httpx"],
-      "features": [
-        "run",
-        "run_script (pyproject.toml)",
-        "platform: python",
-        "tasks.when: lane.create",
-        "SSL_CERT_FILE",
-        "DEVLANES_ORIGINS"
-      ],
-      "requires": ["uv"],
-      "status": "ready"
-    },
-    {
-      "slug": "languages-rust-axum",
-      "title": "Rust and axum",
-      "description": "Run the services of a Cargo workspace, with a ready timeout long enough for the first build.",
-      "category": "languages",
-      "languages": ["rust"],
-      "frameworks": ["axum", "askama", "tokio", "reqwest"],
-      "features": [
-        "run_script (Cargo.toml)",
-        "ready.http.timeout",
-        "SSL_CERT_FILE",
-        "devlanes lane new"
-      ],
-      "requires": ["rust"],
-      "status": "ready"
-    },
-    {
-      "slug": "languages-polyglot",
-      "title": "Polyglot lane",
-      "description": "Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.",
-      "category": "languages",
-      "languages": ["typescript", "python", "rust", "deno"],
-      "frameworks": [],
-      "features": ["run_script", "platform"],
-      "requires": ["node", "bun", "deno", "uv", "rust", "just", "make"],
-      "status": "planned"
     },
     {
       "slug": "frameworks-wrangler-workers",

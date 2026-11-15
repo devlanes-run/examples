@@ -1,11 +1,11 @@
-# Example title in sentence case
+# Example title, the same as in catalog.json
 
-One or two sentences: the app this example runs and the devlanes features it shows. Name the features with their config keys, such as `infra.per_lane` or `preset: vite`.
+One or two sentences: the app this example runs and what a reader learns from it. Leave the list of config keys to `catalog.json`.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22 or later (list only what this example needs, with versions)
+- Node 22 or later (only what this example needs, with the minimum version)
 
 ## Run it
 
@@ -14,11 +14,15 @@ cd category-example-name
 devlanes start
 ```
 
-Open https://example-name.localhost (the project is `example-` plus the folder name without its category). The page shows lane 0 and the values devlanes gave the service.
+Open https://example-name.localhost (the project is `example-` plus the folder name without its category). One sentence on what the page shows.
 
 ## During a start
 
-A short numbered list of what happens, in start order: containers, setup entries, tasks, services, `after: services` tasks. Say which hostname serves what and where each value on the page comes from.
+A numbered list in start order, one line per step, with only the steps this example adds: containers, setup entries, tasks, services, `after: services` tasks.
+
+## A feature that needs more than a step
+
+Optional. A section of its own, titled with what the feature does, for the part of the example a numbered step cannot explain.
 
 ## Try next
 
@@ -29,8 +33,8 @@ Each item is one command or edit and the result the reader should see.
 
 ## Files
 
-- `devlanes.yaml`: one line on what it declares.
-- `src/`: one line per folder or file a reader would open first.
+- [`devlanes.yaml`](devlanes.yaml): one line on what it declares.
+- [`src/`](src): one line per folder or file a reader would open first, five entries at most, each linked to the file.
 
 ## Docs
 

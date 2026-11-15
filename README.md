@@ -61,6 +61,14 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 | [basics-hello-node](basics-hello-node)     | Start here: one TypeScript server that gets its port and HTTPS hostname from devlanes. | node       | ready  |
 | [basics-ready-checks](basics-ready-checks) | Tell devlanes when each service is up, with an http, tcp, log or cmd ready check.      | node, curl | ready  |
 
+### Languages
+
+| Example                                              | What it teaches                                                                              | Needs                                 | Status  |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------- | ------- |
+| [languages-python-fastapi](languages-python-fastapi) | Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.    | uv                                    | ready   |
+| [languages-rust-axum](languages-rust-axum)           | Run the services of a Cargo workspace, with a ready timeout long enough for the first build. | rust                                  | ready   |
+| languages-polyglot                                   | Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.   | node, bun, deno, uv, rust, just, make | planned |
+
 ### Web
 
 | Example                                      | What it teaches                                                                                                           | Needs | Status |
@@ -70,14 +78,6 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 | [web-realtime-ws](web-realtime-ws)           | Serve WebSockets and server-sent events through the proxy, and give a service's second port its own hostname.             | node  | ready  |
 | [web-wildcard-tenants](web-wildcard-tenants) | Serve every tenant on its own subdomain with a wildcard host, while exact hostnames and a fallback gateway take the rest. | node  | ready  |
 | [web-provider-stubs](web-provider-stubs)     | Swap SMS and email providers for local fakes, so each lane's messages land in its own inbox.                              | node  | ready  |
-
-### Languages
-
-| Example                                              | What it teaches                                                                              | Needs                                 | Status  |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------- | ------- |
-| [languages-python-fastapi](languages-python-fastapi) | Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.    | uv                                    | ready   |
-| [languages-rust-axum](languages-rust-axum)           | Run the services of a Cargo workspace, with a ready timeout long enough for the first build. | rust                                  | ready   |
-| languages-polyglot                                   | Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.   | node, bun, deno, uv, rust, just, make | planned |
 
 ### Frameworks
 

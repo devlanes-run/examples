@@ -1,11 +1,11 @@
 # Dotenv and one domain root
 
-A gitignored `.env` holds what a secrets vault would hand you: an API token, feature flags and an optional Sentry DSN. devlanes reads `.env` only for `${{ env.X }}` expressions, so `global_env` names each key a process gets. The apps build every URL and their cookie domain from one variable, `APP_DOMAIN: ${{ lane.domain }}`, so lanes share one `.env` and still get their own URLs. Two [Hono](https://hono.dev) services run it: `web` at `https://example-dotenv.localhost` and `api` at `https://api.example-dotenv.localhost`.
+Two [Hono](https://hono.dev) services, `web` at `https://example-dotenv.localhost` and `api` at `https://api.example-dotenv.localhost`, read a gitignored `.env` that holds an API token, feature flags and an optional Sentry DSN. They build every URL and their cookie domain from `APP_DOMAIN: ${{ lane.domain }}`, so lanes share one `.env` and still get their own URLs.
 
 ## Requirements
 
 - devlanes, with `devlanes setup` run once
-- Node 22 or later (tested with Node 24 and npm 11)
+- Node 22 or later
 
 ## Run it
 
@@ -15,9 +15,9 @@ cp .env.example .env
 devlanes start
 ```
 
-`.env` is gitignored by the repository's `.gitignore`. Without it both services fail on `ACME_API_TOKEN`, the one key `devlanes.yaml` requires, with `devlanes.yaml in global_env.ACME_API_TOKEN is invalid: expression resolved to an undefined value` and the file and line.
+Without `.env`, both services fail on `ACME_API_TOKEN`, the one key `devlanes.yaml` requires, with `devlanes.yaml in global_env.ACME_API_TOKEN is invalid: expression resolved to an undefined value` and the file and line.
 
-With `.env` in place, `devlanes start --no-ui` prints:
+`devlanes start --no-ui` prints the start as text:
 
 ```text
 example-dotenv@0 (main): 2/2 ready
@@ -25,20 +25,20 @@ ready web http://127.0.0.1:20531 https://example-dotenv.localhost
 ready api http://127.0.0.1:20530 https://api.example-dotenv.localhost
 ```
 
-Open https://example-dotenv.localhost. The page says `This is lane 0 of example-dotenv.` and lists every key in `.env` with what reached the `web` process: `ACME_API_TOKEN` is `set` with its value hidden, `FEATURE_FLAGS` shows `new-checkout,dark-mode`, `SENTRY_DSN` is `empty`, and `ACME_ADMIN_PASSWORD` is `not in this process`.
+Open https://example-dotenv.localhost. The page lists every key in `.env` with what reached the `web` process: `ACME_API_TOKEN` is `set` with its value hidden, `FEATURE_FLAGS` shows `new-checkout,dark-mode`, `SENTRY_DSN` is `empty`, and `ACME_ADMIN_PASSWORD` is `not in this process`.
 
 ## During a start
 
-devlanes calls each worktree of the repository a lane. A fresh clone on `main` is lane 0.
-
-1. devlanes evaluates `global_env` for the lane. `${{ env.X }}` looks in the shell that ran devlanes first, then in `.env`. `ACME_API_TOKEN` has no default, so the start fails without it; `FEATURE_FLAGS` and `SENTRY_DSN` use `| default('')` and come out empty instead.
-2. The first start of a lane runs the `install` task (`npm install` at the example root), which installs both apps and `packages/config`.
+1. devlanes evaluates `global_env` for the lane. It reads `.env` only for `${{ env.X }}` expressions, so `global_env` names each key a process gets. `${{ env.X }}` looks in the shell that ran devlanes first, then in `.env`. `ACME_API_TOKEN` has no default, so the start fails without it. `FEATURE_FLAGS` and `SENTRY_DSN` use `| default('')` and come out empty instead.
+2. The first start of a lane runs the `install` task (`npm install` at the example root).
 3. `web` and `api` start with `PORT`, `HOST` and the same `global_env`. From `.env` they get the three keys `global_env` names and nothing else.
 4. The ready checks wait for `/healthz`. The proxy routes `example-dotenv.localhost` and `assets.example-dotenv.localhost` to `web` and `api.example-dotenv.localhost` to `api`.
 
-Each app's `src/env.ts` passes `APP_DOMAIN` to `appUrls` in `packages/config`, which derives the web, api and asset URLs and the cookie domain, and the page puts each one to use. Its CSS and logo load from `https://assets.example-dotenv.localhost`. It sets an `acme_session` cookie with `Domain=example-dotenv.localhost`. On the server, `web` calls `https://api.example-dotenv.localhost/api/orders` with `ACME_API_TOKEN` as a bearer token, and `api` checks it against its own copy from the same `.env` (`200, 3 orders`). In the browser, the page calls `/api/session` on the api with the cookie and shows `api saw acme_session=...`; the api allows the origin because it is in `DEVLANES_ORIGINS`.
+## One domain root
 
-To list the keys, `web` reads the same `.env` that devlanes reads, takes only the names, and looks each one up in its own environment; `dotenvSummary` in `packages/config` hides the values of keys named like secrets. In this repository the project file sits in a subfolder: devlanes reads `.env` next to `devlanes.yaml`, while `${{ lane.path }}` and `${{ project.primary_path }}` are the repository root. `web` joins `DOTENV_ROOT` with the example's path inside the worktree to find the primary worktree's copy.
+Each app's `src/env.ts` passes `APP_DOMAIN` to `appUrls` in `packages/config`, which derives the web, api and asset URLs and the cookie domain. The page loads its CSS and logo from `https://assets.example-dotenv.localhost` and sets an `acme_session` cookie with `Domain=example-dotenv.localhost`. On the server, `web` calls `https://api.example-dotenv.localhost/api/orders` with `ACME_API_TOKEN` as a bearer token, and `api` checks it against its own copy from the same `.env` (`200, 3 orders`). In the browser, the page calls `/api/session` on the api with the cookie and shows `api saw acme_session=...`. The api allows the origin because it is in `DEVLANES_ORIGINS`.
+
+To list the keys, `web` reads the same `.env` that devlanes reads, takes only the names, and looks each one up in its own environment. `dotenvSummary` in `packages/config` hides the values of keys named like secrets. In this repository the project file sits in a subfolder: devlanes reads `.env` next to `devlanes.yaml`, while `${{ lane.path }}` and `${{ project.primary_path }}` are the repository root. `web` joins `DOTENV_ROOT` with the example's path inside the worktree to find the primary worktree's copy.
 
 ## Try next
 
@@ -63,7 +63,7 @@ To list the keys, `web` reads the same `.env` that devlanes reads, takes only th
 - Set `SENTRY_DSN=https://public@sentry.example.invalid/1` in `.env`. `devlanes status` lists `env SENTRY_DSN` for both services. `devlanes reload web` restarts only `web`, whose page then shows `SENTRY_DSN` as `set` and `Sentry` as `on`, while `api` stays marked until a plain `devlanes reload`.
 - The shell comes before `.env`: `FEATURE_FLAGS=from-shell devlanes restart api`, and https://api.example-dotenv.localhost lists only `from-shell`. `devlanes restart api` from a shell without the variable goes back to the value in `.env`.
 - Edit `packages/config/src/urls.ts` and save. Both apps load it from source, so `devlanes logs api` shows `[tsx] change in ./..\..\packages\config\src\urls.ts Restarting...` (with `/` on macOS and Linux), and `web` restarts the same way.
-- Start a second lane in a new worktree: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/workflows-dotenv && devlanes start`. The new worktree has no `.env`, since Git does not copy ignored files. Per the docs, `${{ env.X }}` then falls back to the primary worktree's `.env`, and the page's `file` row names that file. Lane 1 answers at https://example-dotenv1.localhost with `APP_DOMAIN` set to `example-dotenv1.localhost`. This step was not run for this README.
+- Start a second lane in a new worktree: `git worktree add ../examples-checkout -b feat/checkout`, then `cd ../examples-checkout/workflows-dotenv && devlanes start`. The new worktree has no `.env`, since Git does not copy ignored files. `${{ env.X }}` then falls back to the primary worktree's `.env`, and the page's `file` row names that file. Lane 1 answers at https://example-dotenv1.localhost with `APP_DOMAIN` set to `example-dotenv1.localhost`.
 - For a second lane without a worktree, `devlanes lane new --name example-dotenv-review --start` adds lane 1 in this folder. Its page at https://example-dotenv1.localhost shows `APP_DOMAIN` `example-dotenv1.localhost`, the api at https://api.example-dotenv1.localhost and a cookie with `Domain=example-dotenv1.localhost`. Both lanes read the same `.env`, so an edit marks both:
 
   ```text
@@ -79,12 +79,11 @@ To list the keys, `web` reads the same `.env` that devlanes reads, takes only th
 
 ## Files
 
-- `.env.example`: the fake values to copy to `.env`, including `ACME_ADMIN_PASSWORD`, which no process gets.
-- `devlanes.yaml`: `global_env` with `APP_DOMAIN`, `DOTENV_ROOT` and the `${{ env.X }}` keys, the `install` task, and the `web` and `api` services.
-- `packages/config/src/`: `urls.ts` builds every URL and the cookie domain from `APP_DOMAIN`, `dotenv.ts` finds `.env` and summarizes its keys with secrets hidden, `lane.ts` holds the values for `/lane`.
-- `apps/web/src/`: `env.ts`, `app.tsx` with the routes, `session.ts` for the `acme_session` cookie, `orders.ts` for the server-side call to the api, `views/` for the page and `client/session.ts` for the browser's call.
-- `apps/api/src/`: `env.ts`, `app.ts` with `/` and the derived config, `routes/api.ts` with `/api/orders` behind the token and `/api/session` with CORS from `DEVLANES_ORIGINS`.
-- `apps/web/brand`: a link to `_internal/brand`, the CSS and logo all examples share.
+- [`.env.example`](.env.example): the fake values to copy to `.env`, including `ACME_ADMIN_PASSWORD`, which no process gets.
+- [`devlanes.yaml`](devlanes.yaml): `global_env` with `APP_DOMAIN`, `DOTENV_ROOT` and the `${{ env.X }}` keys, the `install` task, and the `web` and `api` services.
+- [`packages/config/src/`](packages/config/src): `urls.ts` builds every URL and the cookie domain from `APP_DOMAIN`, and `dotenv.ts` finds `.env` and summarizes its keys with secrets hidden.
+- [`apps/web/src/`](apps/web/src): the web routes, the `acme_session` cookie and the server-side call to the api.
+- [`apps/api/src/`](apps/api/src): `/api/orders` behind the token and `/api/session` with CORS from `DEVLANES_ORIGINS`.
 
 ## Docs
 
