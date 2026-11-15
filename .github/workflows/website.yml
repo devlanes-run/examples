@@ -1,0 +1,33 @@
+name: Website
+
+# devlanes.run builds its examples page from catalog.json and each example's README on this
+# branch. A push that changes either asks the website to rebuild and deploy.
+on:
+  push:
+    branches: [main]
+    paths:
+      - catalog.json
+      - "*/README.md"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: website
+  cancel-in-progress: true
+
+jobs:
+  rebuild:
+    name: Rebuild devlanes.run
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ask the website to rebuild
+        env:
+          # Fine-grained token scoped to the website repository with Contents write permission,
+          # the same one the devlanes release workflow uses.
+          GH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+        run: |
+          gh api --method POST repos/devlanes-run/website/dispatches \
+            -f event_type=source-release \
+            -f "client_payload[repository]=$GITHUB_REPOSITORY"
