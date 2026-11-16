@@ -16,7 +16,6 @@ These need something devlanes plans but does not ship today.
 - Box metrics and remote logs in the TUI: `remote/docker-box` extended to show them.
 - Adding replicas to a running lane.
 - A secrets provider feeding `global_env`.
-- A `platform-go` contributor: a Go service calling an HTTPS sibling without setting `SSL_CERT_FILE` by hand.
 - OpenTelemetry traces from the daemon: a collector and Jaeger as infra showing a start.
 - Serial start groups for services that need another one first.
 

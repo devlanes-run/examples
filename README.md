@@ -68,6 +68,7 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 | [languages-python-fastapi](languages-python-fastapi) | Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.                                  | uv                                    | ready   |
 | [languages-rust-axum](languages-rust-axum)           | Run the services of a Cargo workspace, with a ready timeout long enough for the first build.                               | rust                                  | ready   |
 | [languages-java-maven](languages-java-maven)         | Run two Spring Boot apps from one Maven multi-module build, one calling the other over HTTPS with the devlanes CA trusted. | java                                  | ready   |
+| [languages-go-api](languages-go-api)                 | Run two Go programs from one module, one with go run and one rebuilt by air, and call one from the other over HTTPS.       | go, task                              | ready   |
 | languages-polyglot                                   | Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.                                 | node, bun, deno, uv, rust, just, make | planned |
 
 ### Web

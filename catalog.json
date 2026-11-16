@@ -88,6 +88,24 @@
       "status": "ready"
     },
     {
+      "slug": "languages-go-api",
+      "title": "Go and net/http",
+      "description": "Run two Go programs from one module, one with go run and one rebuilt by air, and call one from the other over HTTPS.",
+      "category": "languages",
+      "languages": ["go"],
+      "frameworks": ["net/http", "html/template", "air", "task"],
+      "features": [
+        "run_script (go.mod)",
+        "run_script (Taskfile.yml)",
+        "SSL_CERT_FILE",
+        "lane.data_path",
+        "ready.http.timeout",
+        "devlanes lane new"
+      ],
+      "requires": ["go", "task"],
+      "status": "ready"
+    },
+    {
       "slug": "languages-polyglot",
       "title": "Polyglot lane",
       "description": "Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.",

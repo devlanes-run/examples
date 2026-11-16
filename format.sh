@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Formats every example: Prettier for TypeScript, JavaScript, CSS, HTML, JSON, YAML, Markdown, Java
-# and shell scripts, cargo fmt for Rust, ruff for Python. With --check it only reports what differs.
+# and shell scripts, cargo fmt for Rust, ruff for Python, gofmt for Go. With --check it only reports
+# what differs.
 #
-# Needs `npm install` in the repository root once (Prettier), plus cargo and uv on PATH.
+# Needs `npm install` in the repository root once (Prettier), plus cargo, uv and go on PATH.
 #
 # Usage: ./format.sh [--check]
 set -euo pipefail
@@ -53,6 +54,24 @@ format_python() {
   fi
 }
 
+format_go() {
+  local dir unformatted="" listed
+  for dir in $(folders_with go.mod); do
+    if $check; then
+      # gofmt -l lists the files that differ but exits 0, so a non-empty list fails the check.
+      listed=$(gofmt -l "$dir")
+      if [[ -n $listed ]]; then unformatted+="$listed"$'\n'; fi
+    else
+      gofmt -w "$dir"
+    fi
+  done
+  if [[ -n $unformatted ]]; then
+    echo "gofmt would change:" >&2
+    printf '%s' "$unformatted" >&2
+    return 1
+  fi
+}
+
 main() {
   case "${1:-}" in
     "") ;;
@@ -67,6 +86,7 @@ main() {
   format_prettier
   format_rust
   format_python
+  format_go
 }
 
 main "$@"
