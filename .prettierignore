@@ -2,6 +2,8 @@
 node_modules/
 dist/
 target/
+build/
+.gradle/
 .venv/
 .next/
 .wrangler/
@@ -13,7 +15,15 @@ uv.lock
 Cargo.lock
 worker-configuration.d.ts
 
-# Jinja and askama templates: Prettier's HTML parser rewrites their {% %} tags.
+# Maven and Gradle wrappers, as their projects ship them.
+mvnw
+mvnw.cmd
+.mvn/
+gradlew
+gradlew.bat
+gradle/wrapper/
+
+# Jinja, askama, Thymeleaf and Qute templates: Prettier's HTML parser rewrites their tags.
 templates/
 
 # Each example's brand/ links to _internal/brand, which is formatted once there.

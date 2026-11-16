@@ -1,0 +1,26 @@
+<!-- The terminal-style card with the lane values devlanes gave this service. -->
+<div class="dl-card" xmlns:th="http://www.thymeleaf.org" th:fragment="card(info)">
+  <div class="dl-bar">
+    <span class="dl-dots"><i></i><i></i><i></i></span>
+    <span th:text="|${info.project}@${info.lane}:${info.service}|"></span>
+    <span></span>
+  </div>
+  <dl class="dl-rows">
+    <dt>lane</dt>
+    <dd>
+      <span th:text="${info.lane}"></span>
+      <span class="dl-key" th:text="${info.laneName}"></span>
+    </dd>
+    <dt>branch</dt>
+    <dd th:text="${info.branch}"></dd>
+    <dt>service</dt>
+    <dd th:text="${info.service}"></dd>
+    <dt>port</dt>
+    <dd th:text="${info.port}"></dd>
+    <dt>url</dt>
+    <dd>
+      <a th:if="${info.url}" th:href="${info.url}" th:text="${info.url}"></a>
+      <span th:unless="${info.url}" class="dl-bad">not through the proxy</span>
+    </dd>
+  </dl>
+</div>

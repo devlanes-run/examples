@@ -1,0 +1,32 @@
+<!doctype html>
+{! The page around each template's content; every page passes info, the lane values. !}
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lane {info.lane} of {info.project}</title>
+    <link rel="icon" href="/brand/logo.svg" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;900&family=JetBrains+Mono:wght@400;700&display=swap"
+    />
+    <link rel="stylesheet" href="/brand/devlanes.css" />
+  </head>
+  <body style="--dl-lane: var(--dl-lane-{info.lane.mod(4)})">
+    <div class="dl-page">
+      <header class="dl-header">
+        <a class="dl-brand" href="https://devlanes.run">
+          <img src="/brand/logo.svg" alt="" width="32" height="32" />
+          devlanes
+        </a>
+        <nav class="dl-nav">
+          <a href="https://github.com/devlanes-run/examples/tree/main/frameworks-quarkus-gradle">
+            frameworks-quarkus-gradle on GitHub
+          </a>
+        </nav>
+      </header>
+      <main class="dl-main">{#insert}{/insert}</main>
+      <footer class="dl-footer">Quarkus and Qute in dev mode, run by the Gradle Wrapper</footer>
+    </div>
+  </body>
+</html>

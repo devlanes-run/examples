@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: example-java-maven
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+services:
+  web:
+    # The maven runner: ./mvnw -pl web -am spring-boot:run from the root pom. -am builds
+    # shared/ first; the parent pom skips spring-boot:run everywhere but in the apps.
+    run_script:
+      file: pom.xml
+      name: -pl web -am spring-boot:run
+    # SERVER_PORT, SERVER_ADDRESS and the forwarded-headers strategy, so Spring sees https.
+    preset: spring-boot
+    hosts: "${{ lane.domain }}"
+    env:
+      # public_url on purpose: the point is an HTTPS call that trusts the devlanes CA through
+      # the trust store devlanes gives every JVM.
+      QUOTES_URL: ${{ services.quotes.public_url }}
+    ready:
+      http:
+        path: /healthz
+        # The first start downloads Maven and every dependency.
+        timeout: 5m
+
+  quotes:
+    # No -am: Maven has no build lock, so only web builds shared/.
+    run_script:
+      file: pom.xml
+      name: -pl quotes spring-boot:run
+    preset: spring-boot
+    hosts:
+      - "quotes.${{ lane.domain }}"
+      # Naming the management port makes the preset set MANAGEMENT_SERVER_PORT, so the
+      # actuator answers on a port and hostname of its own.
+      - host: "actuator.quotes.${{ lane.domain }}"
+        port: management
+    ready:
+      http:
+        path: /healthz
+        timeout: 5m

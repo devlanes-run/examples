@@ -58,7 +58,7 @@
           "description": "Languages a reader sees in the example's code, most important first.",
           "type": "array",
           "items": {
-            "enum": ["typescript", "javascript", "python", "rust", "shell", "go", "deno"]
+            "enum": ["typescript", "javascript", "python", "rust", "java", "shell", "go", "deno"]
           }
         },
         "frameworks": {

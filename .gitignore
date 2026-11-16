@@ -1,5 +1,7 @@
 node_modules/
 target/
+build/
+.gradle/
 .venv/
 __pycache__/
 dist/

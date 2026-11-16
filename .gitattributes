@@ -1,3 +1,7 @@
 * text=auto eol=lf
 *.png binary
 *.ico binary
+*.jar binary
+# cmd.exe needs CRLF in mvnw.cmd and gradlew.bat; mvnw and gradlew stay LF through the rule above.
+*.cmd text eol=crlf
+*.bat text eol=crlf
