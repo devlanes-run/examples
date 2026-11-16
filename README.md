@@ -1,10 +1,48 @@
+<p align="center">
+   <b>Using devlanes?</b> Please consider <a href="https://github.com/sponsors/arthurfiorette" target="_blank">donating</a> to support my open source work ❤️
+  <br />
+  <sup>
+   Help devlanes grow! Star and share this amazing repository with your friends and co-workers!
+  </sup>
+</p>
+
+<br />
+
+<p align="center" title="devlanes">
+  <a href="https://devlanes.run" target="_blank" rel="noopener noreferrer">
+    <img src="https://devlanes.run/assets/banner.png" alt="devlanes: Sandboxes for your agents. localhost for you." />
+  </a>
+</p>
+
+<br />
+
+<p align="center">
+  <a title="MIT license" target="_blank" href="https://github.com/devlanes-run/examples/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/devlanes-run/examples"></a>
+  <a title="Latest devlanes release" target="_blank" href="https://github.com/devlanes-run/devlanes/releases/latest"><img alt="devlanes release" src="https://img.shields.io/github/v/release/devlanes-run/devlanes?label=devlanes"></a>
+  <a title="Last commit" target="_blank" href="https://github.com/devlanes-run/examples/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/devlanes-run/examples"></a>
+</p>
+
+<br />
+<br />
+
 # devlanes examples
 
-Runnable projects for [devlanes](https://github.com/devlanes-run/devlanes). Each folder has its own `devlanes.yaml` and is a separate devlanes project named `example-<name>`, so you can start one example or several at once, and every Git worktree of this repository runs its own lane of each. The examples double as a test bed for devlanes itself, locally or on a remote box.
+> Runnable projects that each show one devlanes feature.
+
+<br />
+
+Small apps that run under [devlanes](https://github.com/devlanes-run/devlanes). Each folder has its own `devlanes.yaml` and is a separate devlanes project named `example-<name>`, so you can start one example or several at once, and every Git worktree of this repository runs its own lane of each. The examples double as a test bed for devlanes itself, locally or on a remote box.
+
+<br />
+
+- [Browse the examples on devlanes.run.](https://devlanes.run/examples/)
+- [Read the devlanes docs.](https://devlanes.run/docs/)
+
+<br />
 
 ## Requirements
 
-- devlanes ([install](https://github.com/devlanes-run/devlanes#install)), then `devlanes setup` once so browsers and `curl` trust the HTTPS hostnames
+- devlanes ([install](https://devlanes.run/docs/install/)), then `devlanes setup` once so browsers and `curl` trust the HTTPS hostnames
 - Git with symbolic links enabled: every example links to the shared CSS and logo in `_internal/brand`. macOS and Linux need nothing. On Windows, turn on Developer Mode and clone with `git clone -c core.symlinks=true ...`.
 - What each example lists under Requirements: Node, Docker, uv, Rust and so on
 
@@ -16,7 +54,7 @@ cd examples/basics-hello-node
 devlanes start
 ```
 
-`devlanes start` opens the TUI on the lane and follows the start. Open https://example-hello-node.localhost to see which lane, branch, service and port answered. `devlanes stop` stops the lane, and `devlanes lane clean 0 --yes` also removes its data.
+`devlanes start` opens the TUI on the lane and follows the start. Open `https://example-hello-node.localhost` to see which lane, branch, service and port answered. `devlanes stop` stops the lane, and `devlanes lane clean 0 --yes` also removes its data.
 
 ## A second lane
 
@@ -46,7 +84,7 @@ devlanes daemon pair
 devlanes remote connect my-box --code XXXX-XXXX
 ```
 
-The box's hostnames then open in your local browser. [remote-docker-box](remote-docker-box) does the same with a container as the box, and the [remote setup guide](https://github.com/devlanes-run/devlanes/blob/main/docs/guides/remote-setup.md) covers SSH, Tailscale and Cloudflare.
+The box's hostnames then open in your local browser. [remote-docker-box](remote-docker-box) does the same with a container as the box, and [Prepare a box](https://devlanes.run/docs/how-to/remote/prepare-a-box/) and the guides next to it cover SSH, Tailscale and Cloudflare.
 
 ## Examples
 
@@ -137,10 +175,10 @@ npm install # once, for Prettier
 ./build.sh  # installs and builds every example; ./build.sh basics-hello-node builds one
 ```
 
-## Adding an example
+## Contributing
 
-[AGENTS.md](AGENTS.md) has the rules every example follows, for people and coding agents alike. [IDEAS.md](IDEAS.md) lists examples for devlanes features that are planned but not shipped.
+To add an example, start with [AGENTS.md](AGENTS.md), which has the rules every example follows, for people and coding agents alike. [IDEAS.md](IDEAS.md) lists examples for devlanes features that are planned but not shipped.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Licensed under the **MIT License**. See [`LICENSE`](https://github.com/devlanes-run/examples/blob/main/LICENSE) for more information.
