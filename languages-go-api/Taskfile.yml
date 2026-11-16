@@ -1,0 +1,16 @@
+version: "3"
+
+tasks:
+  dev:web:
+    desc: Run the web service with air, rebuilding it on every save
+    # BUILD_DIR is the lane's data folder, set in devlanes.yaml, so two lanes running from one
+    # folder never build or run the same binary. air keeps its own files there too.
+    requires:
+      vars: [BUILD_DIR]
+    # `go run` with a version builds air outside this module, so its dependencies stay out of go.mod.
+    cmds:
+      - >-
+        go run github.com/air-verse/air@v1.67.4
+        --tmp_dir "{{.BUILD_DIR}}/air"
+        --build.cmd "go build -o '{{.BUILD_DIR}}/web{{exeExt}}' ./cmd/web"
+        --build.entrypoint "{{.BUILD_DIR}}/web{{exeExt}}"

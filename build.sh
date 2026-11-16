@@ -34,6 +34,10 @@ build_gradle() {
   ./gradlew --no-daemon --console=plain -q build -x test
 }
 
+build_go() {
+  go build ./... && go vet ./...
+}
+
 # Builds one example in a subshell, so a failure or a cd never leaks into the next one.
 build_example() (
   cd "$1" || exit 1
@@ -57,6 +61,10 @@ build_example() (
   fi
   if [[ -f settings.gradle.kts || -f settings.gradle ]]; then
     build_gradle || exit 1
+    built=true
+  fi
+  if [[ -f go.mod ]]; then
+    build_go || exit 1
     built=true
   fi
 

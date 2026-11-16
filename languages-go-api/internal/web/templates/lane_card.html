@@ -1,0 +1,27 @@
+{{define "lane_card"}}
+        <div class="dl-card">
+          <div class="dl-bar">
+            <span class="dl-dots"><i></i><i></i><i></i></span>
+            <span>{{.Project}}@{{.Lane}}:{{.Service}}</span>
+            <span></span>
+          </div>
+          <dl class="dl-rows">
+            <dt>lane</dt>
+            <dd>{{.Lane}} <span class="dl-key">{{.LaneName}}</span></dd>
+            <dt>branch</dt>
+            <dd>{{.Branch}}</dd>
+            <dt>service</dt>
+            <dd>{{.Service}}</dd>
+            <dt>port</dt>
+            <dd>{{.Port}}</dd>
+            <dt>url</dt>
+            <dd>
+              {{- with .URL -}}
+              <a href="{{.}}">{{.}}</a>
+              {{- else -}}
+              <span class="dl-bad">not through the proxy</span>
+              {{- end -}}
+            </dd>
+          </dl>
+        </div>
+{{end}}

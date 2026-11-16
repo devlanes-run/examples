@@ -13,7 +13,7 @@ README.md                 how to run examples; the catalogue table is generated 
 AGENTS.md                 this file
 IDEAS.md                  examples waiting on devlanes features, and repository ideas
 catalog.json              every example, for the README and the devlanes docs examples page
-format.sh                 Prettier, cargo fmt and ruff over everything
+format.sh                 Prettier, cargo fmt, ruff and gofmt over everything
 build.sh                  installs and builds every example, checks catalog.json
 _internal/
   brand/                  devlanes.css and logo.svg, the only copy; examples link to it
@@ -100,7 +100,7 @@ General rules, every language:
 
 - Code reads like a small production codebase. Each file has one job; split a file before it reaches about 150 lines and a function before about 40.
 - No HTML, CSS or client JavaScript inside string literals. Markup lives in components or template files, styles in CSS files, browser code in its own modules.
-- All environment reads happen in one module (`env.ts`, `settings.py`, `config.rs`, `Settings.java`) that fails at startup with a clear message when a variable is missing. Nothing else reads `process.env` or its equivalents.
+- All environment reads happen in one module (`env.ts`, `settings.py`, `config.rs`, `Settings.java`, `internal/config`) that fails at startup with a clear message when a variable is missing. Nothing else reads `process.env` or its equivalents.
 - Network calls have timeouts. Errors are handled where something useful can be done and shown on the page when the example is about them; otherwise they propagate.
 - Exported functions, components and types get a one-line doc comment. Other comments say why, when or where, never what.
 - Typed everywhere: TypeScript `strict`, Python type hints, Rust as usual.
@@ -142,6 +142,15 @@ General rules, every language:
 - The `brand` link lives in the framework's static folder (`src/main/resources/static/brand` for Spring, `src/main/resources/META-INF/resources/brand` for Quarkus), which serves it under `/brand/`.
 - HTTP clients set connect and read timeouts. Spring apps use `RestClient` on the JDK `HttpClient`.
 - Formatted by `prettier-plugin-java` through `./format.sh`. `./build.sh` runs `./mvnw -B -ntp -q verify -DskipTests` or `./gradlew --no-daemon build -x test`.
+
+### Go
+
+- One module at the example root, even with several programs. Each program is `cmd/<service>/main.go`, which only loads the config and starts the server; the rest lives under `internal/` (`config`, `lane`, and one package per service with its handlers).
+- Standard library first: `net/http` with `ServeMux` method patterns (`GET /lane`), `html/template` and `encoding/json`. Add a dependency only when it earns its place. Tools such as air run with `go run <module>@<version>`, so the version is pinned, readers need only Go, and the tool's dependencies stay out of the example's `go.mod`.
+- `internal/config` is the only package that calls `os.Getenv`; it returns an error naming the missing variable, and `main` exits with it.
+- Templates are files under `templates/` next to the package that renders them, embedded with `go:embed`. `go:embed` refuses symbolic links, so the `brand` link is served at run time with `http.FileServer(http.Dir("brand"))`; `go run`, and air under `task`, start the program in the module folder.
+- Quote paths inside air's `build.cmd`, and use `{{exeExt}}` for the Windows `.exe`.
+- Clean under `gofmt` and `go vet`. Commit `go.sum` when the module has dependencies.
 
 ### Shell
 
@@ -188,7 +197,7 @@ The look lives in one place: `_internal/brand/devlanes.css` and `_internal/brand
 
 - Hono servers serve the link with `serveStatic({ root: "./" })` under `/brand/*`, as in `basics-hello-node`.
 - Vite apps import `../brand/devlanes.css` from `src/main.tsx` and set `resolve.preserveSymlinks: true` so the file stays inside the app's root; check that the dev server and `vite build` both load it. In pnpm workspaces `preserveSymlinks` breaks resolution through pnpm's linked `node_modules`, so those apps add the link's target to `server.fs.allow` instead (as in `workflows-pnpm-monorepo`).
-- Python serves the link as a static folder; Rust embeds it with `include_str!`; Spring and Quarkus serve a link placed in their static resources folder.
+- Python and Go serve the link as a static folder; Rust embeds it with `include_str!`; Spring and Quarkus serve a link placed in their static resources folder.
 - Example-specific styles go in one small stylesheet next to the components (`src/styles.css`), using the brand's variables and classes. No inline styles except the lane colour variable.
 
 Every page has:
@@ -212,7 +221,7 @@ npm install                  # once, in the repository root
 ./build.sh basics-hello-node # one example; no arguments builds all
 ```
 
-`./build.sh` runs, per example: `npm ci && npm run build` (or `pnpm install --frozen-lockfile && pnpm run build` when there is a `pnpm-lock.yaml`), `cargo build --locked`, `uv sync --frozen && uv run python -m compileall -q src`, `./mvnw -B -ntp -q verify -DskipTests` when there is a `pom.xml`, and `./gradlew --no-daemon build -x test` when there is a `settings.gradle.kts`. An example builds when those pass. Stop an example's lanes before building it, since `npm ci` replaces `node_modules`.
+`./build.sh` runs, per example: `npm ci && npm run build` (or `pnpm install --frozen-lockfile && pnpm run build` when there is a `pnpm-lock.yaml`), `cargo build --locked`, `uv sync --frozen && uv run python -m compileall -q src`, `./mvnw -B -ntp -q verify -DskipTests` when there is a `pom.xml`, `./gradlew --no-daemon build -x test` when there is a `settings.gradle.kts`, and `go build ./... && go vet ./...` when there is a `go.mod`. An example builds when those pass. Stop an example's lanes before building it, since `npm ci` replaces `node_modules`.
 
 ## Verifying
 
