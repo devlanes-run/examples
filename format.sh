@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Formats every example: Prettier for TypeScript, JavaScript, CSS, HTML, JSON, YAML, Markdown and
-# shell scripts, cargo fmt for Rust, ruff for Python. With --check it only reports what differs.
+# Formats every example: Prettier for TypeScript, JavaScript, CSS, HTML, JSON, YAML, Markdown, Java
+# and shell scripts, cargo fmt for Rust, ruff for Python. With --check it only reports what differs.
 #
 # Needs `npm install` in the repository root once (Prettier), plus cargo and uv on PATH.
 #

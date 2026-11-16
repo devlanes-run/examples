@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::main})}">
+  <body>
+    <main class="dl-main">
+      <h1 class="dl-title" th:text="|This is lane ${info.lane} of ${info.project}.|"></h1>
+      <p class="dl-lede">
+        The <code th:text="${info.service}"></code> service, Spring Boot started with
+        <code>spring-boot:run</code>, rendered this page from the worktree on
+        <code th:text="${info.branch}"></code>.
+      </p>
+      <div th:replace="~{lane-card :: card(${info})}"></div>
+
+      <h2 class="dl-h2">A call to quotes over HTTPS</h2>
+      <p class="dl-lede">
+        This page asked the lane's <code>quotes</code> service for its data with Spring's
+        <code>RestClient</code>, through the proxy. The certificate checks out because devlanes
+        points the JVM at a trust store with its CA.
+      </p>
+      <div class="dl-card">
+        <dl class="dl-rows">
+          <dt>GET</dt>
+          <dd><a th:href="|${quotesUrl}/|" th:text="|${quotesUrl}/|"></a></dd>
+          <dt>trust store</dt>
+          <dd th:text="${trustStore} ?: 'the JDK default'"></dd>
+          <th:block th:if="${quotes.body}">
+            <dt>status</dt>
+            <dd><span class="dl-ok" th:text="${quotes.status}"></span></dd>
+            <dt>answered by</dt>
+            <dd
+              th:text="|lane ${quotes.body.lane}, service ${quotes.body.service}, port ${quotes.body.port}|"
+            ></dd>
+            <th:block th:each="quote : ${quotes.body.quotes}">
+              <dt th:text="|quote ${quote.id}|"></dt>
+              <dd th:text="${quote.text}"></dd>
+            </th:block>
+          </th:block>
+          <th:block th:unless="${quotes.body}">
+            <dt>error</dt>
+            <dd><span class="dl-bad" th:text="${quotes.error}"></span></dd>
+          </th:block>
+        </dl>
+      </div>
+    </main>
+  </body>
+</html>

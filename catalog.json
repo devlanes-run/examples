@@ -70,6 +70,24 @@
       "status": "ready"
     },
     {
+      "slug": "languages-java-maven",
+      "title": "Java with Maven and Spring Boot",
+      "description": "Run two Spring Boot apps from one Maven multi-module build, one calling the other over HTTPS with the devlanes CA trusted.",
+      "category": "languages",
+      "languages": ["java"],
+      "frameworks": ["spring-boot", "maven", "thymeleaf"],
+      "features": [
+        "run_script (pom.xml)",
+        "preset: spring-boot",
+        "platform: java",
+        "hosts[].port",
+        "ready.http.timeout",
+        "services.<name>.public_url"
+      ],
+      "requires": ["java"],
+      "status": "ready"
+    },
+    {
       "slug": "languages-polyglot",
       "title": "Polyglot lane",
       "description": "Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.",
@@ -182,6 +200,24 @@
       "frameworks": ["vite", "react", "cloudflare-vite-plugin", "hono", "wrangler"],
       "features": ["preset: vite", "self.ports.<name>", "hosts.host_header", "DEVLANES_LANE_DATA"],
       "requires": ["node"],
+      "status": "ready"
+    },
+    {
+      "slug": "frameworks-quarkus-gradle",
+      "title": "Quarkus with Gradle and Postgres per lane",
+      "description": "Run Quarkus dev mode from Gradle with its own Postgres container and debugger port in each lane.",
+      "category": "frameworks",
+      "languages": ["java"],
+      "frameworks": ["quarkus", "gradle", "qute", "docker-compose", "postgres"],
+      "features": [
+        "run_script (build.gradle.kts)",
+        "preset: quarkus",
+        "self.ports.<name>",
+        "infra.per_lane",
+        "infra.setup",
+        "ready.http.timeout"
+      ],
+      "requires": ["java", "docker"],
       "status": "ready"
     },
     {

@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- The page around each template's <main>; every page puts info, the lane values, in the model. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(main)">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="|Lane ${info.lane} of ${info.project}|">Lane</title>
+    <link rel="icon" th:href="@{/brand/logo.svg}" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;900&family=JetBrains+Mono:wght@400;700&display=swap"
+    />
+    <link rel="stylesheet" th:href="@{/brand/devlanes.css}" />
+  </head>
+  <body th:style="|--dl-lane: var(--dl-lane-${info.lane % 4})|">
+    <div class="dl-page">
+      <header class="dl-header">
+        <a class="dl-brand" href="https://devlanes.run">
+          <img th:src="@{/brand/logo.svg}" alt="" width="32" height="32" />
+          devlanes
+        </a>
+        <nav class="dl-nav">
+          <a href="https://github.com/devlanes-run/examples/tree/main/languages-java-maven">
+            languages-java-maven on GitHub
+          </a>
+        </nav>
+      </header>
+      <main th:replace="${main}"></main>
+      <footer class="dl-footer">Spring Boot and Thymeleaf, run by the Maven Wrapper</footer>
+    </div>
+  </body>
+</html>

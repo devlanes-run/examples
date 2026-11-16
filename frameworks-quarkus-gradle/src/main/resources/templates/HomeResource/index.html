@@ -1,0 +1,55 @@
+{#include layout}
+<h1 class="dl-title">This is lane {info.lane} of {info.project}.</h1>
+<p class="dl-lede">
+  The <code>{info.service}</code> service, Quarkus in dev mode under <code>quarkusDev</code>,
+  rendered this page from the worktree on <code>{info.branch}</code>.
+</p>
+{#laneCard info=info /}
+
+<h2 class="dl-h2">This lane's database</h2>
+<p class="dl-lede">
+  Each lane has its own Postgres container. Dev Services is off, so Quarkus connects to the one
+  devlanes started for this lane.
+</p>
+<div class="dl-card">
+  <div class="dl-bar">
+    <span class="dl-dots"><i></i><i></i><i></i></span>
+    <span>per_lane: [postgres]</span>
+    <span></span>
+  </div>
+  <dl class="dl-rows">
+    <dt>container</dt>
+    <dd class="dl-ok">{database.container}</dd>
+    <dt>jdbc url</dt>
+    <dd>{database.jdbcUrl}</dd>
+    <dt>server</dt>
+    <dd>Postgres {database.version}</dd>
+    <dt>rows</dt>
+    <dd>{database.rows} in notes</dd>
+    {#for note in database.latest}
+    <dt>#{note.id}</dt>
+    <dd>{note.body}</dd>
+    {/for}
+  </dl>
+</div>
+<form method="post" action="/notes">
+  <input type="hidden" name="body" value="Added from lane {info.lane}" />
+  <button class="dl-button">Add a note</button>
+</form>
+
+<h2 class="dl-h2">Debugger</h2>
+<p class="dl-lede">
+  Quarkus dev mode opens a JDWP port. devlanes gives each lane its own, so a second lane does not
+  lose debugging to the first. Attach your IDE's remote JVM debugger to it.
+</p>
+<div class="dl-card">
+  <dl class="dl-rows">
+    <dt>host</dt>
+    <dd>127.0.0.1</dd>
+    <dt>port</dt>
+    <dd class="dl-ok">{debugPort}</dd>
+    <dt>jdb</dt>
+    <dd><code>jdb -connect com.sun.jdi.SocketAttach:hostname=127.0.0.1,port={debugPort}</code></dd>
+  </dl>
+</div>
+{/include}

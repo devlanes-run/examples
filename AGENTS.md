@@ -100,7 +100,7 @@ General rules, every language:
 
 - Code reads like a small production codebase. Each file has one job; split a file before it reaches about 150 lines and a function before about 40.
 - No HTML, CSS or client JavaScript inside string literals. Markup lives in components or template files, styles in CSS files, browser code in its own modules.
-- All environment reads happen in one module (`env.ts`, `settings.py`, `config.rs`) that fails at startup with a clear message when a variable is missing. Nothing else reads `process.env` or its equivalents.
+- All environment reads happen in one module (`env.ts`, `settings.py`, `config.rs`, `Settings.java`) that fails at startup with a clear message when a variable is missing. Nothing else reads `process.env` or its equivalents.
 - Network calls have timeouts. Errors are handled where something useful can be done and shown on the page when the example is about them; otherwise they propagate.
 - Exported functions, components and types get a one-line doc comment. Other comments say why, when or where, never what.
 - Typed everywhere: TypeScript `strict`, Python type hints, Rust as usual.
@@ -129,6 +129,19 @@ General rules, every language:
 - A Cargo workspace when the example has several binaries (`crates/<service>/` plus `crates/shared/` for common code), otherwise one crate. `main.rs` only starts the server; `config.rs`, `routes.rs` and `views.rs` (or modules per area) hold the rest.
 - HTML comes from templates (askama) in `templates/`. The CSS and logo are served from `include_str!` / `include_bytes!` of the `brand` link.
 - Clean under `cargo fmt` and `cargo clippy -- -D warnings`. Commit `Cargo.lock`.
+
+### Java
+
+- JDK 21 or later, compiled with `release` 21. Java sources only; Gradle build files use the Kotlin DSL.
+- Commit the Maven Wrapper (`mvnw`, `mvnw.cmd`, `.mvn/wrapper/`, `only-script` type) or the Gradle Wrapper (`gradlew`, `gradlew.bat`, `gradle/wrapper/`), and run every build through it, never a `mvn` or `gradle` from `PATH`. `run_script` finds the wrapper by itself.
+- Each build writes its framework version in one place: the Spring Boot parent's `<version>` in the root `pom.xml`, or `quarkusVersion` in `gradle.properties`, read by both `settings.gradle.kts` and `build.gradle.kts`. Dependencies take their versions from that BOM; anything outside it is pinned exactly.
+- Maven multi-module builds keep the parent `pom.xml` at the example root with one folder per module (`shared/`, `web/`, `quotes/`). The parent declares `spring-boot-maven-plugin` with `<skip>true</skip>` and each app sets it back to `false`, so `-pl web -am spring-boot:run` works from the root. Only one service may build a shared module with `-am`: Maven has no build lock, so two services compiling the same module at once write the same `target/`.
+- Packages under `com.acme.<app>`: the `*Application` (or nothing, in Quarkus) only starts the app; `config/` holds `Settings` and the beans; one package per area (`lane/`, `pages/`, `notes/`) holds its controllers or resources and their records.
+- `config/Settings.java` is a record with a static `load()` that does every `System.getenv` and `System.getProperty` read and throws `IllegalStateException("<NAME> is not set; start this service with devlanes start")` for a missing variable. It is created eagerly (a Spring `@Bean`, a Quarkus `@Startup` producer), so the app fails before it listens. Variables the framework reads itself (`SERVER_PORT`, `QUARKUS_DATASOURCE_JDBC_URL`) stay with the framework; `Settings` reads them again only to show them.
+- Pages are templates: Thymeleaf in `src/main/resources/templates/` for Spring (a `layout.html` with a `page(main)` fragment), Qute for Quarkus (`layout.html` with `{#insert}`, type-checked with `@CheckedTemplate`, tags in `templates/tags/`). JSON comes from records; snake_case keys such as `lane_name` use `@JsonProperty`.
+- The `brand` link lives in the framework's static folder (`src/main/resources/static/brand` for Spring, `src/main/resources/META-INF/resources/brand` for Quarkus), which serves it under `/brand/`.
+- HTTP clients set connect and read timeouts. Spring apps use `RestClient` on the JDK `HttpClient`.
+- Formatted by `prettier-plugin-java` through `./format.sh`. `./build.sh` runs `./mvnw -B -ntp -q verify -DskipTests` or `./gradlew --no-daemon build -x test`.
 
 ### Shell
 
@@ -165,7 +178,7 @@ Processes:
 - Every HTTP service has a `hosts` entry under `${{ lane.domain }}` (or a `domain()` name) and a `ready` check that reaches the app: `http` on `/healthz` for servers, an unanchored `log` pattern for workers. Never `ready: started` for a watcher.
 - Every HTTP server answers `GET /healthz` with `200 ok` and `GET /lane` with JSON `{ "project", "lane", "lane_name", "branch", "service", "port", "url" }`, where `url` is `https://` plus the `X-Forwarded-Host` request header (proof that the request came through the proxy). APIs answer `/` with the same JSON plus a few mock records relevant to the example. A dev server that cannot add routes, such as Vite, is exempt; its page shows the values instead.
 - Browser-facing URLs use `public_url`; server-to-server calls use `url`. APIs read their CORS and CSRF allow-lists from `DEVLANES_ORIGINS`.
-- Never set `NODE_TLS_REJECT_UNAUTHORIZED`, `NODE_EXTRA_CA_CERTS` or `SSL_CERT_FILE` yourself; devlanes sets them.
+- Never set `NODE_TLS_REJECT_UNAUTHORIZED`, `NODE_EXTRA_CA_CERTS`, `SSL_CERT_FILE`, `JAVA_TOOL_OPTIONS` or the `javax.net.ssl.*` properties (trust stores) yourself; devlanes sets them.
 
 ## Pages
 
@@ -175,7 +188,7 @@ The look lives in one place: `_internal/brand/devlanes.css` and `_internal/brand
 
 - Hono servers serve the link with `serveStatic({ root: "./" })` under `/brand/*`, as in `basics-hello-node`.
 - Vite apps import `../brand/devlanes.css` from `src/main.tsx` and set `resolve.preserveSymlinks: true` so the file stays inside the app's root; check that the dev server and `vite build` both load it. In pnpm workspaces `preserveSymlinks` breaks resolution through pnpm's linked `node_modules`, so those apps add the link's target to `server.fs.allow` instead (as in `workflows-pnpm-monorepo`).
-- Python serves the link as a static folder; Rust embeds it with `include_str!`.
+- Python serves the link as a static folder; Rust embeds it with `include_str!`; Spring and Quarkus serve a link placed in their static resources folder.
 - Example-specific styles go in one small stylesheet next to the components (`src/styles.css`), using the brand's variables and classes. No inline styles except the lane colour variable.
 
 Every page has:
@@ -199,7 +212,7 @@ npm install                  # once, in the repository root
 ./build.sh basics-hello-node # one example; no arguments builds all
 ```
 
-`./build.sh` runs, per example: `npm ci && npm run build` (or `pnpm install --frozen-lockfile && pnpm run build` when there is a `pnpm-lock.yaml`), `cargo build --locked`, and `uv sync --frozen && uv run python -m compileall -q src`. An example builds when those pass. Stop an example's lanes before building it, since `npm ci` replaces `node_modules`.
+`./build.sh` runs, per example: `npm ci && npm run build` (or `pnpm install --frozen-lockfile && pnpm run build` when there is a `pnpm-lock.yaml`), `cargo build --locked`, `uv sync --frozen && uv run python -m compileall -q src`, `./mvnw -B -ntp -q verify -DskipTests` when there is a `pom.xml`, and `./gradlew --no-daemon build -x test` when there is a `settings.gradle.kts`. An example builds when those pass. Stop an example's lanes before building it, since `npm ci` replaces `node_modules`.
 
 ## Verifying
 

@@ -26,6 +26,14 @@ build_python() {
   uv sync --frozen && uv run python -m compileall -q src
 }
 
+build_maven() {
+  ./mvnw -B -ntp -q verify -DskipTests
+}
+
+build_gradle() {
+  ./gradlew --no-daemon --console=plain -q build -x test
+}
+
 # Builds one example in a subshell, so a failure or a cd never leaks into the next one.
 build_example() (
   cd "$1" || exit 1
@@ -41,6 +49,14 @@ build_example() (
   fi
   if [[ -f pyproject.toml ]]; then
     build_python || exit 1
+    built=true
+  fi
+  if [[ -f pom.xml ]]; then
+    build_maven || exit 1
+    built=true
+  fi
+  if [[ -f settings.gradle.kts || -f settings.gradle ]]; then
+    build_gradle || exit 1
     built=true
   fi
 

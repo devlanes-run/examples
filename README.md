@@ -63,11 +63,12 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 
 ### Languages
 
-| Example                                              | What it teaches                                                                              | Needs                                 | Status  |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------- | ------- |
-| [languages-python-fastapi](languages-python-fastapi) | Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.    | uv                                    | ready   |
-| [languages-rust-axum](languages-rust-axum)           | Run the services of a Cargo workspace, with a ready timeout long enough for the first build. | rust                                  | ready   |
-| languages-polyglot                                   | Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.   | node, bun, deno, uv, rust, just, make | planned |
+| Example                                              | What it teaches                                                                                                            | Needs                                 | Status  |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------- |
+| [languages-python-fastapi](languages-python-fastapi) | Run a FastAPI app under uv behind the HTTPS proxy, and call other HTTPS services from it.                                  | uv                                    | ready   |
+| [languages-rust-axum](languages-rust-axum)           | Run the services of a Cargo workspace, with a ready timeout long enough for the first build.                               | rust                                  | ready   |
+| [languages-java-maven](languages-java-maven)         | Run two Spring Boot apps from one Maven multi-module build, one calling the other over HTTPS with the devlanes CA trusted. | java                                  | ready   |
+| languages-polyglot                                   | Run Node, Bun, Deno, Python and Rust services in one lane through every run_script runner.                                 | node, bun, deno, uv, rust, just, make | planned |
 
 ### Web
 
@@ -85,6 +86,7 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------- | ------- |
 | [frameworks-wrangler-workers](frameworks-wrangler-workers) | Run two Cloudflare Workers with the wrangler preset, joined by a service binding that resolves inside the lane.   | node              | ready   |
 | [frameworks-cloudflare-vite](frameworks-cloudflare-vite)   | Run a React app and a Worker in one Vite server, with an inspector port and stored state of its own in each lane. | node              | ready   |
+| [frameworks-quarkus-gradle](frameworks-quarkus-gradle)     | Run Quarkus dev mode from Gradle with its own Postgres container and debugger port in each lane.                  | java, docker      | ready   |
 | frameworks-tauri-desktop                                   | Run a Tauri 2 desktop app with a different identifier in each lane, against a Vite frontend devlanes starts.      | node, rust, tauri | planned |
 
 ### Infra
