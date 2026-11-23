@@ -580,6 +580,25 @@
       ],
       "requires": ["a linux box", "ssh", "node"],
       "status": "ready"
+    },
+    {
+      "slug": "gui-tauri",
+      "title": "Tauri desktop app",
+      "description": "Run a Tauri 2 desktop app per lane, with its own app data, its own lane's Vite frontend and an API next to it.",
+      "category": "gui",
+      "languages": ["typescript", "rust"],
+      "frameworks": ["tauri", "react", "vite", "hono"],
+      "features": [
+        "preset: tauri",
+        "tauri.identifier",
+        "tauri.dev_url",
+        "tauri.before_dev_command",
+        "preset: vite",
+        "ready.log",
+        "ready.timeout"
+      ],
+      "requires": ["node", "rust"],
+      "status": "planned"
     }
   ]
 }

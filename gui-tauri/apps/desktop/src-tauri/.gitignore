@@ -1,0 +1,2 @@
+# Permission schemas tauri-build writes on every build.
+/gen/schemas

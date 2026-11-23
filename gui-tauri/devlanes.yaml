@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: example-tauri
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # One npm install at the workspace root installs both apps and the Tauri CLI in a new worktree.
+  install:
+    run: [npm, install]
+    when: lane.create
+
+services:
+  api:
+    run_script:
+      file: apps/api/package.json
+      name: dev
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+
+  # The desktop app's frontend runs as its own service, so each lane serves it on its own port
+  # and a browser can open it too.
+  desktop-web:
+    # Adds --port, --strictPort and --host to `npm run dev:web`, which runs vite.
+    preset: vite
+    run_script:
+      file: apps/desktop/package.json
+      name: dev:web
+    hosts: "${{ lane.domain }}"
+    ready:
+      http:
+        path: /
+    env:
+      # The webview calls it, so it is the https hostname, like a browser would use.
+      VITE_API_URL: ${{ services.api.public_url }}
+      VITE_PROJECT: ${{ project.name }}
+      VITE_LANE: ${{ lane.index }}
+      VITE_LANE_NAME: ${{ lane.name }}
+      VITE_LANE_LABEL: ${{ lane.label }}
+      VITE_SERVICE: ${{ self.name }}
+      VITE_PORT: ${{ self.port }}
+
+  # The process that opens the windows: `tauri dev`, which builds and runs the Rust app.
+  desktop:
+    # Merges a per-lane config over tauri.conf.json with `tauri dev --config <file>`.
+    preset: tauri
+    run_script:
+      file: apps/desktop/package.json
+      name: dev
+    tauri:
+      # Tauri keeps the app's data and the webview's storage under the identifier, so two lanes
+      # (or two replicas) with the same one would share them; devlanes refuses to start them.
+      identifier: "com.acme.tauri.lane${{ lane.index }}.client${{ replica.index }}"
+      # This lane's frontend, instead of the devUrl in tauri.conf.json.
+      dev_url: "${{ services.desktop_web.url }}"
+      # desktop-web already runs Vite, so tauri dev must not start its own.
+      before_dev_command: ""
+    env:
+      # The identifier and dev URL are compiled into the binary, so each lane and replica
+      # builds its own. In a shared target/ one copy would relink the executable another runs,
+      # which Windows refuses.
+      CARGO_TARGET_DIR: ${{ lane.data_path }}/target/client${{ replica.index }}
+    ready:
+      # The app prints this once the main window has loaded its page.
+      log: "main window loaded"
+      # The first start compiles the Tauri app and its dependencies.
+      timeout: 20m
