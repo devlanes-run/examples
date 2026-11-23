@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: example-react-native
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # One npm install at the workspace root installs both apps in a new worktree.
+  install:
+    run: [npm, install]
+    when: lane.create
+
+services:
+  api:
+    run_script:
+      file: apps/api/package.json
+      name: dev
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+
+  metro:
+    # react-native start --host 127.0.0.1
+    run_script:
+      file: apps/mobile/package.json
+      name: start
+    hosts: "metro.${{ lane.domain }}"
+    # Metro's own status endpoint answers once the server listens.
+    ready:
+      http:
+        path: /status
+    env:
+      # Metro listens on the port devlanes picked for this service: @react-native/metro-config
+      # reads it as Metro's port.
+      RCT_METRO_PORT: ${{ self.port }}
+      # The app reaches its lane through one port, Metro's. The android and ios services build
+      # that port into the app, the CLI runs `adb reverse` for it on Android, and the app calls
+      # /api/ on the Metro origin it loaded from, which forwards to this URL. Lanes have
+      # different Metro ports, so they never share one, and the app needs no API address of
+      # its own. Plain HTTP on loopback, because emulators and simulators do not trust the
+      # devlanes CA that https://api.example-react-native.localhost needs.
+      API_URL: ${{ services.api.url }}
+
+  # Builds the debug app, installs it on the running emulator or USB device (the CLI boots the
+  # first emulator when none runs) and follows its log. Started by name, since it needs the
+  # Android SDK.
+  android:
+    run_script:
+      file: apps/mobile/package.json
+      name: android
+    autostart: false
+    env:
+      # The React Native CLI passes it to Gradle as the dev server port of the build.
+      RCT_METRO_PORT: ${{ services.metro.port }}
+
+  # Builds the debug app, boots the iOS simulator, installs and launches the app and follows the
+  # simulator log. macOS with Xcode only.
+  ios:
+    run_script:
+      file: apps/mobile/package.json
+      name: ios
+    autostart: false
+    env:
+      # xcodebuild compiles it into the app as the Metro port.
+      RCT_METRO_PORT: ${{ services.metro.port }}

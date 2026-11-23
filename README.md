@@ -165,6 +165,12 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 | [remote-docker-box](remote-docker-box) | Run lanes on a box inside a Docker container and open them from your machine under the same hostnames. | docker                 | ready  |
 | [remote-ssh-box](remote-ssh-box)       | Prepare a Linux server as a devlanes box and connect to it over SSH, Tailscale or Cloudflare Tunnel.   | a linux box, ssh, node | ready  |
 
+### GUI apps
+
+| Example                              | What it teaches                                                                                                                               | Needs                         | Status  |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
+| [gui-react-native](gui-react-native) | Run Metro on each lane's own port next to an API, and build the React Native app for the Android emulator or iOS simulator against that lane. | node, android sdk, jdk, xcode | planned |
+
 <!-- catalog:end -->
 
 ## Formatting and building

@@ -1,0 +1,7 @@
+// npm hoists the app's dependencies to the example root, two folders above apps/mobile.
+pluginManagement { includeBuild("../../../node_modules/@react-native/gradle-plugin") }
+plugins { id("com.facebook.react.settings") }
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+rootProject.name = 'AcmeLanes'
+include ':app'
+includeBuild('../../../node_modules/@react-native/gradle-plugin')
