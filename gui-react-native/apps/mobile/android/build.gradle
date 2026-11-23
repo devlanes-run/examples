@@ -1,0 +1,34 @@
+buildscript {
+    ext {
+        buildToolsVersion = "37.0.0"
+        minSdkVersion = 24
+        compileSdkVersion = 37
+        targetSdkVersion = 36
+        ndkVersion = "27.1.12297006"
+        kotlinVersion = "2.2.0"
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    }
+}
+
+// The CMake AGP picks by default (3.22.1) ships a Ninja that fails on Windows paths over 260
+// characters, which the native builds under node_modules reach. android.cmakeVersion, such as
+// 3.31.6 in ~/.gradle/gradle.properties, builds every native module with that CMake instead.
+// It comes before the plugin below, which evaluates the app and its libraries right away.
+def cmakeVersion = findProperty("android.cmakeVersion")
+if (cmakeVersion) {
+    subprojects {
+        ["com.android.application", "com.android.library"].each { id ->
+            plugins.withId(id) { android.externalNativeBuild.cmake.version = cmakeVersion }
+        }
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"

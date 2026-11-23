@@ -51,7 +51,8 @@
             "infra",
             "workflows",
             "showcase",
-            "remote"
+            "remote",
+            "gui"
           ]
         },
         "languages": {

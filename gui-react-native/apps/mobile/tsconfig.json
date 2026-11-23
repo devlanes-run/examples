@@ -1,0 +1,8 @@
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    // The preset adds jest's types; this app has no tests.
+    "types": []
+  },
+  "include": ["src", "index.js"]
+}

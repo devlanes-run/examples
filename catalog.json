@@ -580,6 +580,24 @@
       ],
       "requires": ["a linux box", "ssh", "node"],
       "status": "ready"
+    },
+    {
+      "slug": "gui-react-native",
+      "title": "React Native app per lane",
+      "description": "Run Metro on each lane's own port next to an API, and build the React Native app for the Android emulator or iOS simulator against that lane.",
+      "category": "gui",
+      "languages": ["typescript"],
+      "frameworks": ["react-native", "metro", "react-navigation", "hono"],
+      "features": [
+        "autostart: false",
+        "services.<name>.url",
+        "services.<name>.port",
+        "run_script",
+        "ready.http",
+        "tasks.when: lane.create"
+      ],
+      "requires": ["node", "android sdk", "jdk", "xcode"],
+      "status": "ready"
     }
   ]
 }

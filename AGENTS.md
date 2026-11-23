@@ -23,7 +23,7 @@ _internal/
 <category>-<name>/        one example
 ```
 
-Categories are `basics`, `languages`, `web`, `frameworks`, `infra`, `workflows`, `showcase` and `remote`.
+Categories are `basics`, `languages`, `web`, `frameworks`, `infra`, `workflows`, `showcase`, `remote` and `gui`. A `gui` example is an app that opens a window, such as a desktop app or a mobile app in a simulator.
 
 ## Adding an example
 

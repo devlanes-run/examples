@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: example-react-native
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # One npm install at the workspace root installs both apps in a new worktree.
+  install:
+    run: [npm, install]
+    when: lane.create
+
+services:
+  api:
+    run_script:
+      file: apps/api/package.json
+      name: dev
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+
+  metro:
+    # react-native start --host 127.0.0.1
+    run_script:
+      file: apps/mobile/package.json
+      name: start
+    hosts: "metro.${{ lane.domain }}"
+    # Metro's own status endpoint answers once the server listens.
+    ready:
+      http:
+        path: /status
+    env:
+      # Metro listens on the port devlanes picked for this service: @react-native/metro-config
+      # reads it as Metro's port.
+      RCT_METRO_PORT: ${{ self.port }}
+      # The app reaches its lane through one port, Metro's. The android and ios services build
+      # that port into the app, and the app calls /api/ on the Metro origin it loaded from,
+      # which forwards to this URL. Lanes have different Metro ports, so they never share one,
+      # and the app needs no API address of its own. Plain HTTP on loopback, because emulators
+      # and simulators do not trust the devlanes CA that the HTTPS hostnames need.
+      API_URL: ${{ services.api.url }}
+
+  # Boots this lane's Android emulator as a child of the service, builds and installs the debug
+  # app and opens it. Stopping the service closes the emulator. On demand: it needs the Android
+  # SDK and takes minutes.
+  android:
+    run_script:
+      file: apps/mobile/package.json
+      name: android
+    autostart: false
+    pty: false
+    ready:
+      log: "app opened on emulator-"
+      # The first Gradle build compiles React Native's native code and takes several minutes.
+      timeout: 20m
+    env:
+      # The React Native CLI passes it to Gradle as the app's dev server port.
+      RCT_METRO_PORT: ${{ services.metro.port }}
+      # adb finds local emulators on even console ports from 5554 to 5584, so lanes take those
+      # in turn and each lane's emulator has a known serial, emulator-<port>. Lanes 16 apart
+      # would share one.
+      EMULATOR_PORT: ${{ 5554 + 2 * (lane.index % 16) }}
+      ANDROID_AVD: ${{ env.ANDROID_AVD | default('') }}
+
+  # Builds the debug app, boots the iOS simulator, installs and opens the app and follows the
+  # simulator log. macOS with Xcode only.
+  ios:
+    run_script:
+      file: apps/mobile/package.json
+      name: ios
+    autostart: false
+    pty: false
+    ready:
+      log: "app opened in the simulator"
+      timeout: 20m
+    env:
+      # xcodebuild compiles it into the app as the Metro port.
+      RCT_METRO_PORT: ${{ services.metro.port }}
