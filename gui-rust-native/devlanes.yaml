@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: example-rust-native
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+services:
+  api:
+    # The workspace Cargo.toml: devlanes finds the member that owns the `api` binary and runs
+    # `cargo run -p api --bin api`. The file also makes the platform rust, which sets
+    # SSL_CERT_FILE to the devlanes CA bundle.
+    run_script:
+      file: Cargo.toml
+      name: api
+    # example-rust-native.localhost in lane 0, example-rust-native1.localhost in lane 1.
+    hosts: ${{ lane.domain }}
+    ready:
+      http:
+        path: /healthz
+        # The first start compiles every dependency, and both services share one target/
+        # directory, so one of them waits for the other's build.
+        timeout: 10m
+
+  # The process that opens the window. It has no hostname: nothing sends it requests.
+  desktop:
+    run_script:
+      file: Cargo.toml
+      name: desktop
+    env:
+      # public_url on purpose: the window calls the api through the proxy over HTTPS, as a
+      # browser would, so reqwest has to trust the devlanes CA.
+      API_URL: ${{ services.api.public_url }}
+      # Each lane keeps its own note and window position, outside the worktree.
+      STATE_DIR: ${{ lane.data_path }}
+    ready:
+      # Printed once the window exists; a window has no port to probe.
+      log: "window open"
+      timeout: 10m
