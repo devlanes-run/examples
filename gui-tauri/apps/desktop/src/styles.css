@@ -1,0 +1,77 @@
+/* Styles this app needs on top of brand/devlanes.css. */
+.nowrap {
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.dl-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.field {
+  padding: 20px 22px 0;
+}
+
+.field input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--dl-line);
+  border-radius: 5px;
+  background: var(--dl-term-raised);
+  color: var(--dl-term-ink);
+  font: inherit;
+}
+
+.long-list {
+  max-height: 320px;
+  margin: 0;
+  padding: 16px 22px 16px 56px;
+  overflow-y: auto;
+  color: var(--dl-term-out);
+}
+
+.second {
+  min-height: 100vh;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 0 0 12px;
+  background: var(--dl-ink);
+  color: var(--dl-paint);
+  font: 600 13px var(--dl-mono);
+  user-select: none;
+}
+
+.titlebar-title {
+  flex: 1;
+}
+
+.titlebar-close {
+  width: 44px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.titlebar-close:hover {
+  background: var(--dl-bad);
+  color: var(--dl-ink);
+}
+
+.second-body {
+  padding: 24px;
+  text-align: center;
+}

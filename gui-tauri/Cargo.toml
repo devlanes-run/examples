@@ -1,0 +1,5 @@
+[workspace]
+# The Tauri app is the only crate. The workspace sits at the example root so Cargo.lock and
+# target/ live here, next to package-lock.json.
+members = ["apps/desktop/src-tauri"]
+resolver = "3"
