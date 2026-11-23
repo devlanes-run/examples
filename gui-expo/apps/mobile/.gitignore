@@ -1,0 +1,5 @@
+# Written by the Expo CLI on start and by expo run:android and run:ios (prebuild).
+.expo/
+expo-env.d.ts
+/android/
+/ios/

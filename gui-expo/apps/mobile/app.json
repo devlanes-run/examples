@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "devlanes Expo",
+    "slug": "example-expo",
+    "scheme": "exampleexpo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#f5c542",
+    "ios": {
+      "bundleIdentifier": "com.acme.exampleexpo"
+    },
+    "android": {
+      "package": "com.acme.exampleexpo"
+    },
+    "web": {
+      "output": "single"
+    },
+    "plugins": ["expo-router", ["expo-splash-screen", { "backgroundColor": "#f5c542" }]]
+  }
+}

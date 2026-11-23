@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: example-expo
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # One npm install at the workspace root installs the API and the app in a new worktree.
+  install:
+    run: [npm, install]
+    when: lane.create
+
+services:
+  api:
+    run_script:
+      file: apps/api/package.json
+      name: dev
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+
+  expo:
+    # `expo start --localhost`: Metro on 127.0.0.1, which devices reach through the
+    # services below. RCT_METRO_PORT gives it this lane's port instead of 8081.
+    run_script:
+      file: apps/mobile/package.json
+      name: dev
+    # The web target, served by the same dev server.
+    hosts: "${{ lane.domain }}"
+    # Without a terminal the Expo CLI never prompts and opens no browser.
+    pty: false
+    ready:
+      http:
+        path: /status
+    env:
+      RCT_METRO_PORT: ${{ self.port }}
+      EXPO_PUBLIC_PROJECT: ${{ project.name }}
+      EXPO_PUBLIC_LANE: ${{ lane.index }}
+      EXPO_PUBLIC_LANE_NAME: ${{ lane.name }}
+      EXPO_PUBLIC_LANE_LABEL: ${{ lane.label }}
+      EXPO_PUBLIC_SERVICE: ${{ self.name }}
+      EXPO_PUBLIC_PORT: ${{ self.port }}
+      # Baked into the bundle. Simulators and emulators do not trust the devlanes CA, so the app
+      # on a device calls the API over plain HTTP on its port; the web target in a browser on
+      # this machine calls the HTTPS hostname.
+      EXPO_PUBLIC_API_URL: ${{ services.api.url }}
+      EXPO_PUBLIC_API_PUBLIC_URL: ${{ services.api.public_url }}
+
+  # Opens the app on a device. On demand: `devlanes start android`.
+  android:
+    run_script:
+      file: apps/mobile/package.json
+      name: android
+    autostart: false
+    pty: false
+    ready:
+      log: "app opened on emulator-"
+      # The first Gradle build of the development client takes several minutes.
+      timeout: 20m
+    env:
+      # Each lane boots its own emulator and maps these ports on it with adb reverse, so
+      # http://127.0.0.1:<port> in the bundle reaches this lane's dev server and API.
+      METRO_PORT: ${{ services.expo.port }}
+      API_PORT: ${{ services.api.port }}
+      # adb finds local emulators on even console ports from 5554 to 5584, so lanes take
+      # those in turn; lanes 16 apart would share one.
+      EMULATOR_PORT: ${{ 5554 + 2 * (lane.index % 16) }}
+      ANDROID_AVD: ${{ env.ANDROID_AVD | default('') }}
+
+  # macOS only: `devlanes start ios`. The simulator shares this Mac's loopback.
+  ios:
+    run_script:
+      file: apps/mobile/package.json
+      name: ios
+    autostart: false
+    pty: false
+    ready:
+      log: "app opened in the simulator"
+      # The first Xcode build of the development client takes several minutes.
+      timeout: 20m
+    env:
+      METRO_PORT: ${{ services.expo.port }}
+      API_PORT: ${{ services.api.port }}
+      IOS_SIMULATOR: ${{ env.IOS_SIMULATOR | default('') }}

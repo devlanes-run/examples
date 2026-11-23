@@ -580,6 +580,24 @@
       ],
       "requires": ["a linux box", "ssh", "node"],
       "status": "ready"
+    },
+    {
+      "slug": "gui-expo",
+      "title": "Expo app on an emulator or simulator",
+      "description": "Run an Expo dev server and its API per lane, and open the app on an Android emulator or iOS simulator that reaches its own lane over plain HTTP.",
+      "category": "gui",
+      "languages": ["typescript"],
+      "frameworks": ["expo", "expo-router", "react-native", "hono"],
+      "features": [
+        "autostart: false",
+        "pty: false",
+        "ready.log",
+        "ready.http",
+        "services.<name>.port",
+        "env.<NAME>"
+      ],
+      "requires": ["node", "android sdk", "java", "xcode"],
+      "status": "ready"
     }
   ]
 }
