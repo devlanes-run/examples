@@ -1,0 +1,21 @@
+[package]
+name = "desktop"
+description = "The native egui window, which calls the api over HTTPS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+eframe.workspace = true
+egui_extras.workspace = true
+reqwest.workspace = true
+rfd.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# The GTK dialog is a window of this process, on the same display as the app. The default
+# XDG portal dialog is drawn by another program, which a display without a desktop lacks.
+[target.'cfg(target_os = "linux")'.dependencies]
+rfd = { workspace = true, features = ["gtk3"] }
