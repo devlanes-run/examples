@@ -1,0 +1,33 @@
+/* Styles this page needs on top of brand/devlanes.css. */
+.nowrap {
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.typing {
+  padding: 20px 22px 0;
+}
+
+.typing input {
+  width: 100%;
+  font: inherit;
+  color: var(--dl-term-ink);
+  background: var(--dl-term-raised);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  padding: 6px 10px;
+}
+
+.long-list {
+  height: 240px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 12px 22px;
+  list-style: none;
+  color: var(--dl-term-out);
+}

@@ -580,6 +580,25 @@
       ],
       "requires": ["a linux box", "ssh", "node"],
       "status": "ready"
+    },
+    {
+      "slug": "gui-electron",
+      "title": "Electron desktop app",
+      "description": "Open one Electron window per lane on its own Vite renderer and API, with an Electron profile per lane so two lanes' apps run side by side.",
+      "category": "gui",
+      "languages": ["typescript"],
+      "frameworks": ["electron", "vite", "react", "hono"],
+      "features": [
+        "preset: vite",
+        "services.<name>.public_url",
+        "lane.data_path",
+        "ready.log",
+        "ready.timeout",
+        "DEVLANES_ORIGINS",
+        "tasks.when: lane.create"
+      ],
+      "requires": ["node", "a desktop session"],
+      "status": "ready"
     }
   ]
 }

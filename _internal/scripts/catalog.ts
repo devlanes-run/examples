@@ -33,6 +33,7 @@ const CATEGORIES: Record<string, string> = {
   workflows: "Workflows",
   showcase: "TUI showcase",
   remote: "Remote boxes",
+  gui: "GUI apps",
 };
 
 const REQUIRED_FIELDS: (keyof Example)[] = [

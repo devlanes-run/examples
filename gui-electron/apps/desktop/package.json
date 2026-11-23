@@ -1,0 +1,17 @@
+{
+  "name": "@example-electron/desktop",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "postinstall": "install-electron",
+    "dev": "tsc && electron .",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "electron": "45.4.1",
+    "typescript": "7.0.2"
+  }
+}

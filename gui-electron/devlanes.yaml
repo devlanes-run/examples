@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=https://devlanes.run/v1/schema.json
+project: example-electron
+
+global_env:
+  LANE_LABEL: ${{ lane.label }}
+  LANE_DOMAIN: ${{ lane.domain }}
+
+tasks:
+  # One npm install at the workspace root installs all three apps, Electron's binary included.
+  install:
+    run: [npm, install]
+    when: lane.create
+
+services:
+  api:
+    run_script:
+      file: apps/api/package.json
+      name: dev
+    hosts: "api.${{ lane.domain }}"
+    ready:
+      http:
+        path: /healthz
+
+  # The renderer: a Vite dev server, so edits reach the Electron window through HMR.
+  web:
+    preset: vite
+    run_script:
+      file: apps/web/package.json
+      name: dev
+    hosts: "${{ lane.domain }}"
+    ready:
+      http:
+        path: /
+    env:
+      # The renderer calls the API from inside Electron's Chromium, as a browser page would.
+      VITE_API_URL: ${{ services.api.public_url }}
+      VITE_PROJECT: ${{ project.name }}
+      VITE_LANE: ${{ lane.index }}
+      VITE_LANE_NAME: ${{ lane.name }}
+      VITE_LANE_LABEL: ${{ lane.label }}
+      VITE_SERVICE: ${{ self.name }}
+      VITE_PORT: ${{ self.port }}
+
+  # The Electron shell. Its window opens on this machine's desktop and loads this lane's
+  # renderer; it serves nothing, so it has no hostname.
+  desktop:
+    run_script:
+      file: apps/desktop/package.json
+      name: dev
+    ready:
+      # Printed once the first window loaded the renderer, which waits for web.
+      log: "window 1 loaded"
+      timeout: 120s
+    env:
+      # The https hostname: the window is a browser, and the renderer's calls to the API
+      # are browser calls with CORS, the same as in a browser tab.
+      RENDERER_URL: ${{ services.web.public_url }}
+      # Electron's profile (cookies, storage, cache, its lock) per lane, so two lanes'
+      # apps run at once without sharing state.
+      ELECTRON_USER_DATA: ${{ lane.data_path }}/electron
