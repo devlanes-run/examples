@@ -30,7 +30,7 @@ A window titled `example-electron@0 (main) window 1` opens. It shows `This is la
 
 - `RENDERER_URL: ${{ services.web.public_url }}` is the renderer's https hostname. The window is a Chromium browser, so it loads the page through the devlanes proxy like a browser tab, trusts the devlanes CA through the system trust store that `devlanes setup` filled, and calls the API cross-origin with CORS from `DEVLANES_ORIGINS`.
 - `ELECTRON_USER_DATA: ${{ lane.data_path }}/electron` is the folder the main process passes to `app.setPath("userData")`. Electron keeps cookies, storage and cache there and locks it, so each lane needs a folder of its own. The page shows it under `user data`.
-- `PORT`, the port devlanes gives every service, is where the main process serves the Chrome DevTools Protocol on 127.0.0.1, so a tool such as Playwright can drive the windows.
+- `PORT`, the port devlanes gives every service, is where the main process serves the Chrome DevTools Protocol on 127.0.0.1, so a tool such as Playwright can drive the windows. Any program on the machine can control the app through that port, as with a Node inspector port, so an app with real data should leave it out.
 
 ## Try next
 
