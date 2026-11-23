@@ -165,6 +165,12 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 | [remote-docker-box](remote-docker-box) | Run lanes on a box inside a Docker container and open them from your machine under the same hostnames. | docker                 | ready  |
 | [remote-ssh-box](remote-ssh-box)       | Prepare a Linux server as a devlanes box and connect to it over SSH, Tailscale or Cloudflare Tunnel.   | a linux box, ssh, node | ready  |
 
+### GUI apps
+
+| Example                      | What it teaches                                                                                                                            | Needs                   | Status |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------- | ------ |
+| [gui-electron](gui-electron) | Open one Electron window per lane on its own Vite renderer and API, with an Electron profile per lane so two lanes' apps run side by side. | node, a desktop session | ready  |
+
 <!-- catalog:end -->
 
 ## Formatting and building
