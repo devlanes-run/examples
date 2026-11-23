@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "npm@11.13.0",
   "engines": {
-    "node": ">=22.12"
+    "node": ">=22.18"
   },
   "workspaces": [
     "apps/*"

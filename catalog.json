@@ -597,7 +597,7 @@
         "env.<NAME>"
       ],
       "requires": ["node", "android sdk", "java", "xcode"],
-      "status": "planned"
+      "status": "ready"
     }
   ]
 }

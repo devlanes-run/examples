@@ -3,11 +3,16 @@
 // app on this lane's dev server. Runs until the emulator closes.
 import { type ChildProcess, spawn } from "node:child_process";
 import { join } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { androidEnv, lanePorts } from "./lib/env";
 import { exited, expo, log, onStop, output, poll } from "./lib/process";
 
 const APP_ID = "com.acme.exampleexpo";
-const SCHEME = "exampleexpo";
+// The scheme expo-dev-client registers, exp+ and the slug in app.json.
+const SCHEME = "exp+example-expo";
+// What the Expo CLI adds when nobody is at its terminal: no dev menu button or menu on launch.
+const DEV_MENU_OFF =
+  "__expo_disable_fab=1&__expo_disable_auto_launch=1&__expo_disable_onboarding=1";
 const exe = (name: string) => (process.platform === "win32" ? `${name}.exe` : name);
 
 const ports = lanePorts();
@@ -43,18 +48,24 @@ async function reversePorts() {
 }
 
 // The Expo CLI opens a --no-bundler build on port 8081 and reverses that port, which is not this
-// lane's, so drop that mapping and open the app on this lane's port instead.
+// lane's, so drop that mapping and reopen the app on this lane's port, with the URL the Expo CLI
+// itself builds for a development build.
 async function openApp() {
   await adb("reverse", "--remove", "tcp:8081").catch(() => undefined);
+  await adb("shell", "am", "force-stop", APP_ID);
   const manifest = encodeURIComponent(`http://127.0.0.1:${ports.metro}`);
-  const url = `${SCHEME}://?__expo_url=${manifest}`;
-  await adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", url, APP_ID);
+  const url = `${SCHEME}://?__expo_url=${manifest}&${DEV_MENU_OFF}`;
+  // adb shell runs the command through the device's shell, where & would end it.
+  await adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", `'${url}'`, APP_ID);
 }
 
 let emulator: ChildProcess | null = null;
 
 async function main() {
-  emulator = startEmulator(await pickAvd());
+  const avd = await pickAvd();
+  // A booting emulator registers with the running adb server; one started mid-boot misses it.
+  await output(adbPath, ["start-server"]);
+  emulator = startEmulator(avd);
   onStop(() => {
     emulator?.kill();
   });
@@ -63,7 +74,34 @@ async function main() {
   await reversePorts();
   await openApp();
   log(`app opened on ${serial} with the dev server at http://127.0.0.1:${ports.metro}`);
+  void keepPortsReversed();
   process.exit(await exited(emulator));
+}
+
+/** The id the adb server gave this emulator's connection, or null while it is not connected. */
+async function transportId(): Promise<string | null> {
+  const devices = await output(adbPath, ["devices", "-l"]).catch(() => "");
+  const line = devices.split(/\r?\n/).find((l) => l.startsWith(`${serial} `));
+  return line?.match(/transport_id:(\d+)/)?.[1] ?? null;
+}
+
+// Every lane shares one adb server, which belongs to the android service that started it.
+// Stopping that service stops the server, and a new one does not carry the old mappings even
+// though the emulator still lists them, so map the ports again whenever the connection changes.
+async function keepPortsReversed() {
+  let mapped = await transportId();
+  for (;;) {
+    await sleep(5000);
+    const current = await transportId();
+    if (current === mapped || current === null) continue;
+    await reversePorts().then(
+      () => {
+        mapped = current;
+        log(`ports mapped again on ${serial}`);
+      },
+      () => undefined,
+    );
+  }
 }
 
 main().catch((error: unknown) => {

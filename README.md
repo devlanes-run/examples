@@ -167,9 +167,9 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 
 ### GUI apps
 
-| Example              | What it teaches                                                                                                                                  | Needs                          | Status  |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------- |
-| [gui-expo](gui-expo) | Run an Expo dev server and its API per lane, and open the app on an Android emulator or iOS simulator that reaches its own lane over plain HTTP. | node, android sdk, java, xcode | planned |
+| Example              | What it teaches                                                                                                                                  | Needs                          | Status |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------ |
+| [gui-expo](gui-expo) | Run an Expo dev server and its API per lane, and open the app on an Android emulator or iOS simulator that reaches its own lane over plain HTTP. | node, android sdk, java, xcode | ready  |
 
 <!-- catalog:end -->
 
