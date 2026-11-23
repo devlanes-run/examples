@@ -167,9 +167,9 @@ The box's hostnames then open in your local browser. [remote-docker-box](remote-
 
 ### GUI apps
 
-| Example                              | What it teaches                                                                                                                               | Needs                         | Status  |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
-| [gui-react-native](gui-react-native) | Run Metro on each lane's own port next to an API, and build the React Native app for the Android emulator or iOS simulator against that lane. | node, android sdk, jdk, xcode | planned |
+| Example                              | What it teaches                                                                                                                               | Needs                         | Status |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------ |
+| [gui-react-native](gui-react-native) | Run Metro on each lane's own port next to an API, and build the React Native app for the Android emulator or iOS simulator against that lane. | node, android sdk, jdk, xcode | ready  |
 
 <!-- catalog:end -->
 

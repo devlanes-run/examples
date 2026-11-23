@@ -19,12 +19,10 @@ export function HomeScreen({ navigation }: ScreenProps<"Home">) {
   const api = useRequest(fetchApi);
 
   return (
+    // The top inset sits outside the scroll view, so content never scrolls under the status bar.
     <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top, paddingBottom: insets.bottom + 40 },
-      ]}
+      style={[styles.screen, { marginTop: insets.top }]}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}
       keyboardShouldPersistTaps="handled"
     >
       <Header />

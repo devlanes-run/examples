@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "start": "react-native start --host 127.0.0.1",
-    "android": "node scripts/device.mts android",
-    "ios": "node scripts/device.mts ios",
+    "android": "node scripts/android.mts",
+    "ios": "node scripts/ios.mts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json",
     "build": "npm run typecheck && npm run lint"

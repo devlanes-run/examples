@@ -597,7 +597,7 @@
         "tasks.when: lane.create"
       ],
       "requires": ["node", "android sdk", "jdk", "xcode"],
-      "status": "planned"
+      "status": "ready"
     }
   ]
 }
